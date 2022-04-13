@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:ui/ui.dart';
+import 'package:tagref/ui/AddButton.dart';
+import 'package:tagref/ui/BinButton.dart';
+import 'package:tagref/ui/EditTagButton.dart';
+import 'package:tagref/ui/SourceButtonLarge.dart';
+import 'package:tagref/ui/SourceButtonSmall.dart';
+import 'package:tagref/ui/TagInputField.dart';
+import 'package:tagref/ui/TagLabel.dart';
 
 void main() {
   runApp(const MyApp());
@@ -70,31 +76,30 @@ class _TagRefHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
+      //TODO: Wrap the body with a scroll
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: <Widget>[
           Row(
             children: <Widget>[
-              PinBtnPinned(onPressed: incrementCounter),
-              PinBtnUnpinned(onPressed: incrementCounter),
-              RemoveBin(onPressed: incrementCounter),
-              SourceBtnSmall(onPressed: incrementCounter),
-              SortBtn(onPressed: incrementCounter),
+              BinButton(onPressed: incrementCounter),
+              SourceButtonSmall(onPressed: incrementCounter),
+              SourceButtonLarge(onPressed: incrementCounter),
             ],
           ),
-          SourceBtn(onPressed: incrementCounter),
-          EditTagBtn(onPressed: incrementCounter),
-          Tag(onPressed: incrementCounter, tagWd: "tagWd"),
+          SourceButtonLarge(onPressed: incrementCounter),
+          EditTagButton(onPressed: incrementCounter),
+          TagLabel(onPressed: incrementCounter, tagWd: "tagWd"),
           const SizedBox(height: 6),
-          Tag(onPressed: incrementCounter, tagWd: "sex"),
+          TagLabel(onPressed: incrementCounter, tagWd: "seddddddddddddddddddddddddddx"),
           const SizedBox(height: 6),
-          AddTagField(),
+          const TagInputField(),
           ClipRect(
               child: Padding(
             padding: const EdgeInsets.all(100.0),
             child: Stack(children: <Widget>[
               const Image(image: AssetImage('assets/beautiful_view.png')),
-              AddBtn(onPressed: incrementCounter),
+              AddButton(onPressed: incrementCounter),
             ]),
           )),
         ],
