@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:tagref/assets/constant.dart';
+import 'package:tagref/ui/TagLabel.dart';
 import 'package:tagref/ui/TagSearchBar.dart';
 
 void main() {
@@ -49,28 +51,31 @@ class TagRefHome extends StatefulWidget {
 }
 
 class _TagRefHomePageState extends State<TagRefHome> {
-  int count = 0;
-
-  void incrementCounter() {
-    setState(() {
-      count++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
 
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
         backgroundColor: primaryColor,
         title: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 150),
           child: TagSearchBar(),
         )
-
       ),
-      //TODO: Wrap the body with a scroll
-      body: Container()
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(100, 20, 100, 0),
+        child: MasonryGridView.count(
+          crossAxisCount: 3,
+          mainAxisSpacing: 15,
+          crossAxisSpacing: 15,
+          itemCount: 100,
+          itemBuilder: (context, index) {
+            //TODO: Change to the "image frame" when it's ready
+            return TagLabel(onPressed: (){}, tagWd: "tagWd");
+          },
+        ),
+      )
     );
   }
 }
