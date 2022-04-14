@@ -14,9 +14,9 @@ class TagLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return RawMaterialButton(
       onPressed: onPressed,
-      fillColor: Colors.purple,
+      fillColor: primaryColorDark,
       //TODO: Make the width of TagLabel "wrap content" - auto adjust the width itself
-      constraints: BoxConstraints.tight(Size(84, 33)),
+      constraints: BoxConstraints.tight(const Size(84, 33)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(cornerRadius)),
       elevation: 0.1,
       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
