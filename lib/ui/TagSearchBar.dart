@@ -23,7 +23,7 @@ class _TagSearchBarState extends State<TagSearchBar> {
           padding: const EdgeInsets.all(4),
           child: Row(
             children: [
-              TagLabel(onPressed: () => {}, tagWd: "tagWd"),
+              TagLabel(onPressed: () => {}, tagWd: "asdfghjklqwertyuiopz"),
               const Flexible(
                 child: TextField(
                   style: TextStyle(color: primaryColorDark),
