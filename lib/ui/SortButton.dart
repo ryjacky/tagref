@@ -4,8 +4,7 @@ import 'package:tagref/assets/constant.dart';
 
 ///Sort-Button.
 class SortBtn extends StatelessWidget {
-  //TODO: use_key_in_widget_constructors
-  const SortBtn({required this.onPressed});
+  const SortBtn({Key? key, required this.onPressed}) : super(key: key);
   final GestureTapCallback onPressed;
 
   @override
@@ -15,7 +14,7 @@ class SortBtn extends StatelessWidget {
       constraints: BoxConstraints.tight(const Size(buttonWidth, buttonHeight)),
       elevation: 0.1,
       child: const Padding(
-        padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+        padding: EdgeInsets.all(8),
         child: FaIcon(
           FontAwesomeIcons.arrowDownShortWide,
           color: Colors.purple,

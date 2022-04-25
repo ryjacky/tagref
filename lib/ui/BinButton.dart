@@ -11,13 +11,14 @@ class BinButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return RawMaterialButton(
       onPressed: onPressed,
-      constraints: BoxConstraints.tight(const Size(42, 42)),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(cornerRadius)),
+      constraints: BoxConstraints.tight(const Size(buttonWidth, buttonHeight)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cornerRadius)),
       elevation: 0.1,
       fillColor: Colors.grey.shade200.withOpacity(0.5),
       splashColor: Colors.grey.shade500.withOpacity(0.5),
       child: const Padding(
-        padding: EdgeInsets.symmetric(vertical: 11.0, horizontal: 12),
+        padding: EdgeInsets.all(8),
         child: FaIcon(
           FontAwesomeIcons.solidTrashCan,
           color: Colors.white,

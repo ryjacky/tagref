@@ -4,16 +4,17 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../assets/constant.dart';
 
 class EditTagButton extends StatelessWidget {
-  //TODO: use_key_in_widget_constructors
-  const EditTagButton({required this.onPressed});
+  const EditTagButton({Key? key, required this.onPressed}) : super(key: key);
   final GestureTapCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return RawMaterialButton(
       onPressed: onPressed,
-      constraints: BoxConstraints.tight(const Size(buttonWidth * 3, buttonHeight)),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(cornerRadius)),
+      constraints:
+          BoxConstraints.tight(const Size(buttonWidth * 3, buttonHeight)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(cornerRadius)),
       elevation: 0.1,
       fillColor: Colors.grey.shade200.withOpacity(0.5),
       splashColor: Colors.grey.shade500.withOpacity(0.5),
@@ -22,7 +23,7 @@ class EditTagButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: const <Widget>[
-            SizedBox(width: 6),
+            Spacer(),
             FaIcon(
               FontAwesomeIcons.pencil,
               color: Colors.white,
@@ -44,4 +45,3 @@ class EditTagButton extends StatelessWidget {
     );
   }
 }
-

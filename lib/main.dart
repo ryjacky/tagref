@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:tagref/ui/AddButton.dart';
 import 'package:tagref/ui/BinButton.dart';
 import 'package:tagref/ui/EditTagButton.dart';
+import 'package:tagref/ui/PinButton.dart';
+import 'package:tagref/ui/SortButton.dart';
 import 'package:tagref/ui/SourceButtonLarge.dart';
 import 'package:tagref/ui/SourceButtonSmall.dart';
 import 'package:tagref/ui/TagInputField.dart';
@@ -76,33 +78,43 @@ class _TagRefHomePageState extends State<MyHomePage> {
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title),
       ),
-      //TODO: Wrap the body with a scroll
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[
-          Row(
-            children: <Widget>[
-              BinButton(onPressed: incrementCounter),
-              SourceButtonSmall(onPressed: incrementCounter),
-              SourceButtonLarge(onPressed: incrementCounter),
-            ],
-          ),
-          SourceButtonLarge(onPressed: incrementCounter),
-          EditTagButton(onPressed: incrementCounter),
-          TagLabel(onPressed: incrementCounter, tagWd: "tagWd"),
-          const SizedBox(height: 6),
-          TagLabel(onPressed: incrementCounter, tagWd: "seddddddddddddddddddddddddddx"),
-          const SizedBox(height: 6),
-          const TagInputField(),
-          ClipRect(
-              child: Padding(
-            padding: const EdgeInsets.all(100.0),
-            child: Stack(children: <Widget>[
-              const Image(image: AssetImage('assets/beautiful_view.png')),
-              AddButton(onPressed: incrementCounter),
-            ]),
-          )),
-        ],
+      body: SingleChildScrollView(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Row(
+              children: <Widget>[
+                BinButton(onPressed: incrementCounter),
+                SortBtn(onPressed: incrementCounter),
+                PinButton(onPressed: incrementCounter),
+                SourceButtonSmall(onPressed: incrementCounter),
+                SourceButtonLarge(onPressed: incrementCounter),
+              ],
+            ),
+            SourceButtonLarge(onPressed: incrementCounter),
+            EditTagButton(onPressed: incrementCounter),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TagLabel(onPressed: incrementCounter, tagWd: "tagWd"),
+                TagLabel(onPressed: incrementCounter, tagWd: "lol")
+              ],
+            ),
+            const SizedBox(height: 6),
+            TagLabel(
+                onPressed: incrementCounter,
+                tagWd: "seddddddddddddddddddddddddddx"),
+            const SizedBox(height: 6),
+            const TagInputField(),
+            Container(
+              margin: const EdgeInsets.all(80),
+              child: Stack(children: <Widget>[
+                const Image(image: AssetImage('assets/beautiful_view.png')),
+                AddButton(onPressed: incrementCounter),
+              ]),
+            ),
+          ],
+        ),
       ),
     );
   }
