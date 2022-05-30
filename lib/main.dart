@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:tagref/assets/constant.dart';
-import 'package:tagref/ui/PinButton.dart';
-import 'package:tagref/ui/RefImageDisplay.dart';
+import 'package:tagref/ui/ReferenceImageDisplay.dart';
 import 'package:tagref/ui/TagSearchBar.dart';
 
 void main() {
