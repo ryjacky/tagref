@@ -21,16 +21,14 @@ class _PinButtonState extends State<PinButton> {
     return RawMaterialButton(
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(cornerRadius)),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       elevation: 0,
-      hoverElevation: 0,
-      focusElevation: 0,
-      highlightElevation: 0,
+      constraints: BoxConstraints.tight(const Size(42, 42)),
       fillColor: Colors.grey.shade300.withOpacity(0.5),
       splashColor: Colors.grey.shade500.withOpacity(0.5),
       child: Padding(
-        padding: const EdgeInsets.all(8),
-        child:
-          _unPinned
+          padding: const EdgeInsets.symmetric(vertical: 11.0, horizontal: 12),
+          child: _unPinned
               ? const RotationTransition(
                   turns: AlwaysStoppedAnimation(30 / 360),
                   child: FaIcon(
@@ -43,15 +41,13 @@ class _PinButtonState extends State<PinButton> {
                   FontAwesomeIcons.thumbtack,
                   color: Colors.white,
                   size: 21,
-                )
-      ),
-      onPressed: (){
+                )),
+      onPressed: () {
         setState(() {
           _unPinned = !_unPinned;
           widget.onPressed(_unPinned);
         });
       },
-
     );
   }
 }

@@ -1,7 +1,10 @@
 import 'dart:ui';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:tagref/ui/BinButton.dart';
+import 'package:tagref/ui/PinButton.dart';
+import 'package:tagref/ui/SourceButtonSmall.dart';
+import 'package:tagref/ui/TagInputField.dart';
 
 import '../assets/constant.dart';
 
@@ -13,29 +16,62 @@ class RefImageDisplay extends StatefulWidget {
 }
 
 class _RefImageDisplayState extends State<RefImageDisplay> {
-  bool blurVisible = false;
+  bool hovered = false;
+  static const double padding = 4;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(cornerRadius),
-        child: Stack(
-          children: [
-            ImageFiltered(
-              imageFilter: ImageFilter.blur(
-                  sigmaX: blurVisible ? 5 : 0,
-                  sigmaY: blurVisible ? 5 : 0),
-              child: Image.network(
-                  "https://cdn.pixabay.com/photo/2021/10/24/18/16/stream-6738889_960_720.jpg")
-            )
-          ],
-        ),
+      child: Stack(
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(cornerRadius),
+            child: Stack(
+              children: [
+                ImageFiltered(
+                    imageFilter: ImageFilter.blur(
+                        sigmaX: hovered ? 5 : 0, sigmaY: hovered ? 5 : 0),
+                    child: Image.network(
+                        "https://cdn.pixabay.com/photo/2022/03/30/14/55/holiday-home-7101309_960_720.jpg"))
+              ],
+            ),
+          ),
+          Visibility(
+            visible: hovered,
+            child: Padding(padding: const EdgeInsets.all(2),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(padding),
+                          child: BinButton(onPressed: () {}),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(padding),
+                          child: SourceButtonSmall(onPressed: () {}),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(padding),
+                          child: PinButton(onPressed: (pinned) {}),
+                        ),
+                      ],
+                    ),
+                    const Padding(
+                      padding: EdgeInsets.all(padding),
+                      child: TagInputField(),
+                    )
+                  ],
+                ),
+            ),
+          )
+        ],
       ),
       onTap: () {},
       onHover: (val) {
         setState(() {
-          blurVisible = val;
+          hovered = val;
         });
       },
     );
