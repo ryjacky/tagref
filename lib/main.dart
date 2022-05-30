@@ -53,26 +53,26 @@ class TagRefHome extends StatefulWidget {
 class _TagRefHomePageState extends State<TagRefHome> {
   @override
   Widget build(BuildContext context) {
+    double paddingH = MediaQuery.of(context).size.width / 5;
 
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
         backgroundColor: primaryColor,
         title: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 150),
+          padding: EdgeInsets.symmetric(horizontal: paddingH),
           child: TagSearchBar(),
         )
       ),
-      body: Padding(
-        padding: const EdgeInsets.fromLTRB(100, 20, 100, 0),
+      body: Container(
+        padding: EdgeInsets.fromLTRB(paddingH, 20, paddingH, 0),
         child: MasonryGridView.count(
           crossAxisCount: 3,
           mainAxisSpacing: 15,
           crossAxisSpacing: 15,
           itemCount: 100,
           itemBuilder: (context, index) {
-            //TODO: Change to the "image frame" when it's ready
-            return RefImageDisplay();
+            return const RefImageDisplay(srcUrl: "https://cdn.pixabay.com/photo/2022/03/30/14/55/holiday-home-7101309_960_720.jpg");
           },
         ),
       )

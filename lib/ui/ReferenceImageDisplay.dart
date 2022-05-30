@@ -9,7 +9,9 @@ import 'package:tagref/ui/TagInputField.dart';
 import '../assets/constant.dart';
 
 class RefImageDisplay extends StatefulWidget {
-  const RefImageDisplay({Key? key}) : super(key: key);
+  final String srcUrl;
+
+  const RefImageDisplay({Key? key, required this.srcUrl}) : super(key: key);
 
   @override
   State<RefImageDisplay> createState() => _RefImageDisplayState();
@@ -22,58 +24,59 @@ class _RefImageDisplayState extends State<RefImageDisplay> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      child: Stack(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(cornerRadius),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(cornerRadius),
+          child: Container(
+            color: primaryColor,
             child: Stack(
+              fit: StackFit.passthrough,
               children: [
                 ImageFiltered(
                     imageFilter: ImageFilter.blur(
-                        sigmaX: hovered ? 5 : 0, sigmaY: hovered ? 5 : 0),
+                        sigmaX: hovered ? 5 : 0.001, sigmaY: hovered ? 5 : 0.001),
                     child: Image.network(
-                        "https://cdn.pixabay.com/photo/2022/03/30/14/55/holiday-home-7101309_960_720.jpg"))
+                      widget.srcUrl,
+                    )),
+                Visibility(
+                  visible: hovered,
+                  child: Padding(
+                    padding: const EdgeInsets.all(2),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(padding),
+                              child: BinButton(onPressed: () {}),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(padding),
+                              child: SourceButtonSmall(onPressed: () {}),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(padding),
+                              child: PinButton(onPressed: (pinned) {}),
+                            ),
+                          ],
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.all(padding),
+                          child: TagInputField(),
+                        )
+                      ],
+                    ),
+                  ),
+                )
               ],
             ),
           ),
-          Visibility(
-            visible: hovered,
-            child: Padding(padding: const EdgeInsets.all(2),
-                child: Column(
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(padding),
-                          child: BinButton(onPressed: () {}),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(padding),
-                          child: SourceButtonSmall(onPressed: () {}),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(padding),
-                          child: PinButton(onPressed: (pinned) {}),
-                        ),
-                      ],
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.all(padding),
-                      child: TagInputField(),
-                    )
-                  ],
-                ),
-            ),
-          )
-        ],
-      ),
-      onTap: () {},
-      onHover: (val) {
-        setState(() {
-          hovered = val;
+        ),
+        onTap: () {},
+        onHover: (val) {
+          setState(() {
+            hovered = val;
+          });
         });
-      },
-    );
   }
 }
