@@ -2,10 +2,8 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tagref/archive/ui/BinButton.dart';
 import 'package:tagref/ui/FaIconButton.dart';
 import 'package:tagref/ui/PinButton.dart';
-import 'package:tagref/archive/ui/SourceButtonSmall.dart';
 import 'package:tagref/ui/TagInputField.dart';
 
 import '../assets/constant.dart';
@@ -35,6 +33,7 @@ class _RefImageDisplayState extends State<RefImageDisplay> {
               children: [
                 ImageFiltered(
                     imageFilter: ImageFilter.blur(
+                      // Use 0.001 instead of 0 for browser compatibility
                         sigmaX: hovered ? 5 : 0.001, sigmaY: hovered ? 5 : 0.001),
                     child: Image.network(
                       widget.srcUrl,
@@ -42,6 +41,7 @@ class _RefImageDisplayState extends State<RefImageDisplay> {
                 Visibility(
                   visible: hovered,
                   child: Padding(
+                    // Extra padding for image overlay
                     padding: const EdgeInsets.all(2),
                     child: Column(
                       children: [
@@ -88,6 +88,7 @@ class _RefImageDisplayState extends State<RefImageDisplay> {
         onTap: () {},
         onHover: (val) {
           setState(() {
+            // Controls overlay visibility
             hovered = val;
           });
         });

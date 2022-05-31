@@ -24,19 +24,32 @@ class _TagSearchBarState extends State<TagSearchBar> {
           child: Row(
             children: [
               TagLabel(onPressed: () => {}, tagWd: "asdfghjklqwertyuiopz"),
-              const Flexible(
-                child: TextField(
-                  style: TextStyle(color: primaryColorDark),
-                  cursorColor: primaryColorDark,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
-                    border: InputBorder.none,
-                    hintText: "Type to search...",
-                    hintStyle: TextStyle(color: primaryColor),
-                  ),
-                ),
+                SizedBox(
+                width: MediaQuery.of(context).size.width/3, height: 25,
+                child: const TextField(
+                      style: TextStyle(color: primaryColorDark),
+                      cursorColor: primaryColorDark,
+                      decoration: InputDecoration(
+                        isDense: true,
+                        border: InputBorder.none,
+                        hintText: "Type to search...",
+                        hintStyle: TextStyle(color: primaryColor),
+                      ),
+                    ),
               )
+              // const Flexible(
+              //   child: TextField(
+              //     style: TextStyle(color: primaryColorDark),
+              //     cursorColor: primaryColorDark,
+              //     decoration: InputDecoration(
+              //       isDense: true,
+              //       contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 10),
+              //       border: InputBorder.none,
+              //       hintText: "Type to search...",
+              //       hintStyle: TextStyle(color: primaryColor),
+              //     ),
+              //   ),
+              // )
             ],
           ),
         )
