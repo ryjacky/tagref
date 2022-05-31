@@ -1,9 +1,11 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:tagref/ui/BinButton.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:tagref/archive/ui/BinButton.dart';
+import 'package:tagref/ui/FaIconButton.dart';
 import 'package:tagref/ui/PinButton.dart';
-import 'package:tagref/ui/SourceButtonSmall.dart';
+import 'package:tagref/archive/ui/SourceButtonSmall.dart';
 import 'package:tagref/ui/TagInputField.dart';
 
 import '../assets/constant.dart';
@@ -48,16 +50,27 @@ class _RefImageDisplayState extends State<RefImageDisplay> {
                           children: [
                             Padding(
                               padding: const EdgeInsets.all(padding),
-                              child: BinButton(onPressed: () {}),
+                              child: FaIconButton(
+                                  faIcon: FontAwesomeIcons.trash,
+                                  onPressed: () {}),
                             ),
                             Padding(
                               padding: const EdgeInsets.all(padding),
-                              child: SourceButtonSmall(onPressed: () {}),
+                              child: FaIconButton(
+                                  faIcon: FontAwesomeIcons.link,
+                                  onPressed: () {}),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.all(padding),
+                              child: FaIconButton(
+                                  faIcon: FontAwesomeIcons.magnifyingGlass,
+                                  onPressed: () {}),
                             ),
                             Padding(
                               padding: const EdgeInsets.all(padding),
                               child: PinButton(onPressed: (pinned) {}),
                             ),
+
                           ],
                         ),
                         const Padding(
