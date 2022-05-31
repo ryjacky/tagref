@@ -18,9 +18,10 @@ class AddButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(cornerRadius),
         child: Stack(
           alignment: Alignment.center,
-          fit: StackFit.loose,
           children: [
             ImageFiltered(
+              // Stronger blur (than ReferenceImageDisplay) for differentiation
+              // (visually)
               imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
               child: Image.network(
                 imgUrl,
