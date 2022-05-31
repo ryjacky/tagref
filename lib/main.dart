@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:tagref/assets/constant.dart';
+import 'package:tagref/ui/AddButton.dart';
 import 'package:tagref/ui/ReferenceImageDisplay.dart';
 import 'package:tagref/ui/TagSearchBar.dart';
 
@@ -72,7 +73,7 @@ class _TagRefHomePageState extends State<TagRefHome> {
           crossAxisSpacing: 15,
           itemCount: 100,
           itemBuilder: (context, index) {
-            return const RefImageDisplay(srcUrl: "https://cdn.pixabay.com/photo/2022/03/30/14/55/holiday-home-7101309_960_720.jpg");
+            return AddButton(onPressed: (){}, imgUrl: "https://images.unsplash.com/photo-1453728013993-6d66e9c9123a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8dmlld3xlbnwwfHwwfHw%3D&w=1000&q=80",);
           },
         ),
       )
