@@ -1,9 +1,11 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../assets/constant.dart';
 import '../ui/AddButton.dart';
+import '../ui/ReferenceImageDisplay.dart';
 import '../ui/TagSearchBar.dart';
 import 'SettingScreen.dart';
 
@@ -36,7 +38,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 alignment: Alignment.centerLeft,
               ),
               Expanded(child: Container()),
-              TagSearchBar(onSubmitted: (val){
+              TagSearchBar(
+              hintText: tr("search-hint"),
+              onSubmitted: (val){
                 setState(() {
                   keywordList.add(val);
                 });
@@ -62,14 +66,13 @@ class _HomeScreenState extends State<HomeScreen> {
             Expanded(
               child: MasonryGridView.count(
                 crossAxisCount: 3,
-                padding: EdgeInsets.fromLTRB(paddingH, 20, paddingH, 0),
+                padding: EdgeInsets.symmetric(vertical: 20, horizontal: paddingH),
                 mainAxisSpacing: 15,
                 crossAxisSpacing: 15,
                 itemCount: 100,
                 itemBuilder: (context, index) {
-                  return AddButton(
-                    onPressed: () {},
-                    imgUrl:
+                  return const ReferenceImageDisplay(
+                    srcUrl:
                     "https://images.unsplash.com/photo-1453728013993-6d66e9c9123a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8dmlld3xlbnwwfHwwfHw%3D&w=1000&q=80",
                   );
                 },

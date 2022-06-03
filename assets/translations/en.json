@@ -1,0 +1,22 @@
+{
+  "welcome-text": "Welcome to TagRef",
+  "tag-ref-description": "TagRef is a tag-oriented image browser that is tailor made for creators",
+  "choose-lang": "Choose your language to start:",
+  "customize-exp": "Customize your experience",
+  "next": "Next",
+  "auto-tag": "AutoTag",
+  "auto-tag-desc": "AutoTag enables the tag suggestion function, which automatically add tags to your images.",
+  "cache": "Cache",
+  "cache-desc": "TagRef will store all the images locally (or in the cloud) if cache is enabled, however, this can take a lot of storage spaces and we recommend you leave it off.",
+  "twitter-link": "Twitter",
+  "twitter-link-desc": "Connecting to twitter enables Twitter mode which allows you to browse only media tweets.",
+  "done": "Done",
+  "search-hint": "Type to search...",
+  "add-tag-field-hint": "Type to add a new tag...",
+  "linked-drives": "Linked Drives",
+  "manage-tags": "Manage Tags",
+  "gdrive": "Google Drive",
+  "icloud": "iCloud",
+  "dropbox": "Dropbox",
+  "pref": "Preferences"
+}

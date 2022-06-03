@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tagref/assets/constant.dart';
@@ -15,11 +16,14 @@ class _SwitchButtonState extends State<ToggleSwitch> {
 
   @override
   Widget build(BuildContext context) {
+    double width = 70.w;
+    double height = 40.h;
+
     return FlutterSwitch(
-      width: 70.0,
-      height: 40.0,
+      width: width,
+      height: height,
       valueFontSize: 25.0,
-      toggleSize: 30.0,
+      toggleSize: height*0.8,
       value: enabled,
       inactiveTextFontWeight: FontWeight.w400,
       activeTextFontWeight: FontWeight.w400,

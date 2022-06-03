@@ -8,7 +8,9 @@ typedef VoidCallback = Function(String val);
 class TagSearchBar extends StatefulWidget {
 
   final VoidCallback onSubmitted;
-  const TagSearchBar({Key? key, required this.onSubmitted}) : super(key: key);
+
+  final String hintText;
+  const TagSearchBar({Key? key, required this.onSubmitted, required this.hintText}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _TagSearchBarState();
@@ -37,12 +39,12 @@ class _TagSearchBarState extends State<TagSearchBar> {
           textInputAction: TextInputAction.none,
           style: const TextStyle(color: primaryColorDark),
           cursorColor: primaryColorDark,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             isDense: true,
-            icon: FaIcon(FontAwesomeIcons.magnifyingGlass),
+            icon: const FaIcon(FontAwesomeIcons.magnifyingGlass),
             border: InputBorder.none,
-            hintText: "Type to search...",
-            hintStyle: TextStyle(color: primaryColor),
+            hintText: widget.hintText,
+            hintStyle: const TextStyle(color: primaryColor),
           ),
         ),
       )

@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tagref/ui/FaIconButton.dart';
@@ -8,16 +9,16 @@ import 'package:tagref/ui/TagInputField.dart';
 
 import '../assets/constant.dart';
 
-class RefImageDisplay extends StatefulWidget {
+class ReferenceImageDisplay extends StatefulWidget {
   final String srcUrl;
 
-  const RefImageDisplay({Key? key, required this.srcUrl}) : super(key: key);
+  const ReferenceImageDisplay({Key? key, required this.srcUrl}) : super(key: key);
 
   @override
-  State<RefImageDisplay> createState() => _RefImageDisplayState();
+  State<ReferenceImageDisplay> createState() => _ReferenceImageDisplayState();
 }
 
-class _RefImageDisplayState extends State<RefImageDisplay> {
+class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
   bool hovered = false;
   static const double padding = 4;
 
@@ -73,9 +74,10 @@ class _RefImageDisplayState extends State<RefImageDisplay> {
 
                           ],
                         ),
-                        const Padding(
-                          padding: EdgeInsets.all(padding),
-                          child: TagInputField(),
+                        Padding(
+                          padding: const EdgeInsets.all(padding),
+                          child: TagInputField(
+                            hintText: tr("add-tag-field-hint"),),
                         )
                       ],
                     ),

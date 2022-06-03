@@ -1,8 +1,22 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tagref/screen/HomeScreen.dart';
+import 'package:tagref/screen/SetupScreen.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'assets/constant.dart';
+
+void main() async {
+
+  WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
+
+  runApp(EasyLocalization(
+      child: const MyApp(),
+      fallbackLocale: Locale('en'),
+      supportedLocales: const [Locale('en'), Locale('ja')],
+      path: 'assets/translations'));
 }
 
 class MyApp extends StatelessWidget {
@@ -11,36 +25,28 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'TagRef',
-      theme: ThemeData(
-          // This is the theme of your application.
-          //
-          // Try running your application with "flutter run". You'll see the
-          // application has a blue toolbar. Then, without quitting the app, try
-          // changing the primarySwatch below to Colors.green and then invoke
-          // "hot reload" (press "r" in the console where you ran "flutter run",
-          // or simply save your changes to "hot reload" in a Flutter IDE).
-          // Notice that the counter didn't reset back to zero; the application
-          // is not restarted.
-          primarySwatch: Colors.purple),
-      home: const TagRefHome(title: 'TagRef Home'),
+    return ScreenUtilInit(
+      designSize: const Size(1280, 720),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      child: const TagRefHome(title: 'TagRef Home'),
+        builder: (context, child) {
+        return MaterialApp(
+          title: 'TagRef',
+          localizationsDelegates: context.localizationDelegates,
+          supportedLocales: context.supportedLocales,
+          locale: context.locale,
+          theme: ThemeData(primarySwatch: Colors.purple),
+          home: child,
+        );
+      },
+
     );
   }
 }
 
 class TagRefHome extends StatefulWidget {
   const TagRefHome({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
   final String title;
 
   @override
@@ -50,6 +56,17 @@ class TagRefHome extends StatefulWidget {
 class _TagRefHomePageState extends State<TagRefHome> {
   @override
   Widget build(BuildContext context) {
+    initRoute().then((screen) => Navigator.pushReplacement(
+        context, MaterialPageRoute(builder: (context) => screen)));
+    return const Scaffold();
+  }
+
+  Future<Widget> initRoute() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.get(Preferences.language) == null) {
+      return const SetupScreen();
+    }
+
     return const HomeScreen();
   }
 }

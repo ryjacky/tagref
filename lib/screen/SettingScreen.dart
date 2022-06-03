@@ -1,5 +1,7 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:tagref/assets/FontSize.dart';
 import 'package:tagref/ui/ToggleSwitch.dart';
 
 import '../assets/constant.dart';
@@ -26,11 +28,11 @@ class _SettingScreenState extends State<SettingScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Expanded(child: Container()),
-              const Text("Preferences",
+              Text(tr("pref"),
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: primaryColorDark,
-                      fontSize: 24)),
+                      fontSize: FontSize.l3)),
               Expanded(child: Container()),
               IconButton(
                 icon: const FaIcon(FontAwesomeIcons.xmark),
@@ -49,36 +51,36 @@ class _SettingScreenState extends State<SettingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text("Linked Drives",
+              Text(tr("linked-drives"),
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: 25,
+                      fontSize: FontSize.l3,
                       color: fontColorDark)),
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                 child: Row(
-                  children: const [
+                  children: [
                     Padding(
-                      padding: EdgeInsets.fromLTRB(0, 8, 8, 8),
-                      child: DriveStatusDisplay(driveLogoSrc: "assets/images/gdrive_logo.svg", driveName: "Google Drive",),
+                      padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
+                      child: DriveStatusDisplay(driveLogoSrc: "assets/images/gdrive_logo.svg", driveName: tr("gdrive"),),
                     ),
                     Padding(
-                      padding: EdgeInsets.all(8),
-                      child: DriveStatusDisplay(driveLogoSrc: "assets/images/gdrive_logo.svg", driveName: "iCloud",),
+                      padding: const EdgeInsets.all(8),
+                      child: DriveStatusDisplay(driveLogoSrc: "assets/images/gdrive_logo.svg", driveName: tr("icloud"),),
                     ),
                     Padding(
-                      padding: EdgeInsets.all(8),
-                      child: DriveStatusDisplay(driveLogoSrc: "assets/images/gdrive_logo.svg", driveName: "Dropbox",),
+                      padding: const EdgeInsets.all(8),
+                      child: DriveStatusDisplay(driveLogoSrc: "assets/images/gdrive_logo.svg", driveName: tr("dropbox"),),
                     ),
                   ],
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.fromLTRB(0, 25, 0, 0),
-                child: Text("Manage Tags",
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 25, 0, 0),
+                child: Text(tr("manage-tags"),
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 25,
+                        fontSize: FontSize.l3,
                         color: fontColorDark)),
               ),
               Padding(
@@ -87,17 +89,17 @@ class _SettingScreenState extends State<SettingScreen> {
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text("AutoTag",
+                        children: [
+                          Text(tr("auto-tag"),
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: 25,
+                                  fontSize: FontSize.l3,
                                   color: fontColorDark)),
                           Text(
-                              "AutoTag enables the tag suggestion function, which automatically add tags to your images.",
+                              tr("auto-tag-desc"),
                               style: TextStyle(
                                   fontWeight: FontWeight.w300,
-                                  fontSize: 18,
+                                  fontSize: FontSize.body2,
                                   color: fontColorDark)),
                         ],
                       ),
