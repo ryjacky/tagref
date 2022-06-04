@@ -263,7 +263,7 @@ class _SetupScreenState extends State<SetupScreen> {
                             const EdgeInsets.fromLTRB(18, 8, 18, 14)),
                         backgroundColor:
                             MaterialStateProperty.all(accentColor)),
-                    child: Text(tr("Done"),
+                    child: Text(tr("done"),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             color: primaryColorDark,

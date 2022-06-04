@@ -1,7 +1,12 @@
+import 'dart:io';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tagref/screen/HomeScreen.dart';
 import 'package:tagref/screen/SetupScreen.dart';
 
@@ -14,7 +19,7 @@ void main() async {
 
   runApp(EasyLocalization(
       child: const MyApp(),
-      fallbackLocale: Locale('en'),
+      fallbackLocale: const Locale('en'),
       supportedLocales: const [Locale('en'), Locale('ja')],
       path: 'assets/translations'));
 }
@@ -62,6 +67,15 @@ class _TagRefHomePageState extends State<TagRefHome> {
   }
 
   Future<Widget> initRoute() async {
+    sqfliteFfiInit();
+    var databaseFactory = databaseFactoryFfi;
+
+    Directory dbDir = await getApplicationSupportDirectory();
+    String dbPath = join(dbDir.path, "tagref_db.db");
+
+    var db = await databaseFactory.openDatabase(dbPath);
+    print(dbPath);
+
     final prefs = await SharedPreferences.getInstance();
     if (prefs.get(Preferences.language) == null) {
       return const SetupScreen();
