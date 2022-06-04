@@ -1,18 +1,27 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../assets/constant.dart';
 import '../ui/AddButton.dart';
+import '../ui/ReferenceImageDisplay.dart';
 import '../ui/TagSearchBar.dart';
 import 'SettingScreen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final List<String> keywordList = [];
+
+  @override
   Widget build(BuildContext context) {
-    double paddingH = MediaQuery.of(context).size.width / 5;
+    double paddingH = MediaQuery.of(context).size.width / 10;
 
     return Scaffold(
         appBar: AppBar(
@@ -29,7 +38,13 @@ class HomeScreen extends StatelessWidget {
                 alignment: Alignment.centerLeft,
               ),
               Expanded(child: Container()),
-              TagSearchBar(),
+              TagSearchBar(
+              hintText: tr("search-hint"),
+              onSubmitted: (val){
+                setState(() {
+                  keywordList.add(val);
+                });
+              }),
               Expanded(child: Container()),
               IconButton(
                 icon: const FaIcon(FontAwesomeIcons.bars),
@@ -45,21 +60,25 @@ class HomeScreen extends StatelessWidget {
             ],
           ),
         ),
-        body: Container(
-          padding: EdgeInsets.fromLTRB(paddingH, 20, paddingH, 0),
-          child: MasonryGridView.count(
-            crossAxisCount: 3,
-            mainAxisSpacing: 15,
-            crossAxisSpacing: 15,
-            itemCount: 100,
-            itemBuilder: (context, index) {
-              return AddButton(
-                onPressed: () {},
-                imgUrl:
-                "https://images.unsplash.com/photo-1453728013993-6d66e9c9123a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8dmlld3xlbnwwfHwwfHw%3D&w=1000&q=80",
-              );
-            },
-          ),
+        body: Column(
+          children: [
+            TagSearchBarKeywordsView(keywordList: keywordList,),
+            Expanded(
+              child: MasonryGridView.count(
+                crossAxisCount: 3,
+                padding: EdgeInsets.symmetric(vertical: 20, horizontal: paddingH),
+                mainAxisSpacing: 15,
+                crossAxisSpacing: 15,
+                itemCount: 100,
+                itemBuilder: (context, index) {
+                  return const ReferenceImageDisplay(
+                    srcUrl:
+                    "https://images.unsplash.com/photo-1453728013993-6d66e9c9123a?ixlib=rb-1.2.1&ixid=MnwxMjA3fDB8MHxzZWFyY2h8Mnx8dmlld3xlbnwwfHwwfHw%3D&w=1000&q=80",
+                  );
+                },
+              ),
+            )
+          ],
         ));
   }
 }

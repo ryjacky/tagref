@@ -1,0 +1,22 @@
+{
+  "welcome-text": "ようこそ、TagRefへ",
+  "tag-ref-description": "TagRefはクリエイターのために作った画像管理アプリです。タグで画像を分類しましょう！",
+  "choose-lang": "使いたい言語を選択してください:",
+  "customize-exp": "カスタマイズ",
+  "next": "次へ",
+  "auto-tag": "自動タグ付け",
+  "auto-tag-desc": "この機能はTagRefに入れられた画像に自動的にタグを追加します。",
+  "cache": "キャッシュ",
+  "cache-desc": "キャッシュが有効な場合、TagRefはすべての画像をローカル（またはクラウド）に保存しますが、これは多くのストレージスペースを必要とするため、オフにしておくことをお勧めします。",
+  "twitter-link": "ツイッター",
+  "twitter-link-desc": "ツイッターに接続することで、メディアのツイートだけを閲覧できる。",
+  "done": "完了",
+  "search-hint": "入力して検索...",
+  "add-tag-field-hint": "入力して新しいタグを追加します...",
+  "linked-drives": "接続したクラウド",
+  "manage-tags": "タグ管理",
+  "gdrive": "Googleドライブ",
+  "icloud": "iCloud",
+  "dropbox": "Dropbox",
+  "pref": "設定"
+}
