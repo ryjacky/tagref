@@ -4,8 +4,7 @@ import 'package:tagref/assets/constant.dart';
 
 ///Sort-Button.
 class SortBtn extends StatelessWidget {
-  //TODO: use_key_in_widget_constructors
-  const SortBtn({required this.onPressed});
+  const SortBtn({Key? key, required this.onPressed}): super(key: key);
   final GestureTapCallback onPressed;
 
   @override

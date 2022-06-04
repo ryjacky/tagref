@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../assets/constant.dart';
 class TagLabel extends StatelessWidget {
-  late final String tagWd;
+  final String tagWd;
 
-  TagLabel({Key? key, required this.onPressed, required this.tagWd})
+  const TagLabel({Key? key, required this.onPressed, required this.tagWd})
       : super(key: key);
   final GestureTapCallback onPressed;
 

@@ -18,5 +18,7 @@
   "gdrive": "Google Drive",
   "icloud": "iCloud",
   "dropbox": "Dropbox",
-  "pref": "Preferences"
+  "pref": "Preferences",
+  "edit-tag": "Edit Tag"
+
 }

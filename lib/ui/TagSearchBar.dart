@@ -70,7 +70,11 @@ class _TagSearchBarKeywordsViewState extends State<TagSearchBarKeywordsView> {
       width: MediaQuery.of(context).size.width,
       padding: EdgeInsets.all((widget.keywordList.isEmpty) ? 0 : 10),
       child: Wrap(
-          children: widget.keywordList.map((e) => TagLabel(onPressed: (){}, tagWd: e)).toList()
+        // Creates List<TagLabel> from List<String> which stores the searched
+        // keywords
+        children: widget.keywordList.map(
+                (keyword) => TagLabel(onPressed: (){}, tagWd: keyword)
+        ).toList()
       ),
     );
   }

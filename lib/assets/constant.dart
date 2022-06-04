@@ -13,10 +13,7 @@ const Color primaryColorDark = Color.fromRGBO(187, 107, 217, 1);
 const Color fontColorDark = Color.fromRGBO(61, 34, 71, 1);
 const Color fontColorLight = Color.fromRGBO(255, 255, 255, 1);
 
-List<String> locale = [
-  "en",
-  "ja"
-];
+List<String> locale = ["en", "ja"];
 
 class Preferences {
   static const language = "language";

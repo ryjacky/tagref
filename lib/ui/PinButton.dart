@@ -44,7 +44,10 @@ class _PinButtonState extends State<PinButton> {
                 )),
       onPressed: () {
         setState(() {
+          // Flips the pin state when clicked
           _unPinned = !_unPinned;
+
+          // Triggers callback and pass the pin state
           widget.onPressed(_unPinned);
         });
       },
