@@ -77,7 +77,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   hintText: tr("search-hint"),
                   onSubmitted: (val) {
                     setState(() {
-                      keywordList.add(val);
+                      if (val.isNotEmpty) {
+                        keywordList.add(val);
+                      }
                     });
                   }),
               Expanded(child: Container()),
