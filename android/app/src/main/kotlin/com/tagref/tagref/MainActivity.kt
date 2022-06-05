@@ -1,4 +1,4 @@
-package com.example.tagref
+package com.tagref.tagref
 
 import io.flutter.embedding.android.FlutterActivity
 

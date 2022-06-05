@@ -4,8 +4,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../assets/constant.dart';
 
 class SourceButtonLarge extends StatelessWidget {
-  //TODO: use_key_in_widget_constructors
-  const SourceButtonLarge({required this.onPressed});
+  const SourceButtonLarge({Key? key, required this.onPressed}) : super(key: key);
   final GestureTapCallback onPressed;
 
   @override

@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../assets/constant.dart';
 class TagLabel extends StatelessWidget {
-  late final String tagWd;
+  final String tagWd;
 
-  TagLabel({Key? key, required this.onPressed, required this.tagWd})
+  const TagLabel({Key? key, required this.onPressed, required this.tagWd})
       : super(key: key);
   final GestureTapCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 5),
+      margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
       child: RawMaterialButton(
         onPressed: onPressed,
         fillColor: primaryColorDark,

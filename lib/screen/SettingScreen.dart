@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tagref/assets/FontSize.dart';
 import 'package:tagref/ui/ToggleSwitch.dart';
@@ -32,7 +33,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: primaryColorDark,
-                      fontSize: FontSize.l3)),
+                      fontSize: FontSize.l3.sp)),
               Expanded(child: Container()),
               IconButton(
                 icon: const FaIcon(FontAwesomeIcons.xmark),
@@ -54,7 +55,7 @@ class _SettingScreenState extends State<SettingScreen> {
               Text(tr("linked-drives"),
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      fontSize: FontSize.l3,
+                      fontSize: FontSize.l3.sp,
                       color: fontColorDark)),
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
@@ -80,7 +81,7 @@ class _SettingScreenState extends State<SettingScreen> {
                 child: Text(tr("manage-tags"),
                     style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: FontSize.l3,
+                        fontSize: FontSize.l3.sp,
                         color: fontColorDark)),
               ),
               Padding(
@@ -93,13 +94,13 @@ class _SettingScreenState extends State<SettingScreen> {
                           Text(tr("auto-tag"),
                               style: TextStyle(
                                   fontWeight: FontWeight.bold,
-                                  fontSize: FontSize.l3,
+                                  fontSize: FontSize.l3.sp,
                                   color: fontColorDark)),
                           Text(
                               tr("auto-tag-desc"),
                               style: TextStyle(
                                   fontWeight: FontWeight.w300,
-                                  fontSize: FontSize.body2,
+                                  fontSize: FontSize.body2.sp,
                                   color: fontColorDark)),
                         ],
                       ),

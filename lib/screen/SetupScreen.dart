@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tagref/assets/constant.dart';
 import 'package:tagref/screen/HomeScreen.dart';
@@ -21,15 +22,17 @@ class _SetupScreenState extends State<SetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Query for window width
     double width = MediaQuery.of(context).size.width;
 
+    // Set current language to active in the language options toggle button
     for (int i = 0; i < context.supportedLocales.length; i++) {
       isSelected[i] = context.locale.toString() == locale[i];
     }
 
     return Scaffold(
         body: Padding(
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       child: PageView(
         controller: _pageController,
         physics: const NeverScrollableScrollPhysics(),
@@ -42,13 +45,13 @@ class _SetupScreenState extends State<SetupScreen> {
                   style: TextStyle(
                       color: primaryColorDark,
                       fontWeight: FontWeight.w500,
-                      fontSize: FontSize.l1)),
+                      fontSize: FontSize.l1.sp)),
               Text(tr("tag-ref-description"),
                   textAlign: TextAlign.center,
                   style: TextStyle(
                       color: primaryColorDark,
                       fontWeight: FontWeight.w300,
-                      fontSize: FontSize.l3)),
+                      fontSize: FontSize.l3.sp)),
               Padding(
                 padding: const EdgeInsets.fromLTRB(0, 100, 0, 20),
                 child: Text(tr("choose-lang"),
@@ -56,13 +59,15 @@ class _SetupScreenState extends State<SetupScreen> {
                     style: TextStyle(
                         color: primaryColorDark,
                         fontWeight: FontWeight.w300,
-                        fontSize: FontSize.l3)),
+                        fontSize: FontSize.l3.sp)),
               ),
               ToggleButtons(
                 borderRadius: BorderRadius.circular(cornerRadius),
                 isSelected: isSelected,
                 onPressed: (index) {
                   setState(() {
+                    // Implements the exclusive selection feature for
+                    // the language options toggle button
                     for (int buttonIndex = 0;
                         buttonIndex < isSelected.length;
                         buttonIndex++) {
@@ -95,7 +100,7 @@ class _SetupScreenState extends State<SetupScreen> {
                                   height: 2,
                                   color: primaryColorDark,
                                   fontWeight: FontWeight.w300,
-                                  fontSize: FontSize.body1)),
+                                  fontSize: FontSize.body1.sp)),
                         ],
                       )),
                   Padding(
@@ -116,7 +121,7 @@ class _SetupScreenState extends State<SetupScreen> {
                                   height: 2,
                                   color: primaryColorDark,
                                   fontWeight: FontWeight.w300,
-                                  fontSize: FontSize.body1)),
+                                  fontSize: FontSize.body1.sp)),
                         ],
                       )),
                 ],
@@ -138,13 +143,13 @@ class _SetupScreenState extends State<SetupScreen> {
                       style: TextStyle(
                           color: primaryColorDark,
                           fontWeight: FontWeight.w300,
-                          fontSize: FontSize.l3)),
+                          fontSize: FontSize.l3.sp)),
                 ),
               )
             ],
           ),
           Padding(
-            padding: EdgeInsets.all(40),
+            padding: const EdgeInsets.all(40),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -153,7 +158,7 @@ class _SetupScreenState extends State<SetupScreen> {
                     style: TextStyle(
                         color: primaryColorDark,
                         fontWeight: FontWeight.w300,
-                        fontSize: FontSize.l2)),
+                        fontSize: FontSize.l2.sp)),
                 Padding(
                     padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                     child: Row(
@@ -166,12 +171,12 @@ class _SetupScreenState extends State<SetupScreen> {
                               Text(tr("auto-tag"),
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: FontSize.l3,
+                                      fontSize: FontSize.l3.sp,
                                       color: fontColorDark)),
                               Text(tr("auto-tag-desc"),
                                   style: TextStyle(
                                       fontWeight: FontWeight.w300,
-                                      fontSize: FontSize.body1,
+                                      fontSize: FontSize.body1.sp,
                                       color: fontColorDark)),
                             ],
                           ),
@@ -194,7 +199,7 @@ class _SetupScreenState extends State<SetupScreen> {
                             Text(tr("cache"),
                                 style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    fontSize: FontSize.l3,
+                                    fontSize: FontSize.l3.sp,
                                     color: fontColorDark)),
                             SizedBox(
                               width: width / 1.3,
@@ -202,7 +207,7 @@ class _SetupScreenState extends State<SetupScreen> {
                                   softWrap: true,
                                   style: TextStyle(
                                       fontWeight: FontWeight.w300,
-                                      fontSize: FontSize.body1,
+                                      fontSize: FontSize.body1.sp,
                                       color: fontColorDark)),
                             )
                           ],
@@ -227,12 +232,12 @@ class _SetupScreenState extends State<SetupScreen> {
                               Text(tr("twitter-link"),
                                   style: TextStyle(
                                       fontWeight: FontWeight.bold,
-                                      fontSize: FontSize.l3,
+                                      fontSize: FontSize.l3.sp,
                                       color: fontColorDark)),
                               Text(tr("twitter-link-desc"),
                                   style: TextStyle(
                                       fontWeight: FontWeight.w300,
-                                      fontSize: FontSize.body1,
+                                      fontSize: FontSize.body1.sp,
                                       color: fontColorDark)),
                             ],
                           ),
@@ -263,12 +268,12 @@ class _SetupScreenState extends State<SetupScreen> {
                             const EdgeInsets.fromLTRB(18, 8, 18, 14)),
                         backgroundColor:
                             MaterialStateProperty.all(accentColor)),
-                    child: Text(tr("Done"),
+                    child: Text(tr("done"),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             color: primaryColorDark,
                             fontWeight: FontWeight.w300,
-                            fontSize: FontSize.l3)),
+                            fontSize: FontSize.l3.sp)),
                   ),
                 )
               ],

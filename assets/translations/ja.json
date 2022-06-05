@@ -18,5 +18,6 @@
   "gdrive": "Googleドライブ",
   "icloud": "iCloud",
   "dropbox": "Dropbox",
-  "pref": "設定"
+  "pref": "設定",
+  "edit-tag": "タグを編集する"
 }
