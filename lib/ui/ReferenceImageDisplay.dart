@@ -1,18 +1,33 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:tagref/assets/DBHelper.dart';
 import 'package:tagref/ui/FaIconButton.dart';
 import 'package:tagref/ui/PinButton.dart';
 import 'package:tagref/ui/TagInputField.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../assets/constant.dart';
 
+typedef VoidCallback = Function();
+
 class ReferenceImageDisplay extends StatefulWidget {
   final String srcUrl;
+  final int imgId;
+  final int srcId;
 
-  const ReferenceImageDisplay({Key? key, required this.srcUrl}) : super(key: key);
+  final VoidCallback onDeleted;
+
+  const ReferenceImageDisplay(
+      {Key? key,
+      required this.srcUrl,
+      required this.imgId,
+      required this.onDeleted,
+      required this.srcId})
+      : super(key: key);
 
   @override
   State<ReferenceImageDisplay> createState() => _ReferenceImageDisplayState();
@@ -21,6 +36,15 @@ class ReferenceImageDisplay extends StatefulWidget {
 class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
   bool hovered = false;
   static const double padding = 4;
+
+  void _launchUrl(Uri url) async {
+    if (!await launchUrl(url)) print('Could not launch $url');
+  }
+
+  Future<void> removeImageFromDB(int imgId) async {
+    await DBHelper.db.rawDelete('DELETE FROM images WHERE img_id = ?', [imgId]);
+    widget.onDeleted();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,11 +58,12 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
               children: [
                 ImageFiltered(
                     imageFilter: ImageFilter.blur(
-                      // Use 0.001 instead of 0 for browser compatibility
-                        sigmaX: hovered ? 5 : 0.001, sigmaY: hovered ? 5 : 0.001),
-                    child: Image.network(
-                      widget.srcUrl,
-                    )),
+                        // Use 0.001 instead of 0 for browser compatibility
+                        sigmaX: hovered ? 5 : 0.001,
+                        sigmaY: hovered ? 5 : 0.001),
+                    child: widget.srcId == 0
+                        ? Image.network(widget.srcUrl)
+                        : Image.file(File(widget.srcUrl))),
                 Visibility(
                   visible: hovered,
                   child: Padding(
@@ -53,13 +78,17 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                               padding: const EdgeInsets.all(padding),
                               child: FaIconButton(
                                   faIcon: FontAwesomeIcons.trash,
-                                  onPressed: () {}),
+                                  onPressed: () {
+                                    removeImageFromDB(widget.imgId);
+                                  }),
                             ),
                             Padding(
                               padding: const EdgeInsets.all(padding),
                               child: FaIconButton(
                                   faIcon: FontAwesomeIcons.link,
-                                  onPressed: () {}),
+                                  onPressed: () {
+                                    _launchUrl(Uri.parse(widget.srcUrl));
+                                  }),
                             ),
                             Padding(
                               padding: const EdgeInsets.all(padding),
@@ -71,13 +100,13 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                               padding: const EdgeInsets.all(padding),
                               child: PinButton(onPressed: (pinned) {}),
                             ),
-
                           ],
                         ),
                         Padding(
                           padding: const EdgeInsets.all(padding),
                           child: TagInputField(
-                            hintText: tr("add-tag-field-hint"),),
+                            hintText: tr("add-tag-field-hint"),
+                          ),
                         )
                       ],
                     ),

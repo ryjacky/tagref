@@ -79,7 +79,13 @@ class _TagRefHomePageState extends State<TagRefHome> {
       (
           img_id         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
           src_url        TEXT,
-          is_src_twitter tinyint
+          src_id         INTEGER,
+          FOREIGN KEY (src_id) REFERENCES sources (src_id)
+      );
+      CREATE TABLE sources
+      (
+          src_id         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+          name           TEXT
       );
       CREATE TABLE tags
       (
@@ -101,6 +107,8 @@ class _TagRefHomePageState extends State<TagRefHome> {
           FOREIGN KEY (tag_id) REFERENCES tags (tag_id)
       );
       ''');
+
+      await DBHelper.db.rawInsert("INSERT INTO sources (name) VALUES ('web'), ('local');");
       return const SetupScreen();
     }
 

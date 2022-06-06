@@ -46,6 +46,8 @@ dependencies:
   change_app_package_name: ^1.1.0
   path: ^1.8.0
   sqlite3_flutter_libs: ^0.5.7
+  url_launcher: ^6.1.2
+  file_picker: ^4.6.1
 
 dev_dependencies:
   flutter_test:
