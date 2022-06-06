@@ -41,6 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
             "INSERT INTO images (src_url, src_id) VALUES ('$path', 1)");
       }
       setState(() {
+        // Reset the masonry view
         currentGridCount = 0;
         gridMaxCounts = 50;
         masonryGrids.clear();
@@ -50,8 +51,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  // Loads all images into the MasonryGridView and adds an AddButton at last
-  Future<void> loadMasonryGrids() async {
+  Future<void> loadImages() async {
     List<Map<String, Object?>> queryResult =
         await DBHelper.db.rawQuery("SELECT * FROM images ORDER BY img_id DESC;");
 
@@ -93,7 +93,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     // Only update when masonryGrids does not contain all images
     if (masonryGrids.length < gridMaxCounts) {
-      loadMasonryGrids();
+      loadImages();
     }
 
     // Calculates the padding from the application window width
@@ -154,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     // more than once
                     isUpdating = false;
 
-                    // Loading cooldown
+                    // Loading cool-down
                     Future.delayed(const Duration(seconds: 1), () {
                       setState(() {
                         gridMaxCounts += masonryUpdateStep;
