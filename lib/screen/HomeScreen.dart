@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -26,21 +27,36 @@ class _HomeScreenState extends State<HomeScreen> {
   int currentGridCount = 0;
   final masonryUpdateStep = 50;
 
-  final List<Widget> masonryGrids = [
-    AddButton(
-        onPressed: () {},
-        imgUrl:
-            "https://cdn.pixabay.com/photo/2022/05/03/23/35/rapeseed-7172836__340.jpg")
-  ];
+  final List<Widget> masonryGrids = [];
 
   bool isUpdating = true;
+
+  Future<void> pickFile() async {
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(allowMultiple: true);
+
+    if (result != null) {
+      for (var path in result.paths){
+        DBHelper.db.rawInsert(""
+            "INSERT INTO images (src_url, src_id) VALUES ('$path', 1)");
+      }
+      setState(() {
+        currentGridCount = 0;
+        gridMaxCounts = 50;
+        masonryGrids.clear();
+      });
+    } else {
+      // User canceled the picker
+    }
+  }
 
   // Loads all images into the MasonryGridView and adds an AddButton at last
   Future<void> loadMasonryGrids() async {
     List<Map<String, Object?>> queryResult =
-        await DBHelper.db.rawQuery("SELECT * FROM images;");
+        await DBHelper.db.rawQuery("SELECT * FROM images ORDER BY img_id DESC;");
 
-    // Set the roof of gridMaxCounts to the maximum number of query result
+    // Limit gridMaxCounts to prevent overflow
+    // (gridMaxCounts > number of all images in the database)
     gridMaxCounts = min(gridMaxCounts, queryResult.length);
 
     // Go through each record from the query result and creates an
@@ -48,28 +64,26 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Only creates 50 widgets per setState()
     setState(() {
-      gridMaxCounts = min(gridMaxCounts, queryResult.length);
-
       for (currentGridCount;
           currentGridCount < gridMaxCounts;
           currentGridCount++) {
-
         late ReferenceImageDisplay rid;
-        masonryGrids.insert(
-            1,
+        masonryGrids.add(
             rid = ReferenceImageDisplay(
-              onDeleted: (){
+              onDeleted: () {
                 setState(() {
                   masonryGrids.remove(rid);
                   currentGridCount -= 1;
                 });
               },
+              srcId: queryResult[currentGridCount]["src_id"] as int,
               imgId: queryResult[currentGridCount]["img_id"] as int,
               srcUrl: queryResult[currentGridCount]["src_url"].toString(),
             ));
       }
 
-      if (masonryGrids.length >= gridMaxCounts) {
+      // Re-enable update when loading is done
+      if (masonryGrids.length == gridMaxCounts) {
         isUpdating = true;
       }
     });
@@ -77,6 +91,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Only update when masonryGrids does not contain all images
     if (masonryGrids.length < gridMaxCounts) {
       loadMasonryGrids();
     }
@@ -157,7 +172,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   // Reserve one seat for the AddButton
                   itemCount: currentGridCount + 1,
                   itemBuilder: (context, index) {
-                    return masonryGrids[index];
+                    if (index == 0) {
+                      return AddButton(
+                          onPressed: () {
+                            pickFile();
+                          },
+                          imgUrl:
+                              "https://picsum.photos/seed/${DateTime.now().day}/1000/1000");
+                    }
+                    return masonryGrids[index - 1];
                   },
                 ),
               ),

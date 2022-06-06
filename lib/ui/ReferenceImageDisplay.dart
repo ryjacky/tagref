@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -16,11 +17,16 @@ typedef VoidCallback = Function();
 class ReferenceImageDisplay extends StatefulWidget {
   final String srcUrl;
   final int imgId;
+  final int srcId;
 
   final VoidCallback onDeleted;
 
   const ReferenceImageDisplay(
-      {Key? key, required this.srcUrl, required this.imgId, required this.onDeleted})
+      {Key? key,
+      required this.srcUrl,
+      required this.imgId,
+      required this.onDeleted,
+      required this.srcId})
       : super(key: key);
 
   @override
@@ -55,9 +61,9 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                         // Use 0.001 instead of 0 for browser compatibility
                         sigmaX: hovered ? 5 : 0.001,
                         sigmaY: hovered ? 5 : 0.001),
-                    child: Image.network(
-                      widget.srcUrl,
-                    )),
+                    child: widget.srcId == 0
+                        ? Image.network(widget.srcUrl)
+                        : Image.file(File(widget.srcUrl))),
                 Visibility(
                   visible: hovered,
                   child: Padding(

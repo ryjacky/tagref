@@ -29,7 +29,7 @@ class AddButton extends StatelessWidget {
                 colorBlendMode: BlendMode.screen,
               ),
             ),
-            FaIconButton(onPressed: (){}, faIcon: FontAwesomeIcons.plus, size: const Size(65, 65),)
+            FaIconButton(onPressed: (){onPressed();}, faIcon: FontAwesomeIcons.plus, size: const Size(65, 65),)
           ],
         ));
   }
