@@ -23,7 +23,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<String> keywordList = [];
 
   int gridMaxCounts = 50;
-  int currentGridCounts = 0;
+  int currentGridCount = 0;
   final masonryUpdateStep = 50;
 
   final List<Widget> masonryGrids = [
@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // Loads all images into the MasonryGridView and adds an AddButton at last
   Future<void> loadMasonryGrids() async {
     List<Map<String, Object?>> queryResult =
-        await DBHelper.db.rawQuery("SELECT src_url FROM images;");
+        await DBHelper.db.rawQuery("SELECT * FROM images;");
 
     // Set the roof of gridMaxCounts to the maximum number of query result
     gridMaxCounts = min(gridMaxCounts, queryResult.length);
@@ -50,28 +50,34 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       gridMaxCounts = min(gridMaxCounts, queryResult.length);
 
-      for (currentGridCounts;
-          currentGridCounts < gridMaxCounts - 1;
-          currentGridCounts++) {
+      for (currentGridCount;
+          currentGridCount < gridMaxCounts;
+          currentGridCount++) {
+
+        late ReferenceImageDisplay rid;
         masonryGrids.insert(
             1,
-            ReferenceImageDisplay(
-              srcUrl: queryResult[currentGridCounts]["src_url"] == null
-                  ? ""
-                  : queryResult[currentGridCounts]["src_url"].toString(),
+            rid = ReferenceImageDisplay(
+              onDeleted: (){
+                setState(() {
+                  masonryGrids.remove(rid);
+                  currentGridCount -= 1;
+                });
+              },
+              imgId: queryResult[currentGridCount]["img_id"] as int,
+              srcUrl: queryResult[currentGridCount]["src_url"].toString(),
             ));
       }
 
-      if (masonryGrids.length == gridMaxCounts){
+      if (masonryGrids.length >= gridMaxCounts) {
         isUpdating = true;
       }
-
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (masonryGrids.length != gridMaxCounts) {
+    if (masonryGrids.length < gridMaxCounts) {
       loadMasonryGrids();
     }
 
@@ -129,7 +135,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (scrollNotification.metrics.pixels >=
                           scrollNotification.metrics.maxScrollExtent - 500 &&
                       isUpdating) {
-
                     // set isUpdating to false to prevent calling setState
                     // more than once
                     isUpdating = false;
@@ -140,8 +145,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         gridMaxCounts += masonryUpdateStep;
                       });
                     });
-
-
                   }
                   return true;
                 },
@@ -151,7 +154,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       EdgeInsets.symmetric(vertical: 20, horizontal: paddingH),
                   mainAxisSpacing: 15,
                   crossAxisSpacing: 15,
-                  itemCount: currentGridCounts,
+                  // Reserve one seat for the AddButton
+                  itemCount: currentGridCount + 1,
                   itemBuilder: (context, index) {
                     return masonryGrids[index];
                   },
