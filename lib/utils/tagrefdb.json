@@ -1,7 +1,7 @@
 {
   "name": "com.tagref.tagref",
   "description": "TagRef",
-  "path": "dbexec.bat",
+  "path": "dbexec.exe",
   "type": "stdio",
   "allowed_origins": [
     "chrome-extension://bnddpjmjmkdljogimkanhdagnceokdmf/"

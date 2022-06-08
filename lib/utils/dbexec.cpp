@@ -1,45 +1,57 @@
-#include <stdio.h>
 #include <iostream>
 #include <fstream>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <string>
 
 using namespace std;
+
+inline bool exists_test (const std::string& name) {
+  struct stat buffer;   
+  return (stat (name.c_str(), &buffer) == 0); 
+}
 
 int main(int argc, char const *argv[])
 {
 
-    const string dbDir[3] = {"~/Library/Containers/com.tagref.tagref/Data/Library/Application\ Support/com.tagref.tagref/tagref_db.db", "%appdata%/TagRef/tagref/tagref_db.db", ""};
-    const string sqliteBinary[3] = {"sqlite3.exe", "sqlite_mac", "sqlite_linux"};
+    const string appDataWin = getenv("APPDATA");
+    const string dbDir[3] = {"~/Library/Containers/com.tagref.tagref/Data/Library/Application\\ Support/com.tagref.tagref/tagref_db.db", appDataWin + "/TagRef/tagref/tagref_db.db", ""};
+    const string sqliteBinary[3] = {"sqlite_mac", "sqlite3.exe", "sqlite_linux"};
 
     // TODO: Set client to 0 - Mac | 1 - Win | 2 - Linux
     int client = 0;
 
-    ifstream ifile;
-    ifile.open(dbDir[0]);
-    if (ifile)
+    for (int i = 0; i < 3; i++)
     {
-        client = 0;
-    }
-    else
-    {
-        ifile.close();
-        ifile.clear();
-
-        ifile.open(dbDir[1]);
-        if (ifile)
+        if (exists_test(dbDir[i]))
         {
-            client = 1;
+            client = i;
+            break;
         }
-        else
-        {
-            client = 2;
-        }
+        
     }
-
+    
     // TODO: receive stdin from NativeMessagingClient in format
     // (values)
     // e.g. insert::the_url             ** insert will also have src_id = 1, make sure to ignore all local files in the chrome extension
     // only insert command
+    string url = "";
+    unsigned int length = 0;
+    for (int i = 0; i < 4; i++)
+    {
+        unsigned int read_char = getchar();
+        length = length | (read_char << i*8);
+    }
 
-    system(sqliteBinary[client] + " " + dbDir[client] + " \"INSERT INTO images (src_url, src_id) VALUES ('test', 0)\"");
+    for (int i = 0; i < length; i++)
+    {
+        url += getchar();
+    }
+
+    string sysCmd = sqliteBinary[client] + " " + dbDir[client] + " \"INSERT INTO images (src_url, src_id) VALUES ('" + url + "', 0)\"";
+
+    system(sysCmd.c_str());
+
     return 0;
 }
