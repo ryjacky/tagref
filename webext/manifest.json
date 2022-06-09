@@ -4,7 +4,8 @@
   "version": "1.0",
   "permissions": [
     "nativeMessaging",
-    "tabs"
+    "tabs",
+    "contextMenus"
   ],
   "action": {
     "default_popup": "popup.html"
@@ -12,10 +13,6 @@
   "background": {
     "service_worker": "background.js"
   },
-  "content_scripts": [{
-    "js": ["content.js"],
-    "matches": ["<all_urls>", "https://*/*"]
-  }],
   "description": "A plain text description"
 
 }

@@ -49,9 +49,22 @@ int main(int argc, char const *argv[])
         url += getchar();
     }
 
-    string sysCmd = sqliteBinary[client] + " " + dbDir[client] + " \"INSERT INTO images (src_url, src_id) VALUES ('" + url + "', 0)\"";
+    string sysCmd = sqliteBinary[client] + " " + dbDir[client] + " \"INSERT INTO images (src_url, src_id) VALUES ('" + url.substr(1, url.length() - 2) + "', 1)\"";
+
+    // ofstream outfile;
+    // outfile.open("D:\\tagref_flutter_windows_android_ios_web\\tagref\\lib\\utils\\log.txt");
+    // outfile << sysCmd;
+    // outfile.close();
 
     system(sysCmd.c_str());
+
+    unsigned int len = url.length();
+    printf("%c%c%c%c", (char) (len & 0xff),
+    (char)(len << 8 & 0xff),
+    (char)(len << 16 & 0xff),
+    (char)(len << 24 & 0xff));
+
+    printf("%s", url.c_str());
 
     return 0;
 }
