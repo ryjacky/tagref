@@ -15,7 +15,7 @@
 
 chrome.contextMenus.create({
     id: "1",
-    title: "Test",
+    title: "Add to TagRef",
     contexts: ["image"],
 })
 

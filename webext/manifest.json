@@ -13,6 +13,11 @@
   "background": {
     "service_worker": "background.js"
   },
+  "icons": { 
+    "16": "16.png",
+    "48": "48.png",
+   "128": "128.png" 
+  },
   "description": "A plain text description"
 
 }
