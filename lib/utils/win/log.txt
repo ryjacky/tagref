@@ -1,0 +1,1 @@
+sqlite3.exe C:\Users\aicetkr\AppData\Roaming/TagRef/tagref/tagref_db.db "INSERT INTO images (src_url, src_id) VALUES ('https://lh3.googleusercontent.com/rfOj8wjEL0Ba7I0I6aYXcUKqCfW3ud2lE6yRo4qWRLIoE_Nbm1Oa1lQmMu4ptRT5EcJVsaXHLSmbzr9YYs9YWC_qFA=w640-h400-e365-rj-sc0x00ffffff', 1)"

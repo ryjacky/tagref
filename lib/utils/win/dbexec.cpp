@@ -15,7 +15,10 @@ inline bool exists_test (const std::string& name) {
 int main(int argc, char const *argv[])
 {
 
+    //Un comment this when compiled on windows
     const string appDataWin = getenv("APPDATA");
+    // const string appDataWin = "";
+
     const string dbDir[3] = {"~/Library/Containers/com.tagref.tagref/Data/Library/Application\\ Support/com.tagref.tagref/tagref_db.db", appDataWin + "/TagRef/tagref/tagref_db.db", ""};
     const string sqliteBinary[3] = {"sqlite_mac", "sqlite3.exe", "sqlite_linux"};
 
