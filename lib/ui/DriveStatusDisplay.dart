@@ -7,10 +7,13 @@ class DriveStatusDisplay extends StatefulWidget {
   final String driveLogoSrc;
   final String driveName;
 
+  final VoidCallback onTap;
+
   const DriveStatusDisplay(
       {Key? key,
       required this.driveLogoSrc,
-      required this.driveName})
+      required this.driveName,
+      required this.onTap})
       : super(key: key);
 
   @override
@@ -23,7 +26,7 @@ class _DriveStatusDisplayState extends State<DriveStatusDisplay> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: widget.onTap,
       child: ClipRRect(
           borderRadius: BorderRadius.circular(cornerRadius),
           child: Container(
