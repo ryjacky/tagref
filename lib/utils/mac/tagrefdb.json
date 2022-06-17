@@ -1,0 +1,9 @@
+{
+  "name": "com.tagref.tagref",
+  "description": "TagRef",
+  "path": "~/Library/Containers/com.tagref.tagref/Data/Library/Application\\ Support/com.tagref.tagref/dbexec.out",
+  "type": "stdio",
+  "allowed_origins": [
+    "chrome-extension://bnddpjmjmkdljogimkanhdagnceokdmf/"
+  ]
+}
