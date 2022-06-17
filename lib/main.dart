@@ -6,11 +6,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tagref/screen/HomeScreen.dart';
 import 'package:tagref/screen/SetupScreen.dart';
-
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'assets/DBHelper.dart';
 
 void main() async {
   sqfliteFfiInit();
+  await Firebase.initializeApp(
+    
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
