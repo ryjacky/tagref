@@ -6,6 +6,7 @@ import 'package:tagref/assets/FontSize.dart';
 import 'package:tagref/ui/ToggleSwitch.dart';
 
 import '../assets/constant.dart';
+import '../helpers/GoogleApiHelpers.dart';
 import '../ui/DriveStatusDisplay.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -63,15 +64,35 @@ class _SettingScreenState extends State<SettingScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-                      child: DriveStatusDisplay(driveLogoSrc: "assets/images/gdrive_logo.svg", driveName: tr("gdrive"),),
+                      child: DriveStatusDisplay(
+                        driveLogoSrc: "assets/images/gdrive_logo.svg",
+                        driveName: tr("gdrive"),
+                        onTap: () {
+                          // TODO: Check if user has already logged in, store
+                          // the AuthClient if user is logged in
+                          obtainCredentials();
+                        },
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8),
-                      child: DriveStatusDisplay(driveLogoSrc: "assets/images/gdrive_logo.svg", driveName: tr("icloud"),),
+                      child: DriveStatusDisplay(
+                        driveLogoSrc: "assets/images/gdrive_logo.svg",
+                        driveName: tr("icloud"),
+                        onTap: () {
+                          print("lskjdflskdjflskdjflskdlskd");
+                        },
+                      ),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8),
-                      child: DriveStatusDisplay(driveLogoSrc: "assets/images/gdrive_logo.svg", driveName: tr("dropbox"),),
+                      child: DriveStatusDisplay(
+                        driveLogoSrc: "assets/images/gdrive_logo.svg",
+                        driveName: tr("dropbox"),
+                        onTap: () {
+                          print("lskjdflskdjflskdjflskdlskd");
+                        },
+                      ),
                     ),
                   ],
                 ),
@@ -96,15 +117,16 @@ class _SettingScreenState extends State<SettingScreen> {
                                   fontWeight: FontWeight.bold,
                                   fontSize: FontSize.l3.sp,
                                   color: fontColorDark)),
-                          Text(
-                              tr("auto-tag-desc"),
+                          Text(tr("auto-tag-desc"),
                               style: TextStyle(
                                   fontWeight: FontWeight.w300,
                                   fontSize: FontSize.body2.sp,
                                   color: fontColorDark)),
                         ],
                       ),
-                      Expanded(child: Container(),),
+                      Expanded(
+                        child: Container(),
+                      ),
                       const Center(
                         child: ToggleSwitch(),
                       )

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
@@ -8,12 +9,20 @@ import 'package:tagref/screen/HomeScreen.dart';
 import 'package:tagref/screen/SetupScreen.dart';
 
 import 'assets/DBHelper.dart';
+import 'firebase_options.dart';
 
 void main() async {
   sqfliteFfiInit();
 
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+
+  // TODO: Create driveApi var if user has logged in before
+
+  // Initialize firebase
+  // await Firebase.initializeApp(
+  //   options: DefaultFirebaseOptions.currentPlatform,
+  // );
 
   runApp(EasyLocalization(
       child: const MyApp(),
@@ -33,7 +42,7 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       child: const TagRefHome(title: 'TagRef Home'),
-        builder: (context, child) {
+      builder: (context, child) {
         return MaterialApp(
           title: 'TagRef',
           localizationsDelegates: context.localizationDelegates,
@@ -43,7 +52,6 @@ class MyApp extends StatelessWidget {
           home: child,
         );
       },
-
     );
   }
 }
@@ -65,15 +73,12 @@ class _TagRefHomePageState extends State<TagRefHome> {
   }
 
   Future<Widget> initRoute() async {
-
-
     String dbUrl = await DBHelper.getDBUrl();
     bool dbExists = await File(dbUrl).exists();
 
     await DBHelper.initializeDatabase();
 
     if (!dbExists) {
-
       await DBHelper.db.execute('''
       CREATE TABLE images
       (
@@ -108,7 +113,8 @@ class _TagRefHomePageState extends State<TagRefHome> {
       );
       ''');
 
-      await DBHelper.db.rawInsert("INSERT INTO sources (name) VALUES ('web'), ('local');");
+      await DBHelper.db
+          .rawInsert("INSERT INTO sources (name) VALUES ('web'), ('local');");
       return const SetupScreen();
     }
 
