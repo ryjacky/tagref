@@ -6,7 +6,8 @@ import 'package:tagref/assets/FontSize.dart';
 import 'package:tagref/ui/ToggleSwitch.dart';
 
 import '../assets/constant.dart';
-import '../helpers/GoogleApiHelpers.dart';
+import '../helpers/GoogleApiHelper.dart';
+import '../helpers/ICloudApiHelper.dart';
 import '../ui/DriveStatusDisplay.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -67,11 +68,7 @@ class _SettingScreenState extends State<SettingScreen> {
                       child: DriveStatusDisplay(
                         driveLogoSrc: "assets/images/gdrive_logo.svg",
                         driveName: tr("gdrive"),
-                        onTap: () {
-                          // TODO: Check if user has already logged in, store
-                          // the AuthClient if user is logged in
-                          obtainCredentials();
-                        },
+                        onTap: () => googleApiSignIn(),
                       ),
                     ),
                     Padding(
@@ -79,21 +76,21 @@ class _SettingScreenState extends State<SettingScreen> {
                       child: DriveStatusDisplay(
                         driveLogoSrc: "assets/images/gdrive_logo.svg",
                         driveName: tr("icloud"),
-                        onTap: () {
-                          print("lskjdflskdjflskdjflskdlskd");
-                        },
+                        onTap: () => iCloudSignIn(),
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: DriveStatusDisplay(
-                        driveLogoSrc: "assets/images/gdrive_logo.svg",
-                        driveName: tr("dropbox"),
-                        onTap: () {
-                          print("lskjdflskdjflskdjflskdlskd");
-                        },
-                      ),
-                    ),
+                    // Dropbox (remove support because of its relatively low
+                    // user base)
+                    // Padding(
+                    //   padding: const EdgeInsets.all(8),
+                    //   child: DriveStatusDisplay(
+                    //     driveLogoSrc: "assets/images/gdrive_logo.svg",
+                    //     driveName: tr("dropbox"),
+                    //     onTap: () {
+                    //       print("lskjdflskdjflskdjflskdlskd");
+                    //     },
+                    //   ),
+                    // ),
                   ],
                 ),
               ),

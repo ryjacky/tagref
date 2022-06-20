@@ -9,8 +9,9 @@ late DriveApi driveApi;
 final GoogleSignIn _googleSignIn =
     GoogleSignIn(scopes: ['https://www.googleapis.com/auth/drive']);
 
-// Google Sign in function for iOS and android
-Future<void> _handleSignIn() async {
+// Controls Google Sign In flow (desktop/mobile flow)
+Future<void> googleApiSignIn() async {
+  // TODO: platform specific login function with condition
   try {
     await _googleSignIn.signIn();
   } catch (error) {
@@ -27,11 +28,13 @@ Future<AuthClient> obtainCredentials() async => await clientViaUserConsent(
       _prompt,
     );
 
-// Grant google api access
+// prompt for user to log in (Opens authentication link with browser)
 void _prompt(String url) {
   launchUrl(Uri.parse(url));
 }
 
+// Initializes variable driveApi, need to be invoked every time 
+// tagref starts
 void initializeDriveApi(AuthClient client) async {
   driveApi = DriveApi(client);
 }
