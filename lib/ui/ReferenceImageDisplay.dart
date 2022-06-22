@@ -105,8 +105,32 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                         Padding(
                           padding: const EdgeInsets.all(padding),
                           child: TagInputField(
-                            hintText: tr("add-tag-field-hint"),
-                          ),
+                              hintText: tr("add-tag-field-hint"),
+                              onSubmitted: (tag) {
+                                setState(() {
+                                  if (tag.isNotEmpty) {
+                                    Future<void> addNewTag() async {
+                                      var tagID = await DBHelper.db.rawQuery(
+                                          "SELECT tag_id FROM tags WHERE name = ?",
+                                          [tag]);
+                                      //check if the typed tag already exists.
+                                      //if does not exists then add this new tag.
+                                      if (tagID.isNull) {
+                                        await DBHelper.db.rawInsert(
+                                            """INSERT INTO tags (name) VALUES ('$tag')""");
+                                        tagID = await DBHelper.db.rawQuery(
+                                            "SELECT tag_id FROM tags WHERE name = ?",
+                                            [tag]);
+                                      }
+                                      //
+                                      await DBHelper.db.rawInsert(
+                                          """INSERT INTO image_tag (img_id, tag_id) VALUES ('$this.imgId', '$tagID')""");
+                                    }
+
+                                    ;
+                                  }
+                                });
+                              }),
                         )
                       ],
                     ),
