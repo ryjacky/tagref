@@ -13,6 +13,8 @@ const Color primaryColorDark = Color.fromRGBO(187, 107, 217, 1);
 const Color fontColorDark = Color.fromRGBO(61, 34, 71, 1);
 const Color fontColorLight = Color.fromRGBO(255, 255, 255, 1);
 
+const String gAccessCredential = "gAccessCredential";
+
 List<String> locale = ["en", "ja"];
 
 class Preferences {
