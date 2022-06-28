@@ -1,17 +1,22 @@
 import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:tagref/assets/DBHelper.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/datastream/v1.dart';
-import 'package:googleapis/drive/v3.dart';
+import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis_auth/auth_io.dart';
 import 'package:tagref/assets/constant.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
-import 'dart:io' show Platform;
+import 'dart:io' show File, Platform;
 
-late DriveApi driveApi;
+late drive.DriveApi driveApi;
 
 final http.Client _baseClient = http.Client();
 
@@ -34,7 +39,7 @@ Future<void> googleApiSignIn() async {
       try {
         // Using GoogleSignIn library
         final GoogleSignIn _googleSignIn =
-            GoogleSignIn(scopes: [DriveApi.driveAppdataScope]);
+            GoogleSignIn(scopes: [drive.DriveApi.driveAppdataScope]);
 
         await _googleSignIn.signIn();
       } catch (error) {
@@ -64,9 +69,9 @@ Future<void> googleApiSignIn() async {
 }
 
 // Google Sign in function for desktop (mac, windows, linux?)
-Future<AuthClient> obtainCredentials() async =>
-    await clientViaUserConsent(_clientId, [DriveApi.driveAppdataScope], _prompt,
-        baseClient: _baseClient);
+Future<AuthClient> obtainCredentials() async => await clientViaUserConsent(
+    _clientId, [drive.DriveApi.driveAppdataScope], _prompt,
+    baseClient: _baseClient);
 
 // prompt for user to log in (Opens authentication link with browser)
 void _prompt(String url) {
@@ -76,20 +81,42 @@ void _prompt(String url) {
 // Initializes variable driveApi, need to be invoked every time
 // tagref starts
 void initializeDriveApi(AuthClient client) async {
-  driveApi = DriveApi(client);
-
-  pushDB("lksjdf.db");
+  driveApi = drive.DriveApi(client);
 }
 
-void pushDB(String url) {
+// drive.File pullDB() {
+
+// }
+
+void pushDB(String dbParent, String dbFileName) async {
+  String url = join(dbParent, dbFileName);
+
   if (url.contains(".db") ||
       url.contains(".sqlite") ||
       url.contains(".sqlite3")) {
-    File dbFile = File();
-    dbFile.name = "tagref_db.db";
-    dbFile.mimeType = "application/vnd.sqlite3";
+    // Prepare the file for drive upload
+    // Create "Google Drive File" (meta data)
+    drive.File dbFileUpload = drive.File();
+    dbFileUpload.name = "tagref_db.db";
 
-    driveApi.files.create(dbFile);
+    // Read db file and create Media for drive api to upload
+    File dbFile = File(url);
+    var dbFileStream = dbFile.openRead().asBroadcastStream();
+    var dbFileStreamLength = dbFile.lengthSync();
+    drive.Media uploadMedia = drive.Media(dbFileStream, dbFileStreamLength);
+
+    // Search for tagref_db.db
+    drive.FileList appDataFileList = await driveApi.files
+        .list(spaces: "appDataFolder", q: "name='$dbFileName'");
+
+    // Upload or update db file based on the search result
+    if (appDataFileList.files!.isNotEmpty) {
+      driveApi.files.update(dbFileUpload, appDataFileList.files!.first.id!,
+          uploadMedia: uploadMedia);
+    } else {
+      dbFileUpload.parents = ["appDataFolder"];
+      driveApi.files.create(dbFileUpload, uploadMedia: uploadMedia);
+    }
   } else {
     throw Error(
         message: "Unknown file type!",
