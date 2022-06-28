@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
       minTextAdapt: true,
       splitScreenMode: true,
       child: const TagRefHome(title: 'TagRef Home'),
-        builder: (context, child) {
+      builder: (context, child) {
         return MaterialApp(
           title: 'TagRef',
           localizationsDelegates: context.localizationDelegates,
@@ -43,7 +43,6 @@ class MyApp extends StatelessWidget {
           home: child,
         );
       },
-
     );
   }
 }
@@ -65,15 +64,12 @@ class _TagRefHomePageState extends State<TagRefHome> {
   }
 
   Future<Widget> initRoute() async {
-
-
     String dbUrl = await DBHelper.getDBUrl();
     bool dbExists = await File(dbUrl).exists();
 
     await DBHelper.initializeDatabase();
 
     if (!dbExists) {
-
       await DBHelper.db.execute('''
       CREATE TABLE images
       (
@@ -108,7 +104,8 @@ class _TagRefHomePageState extends State<TagRefHome> {
       );
       ''');
 
-      await DBHelper.db.rawInsert("INSERT INTO sources (name) VALUES ('web'), ('local');");
+      await DBHelper.db
+          .rawInsert("INSERT INTO sources (name) VALUES ('web'), ('local');");
       return const SetupScreen();
     }
 

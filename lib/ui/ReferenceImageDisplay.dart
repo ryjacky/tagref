@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tagref/assets/DBHelper.dart';
 import 'package:tagref/ui/FaIconButton.dart';
+import 'package:tagref/ui/ImageTagDisplay.dart';
 import 'package:tagref/ui/PinButton.dart';
 import 'package:tagref/ui/TagInputField.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -44,6 +45,22 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
   Future<void> removeImageFromDB(int imgId) async {
     await DBHelper.db.rawDelete('DELETE FROM images WHERE img_id = ?', [imgId]);
     widget.onDeleted();
+  }
+
+  Future<void> addNewTag(String newTag, int imgId) async {
+    var tagID = await DBHelper.db
+        .rawQuery("SELECT tag_id FROM tags WHERE name = ?", [newTag]);
+    //check if the typed tag already exists.
+    //if does not exists then add this new tag.
+    if (tagID.isNull) {
+      await DBHelper.db
+          .rawInsert("""INSERT INTO tags (name) VALUES ('$newTag')""");
+      tagID = await DBHelper.db
+          .rawQuery("SELECT tag_id FROM tags WHERE name = ?", [newTag]);
+    }
+    //
+    await DBHelper.db.rawInsert(
+        """INSERT INTO image_tag (img_id, tag_id) VALUES ('$imgId', '$tagID')""");
   }
 
   @override
@@ -109,29 +126,14 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                               onSubmitted: (tag) {
                                 setState(() {
                                   if (tag.isNotEmpty) {
-                                    Future<void> addNewTag() async {
-                                      var tagID = await DBHelper.db.rawQuery(
-                                          "SELECT tag_id FROM tags WHERE name = ?",
-                                          [tag]);
-                                      //check if the typed tag already exists.
-                                      //if does not exists then add this new tag.
-                                      if (tagID.isNull) {
-                                        await DBHelper.db.rawInsert(
-                                            """INSERT INTO tags (name) VALUES ('$tag')""");
-                                        tagID = await DBHelper.db.rawQuery(
-                                            "SELECT tag_id FROM tags WHERE name = ?",
-                                            [tag]);
-                                      }
-                                      //
-                                      await DBHelper.db.rawInsert(
-                                          """INSERT INTO image_tag (img_id, tag_id) VALUES ('$this.imgId', '$tagID')""");
-                                    }
-
-                                    ;
+                                    addNewTag(tag, widget.imgId);
                                   }
                                 });
                               }),
-                        )
+                        ),
+                        Padding(
+                            padding: const EdgeInsets.all(padding),
+                            child: ImageTagDisplay(imgId: widget.imgId))
                       ],
                     ),
                   ),
