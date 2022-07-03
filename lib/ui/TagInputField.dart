@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import '../assets/constant.dart';
 
@@ -14,7 +13,7 @@ class TagInputField extends StatefulWidget {
 class _TagInputFieldState extends State<TagInputField> {
   @override
   Widget build(BuildContext context) {
-    return TextFormField(
+    return TextField(
       decoration: InputDecoration(
           fillColor: Colors.grey.shade400.withOpacity(0.5),
           filled: true,

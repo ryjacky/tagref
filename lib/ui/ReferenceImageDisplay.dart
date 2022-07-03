@@ -56,14 +56,25 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
             child: Stack(
               fit: StackFit.passthrough,
               children: [
-                ImageFiltered(
-                    imageFilter: ImageFilter.blur(
-                      tileMode: TileMode.decal,
-                        sigmaX: hovered ? 5 : 0,
-                        sigmaY: hovered ? 5 : 0),
-                    child: widget.srcId == 1
-                        ? Image.network(widget.srcUrl, fit: BoxFit.fill,)
-                        : Image.file(File(widget.srcUrl), fit: BoxFit.fill,)),
+                ColorFiltered(
+                  colorFilter:
+                      ColorFilter.mode(
+                          hovered ? Colors.black54 : Colors.transparent, BlendMode.darken),
+                  child: ImageFiltered(
+                      imageFilter: ImageFilter.blur(
+                          tileMode: TileMode.decal,
+                          sigmaX: hovered ? 5 : 0,
+                          sigmaY: hovered ? 5 : 0),
+                      child: widget.srcId == 1
+                          ? Image.network(
+                              widget.srcUrl,
+                              fit: BoxFit.fill,
+                            )
+                          : Image.file(
+                              File(widget.srcUrl),
+                              fit: BoxFit.fill,
+                            )),
+                ),
                 Visibility(
                   visible: hovered,
                   child: Padding(
