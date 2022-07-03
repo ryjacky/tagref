@@ -68,7 +68,7 @@ class _SettingScreenState extends State<SettingScreen> {
                       child: DriveStatusDisplay(
                         driveLogoSrc: "assets/images/gdrive_logo.svg",
                         driveName: tr("gdrive"),
-                        onTap: () => googleApiSignIn(),
+                        onTap: () => initializeGoogleApi(),
                       ),
                     ),
                     Padding(

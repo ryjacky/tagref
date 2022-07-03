@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:googleapis/youtube/v3.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tagref/assets/DBHelper.dart';
@@ -18,6 +19,7 @@ import 'dart:io' show File, Platform;
 
 late drive.DriveApi driveApi;
 
+/// Base client used by the Google Drive API
 final http.Client _baseClient = http.Client();
 
 ClientId _clientId = ClientId(
@@ -25,7 +27,7 @@ ClientId _clientId = ClientId(
     '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');
 
 // Controls Google Sign In flow (desktop/mobile flow)
-Future<void> googleApiSignIn() async {
+Future<void> initializeGoogleApi() async {
   // check if accessCredential is already available
   const storage = FlutterSecureStorage();
 
@@ -65,7 +67,7 @@ Future<void> googleApiSignIn() async {
         _baseClient);
   }
 
-  initializeDriveApi(client);
+  driveApi = drive.DriveApi(client);
 }
 
 // Google Sign in function for desktop (mac, windows, linux?)
@@ -78,15 +80,33 @@ void _prompt(String url) {
   launchUrl(Uri.parse(url));
 }
 
-// Initializes variable driveApi, need to be invoked every time
-// tagref starts
-void initializeDriveApi(AuthClient client) async {
-  driveApi = drive.DriveApi(client);
+/// Downloads the remote version of the database that is named [dbFileName]
+/// and updates the local copy located at [dbParent].
+/// Returns null if there is no remote copy of the file and returns the file
+/// itself if the remote copy is available.
+Future<bool> pullDB(String dbParent, String dbFileName) async {
+  // Search for tagref_db.db
+  drive.FileList appDataFileList = await driveApi.files
+      .list(spaces: "appDataFolder", q: "name='$dbFileName'");
+
+  // Upload or update the local db file based on the search result
+  if (appDataFileList.files!.isNotEmpty) {
+    var localDBFile = File(await DBHelper.getDBUrl()).openWrite();
+
+    Media remoteDBMedia = await driveApi.files.get(
+        appDataFileList.files!.first.id!,
+        downloadOptions: DownloadOptions.fullMedia) as Media;
+
+    localDBFile.addStream(remoteDBMedia.stream).whenComplete(() {
+      localDBFile.flush();
+      localDBFile.close();
+    });
+
+    return true;
+  } else {
+    return false;
+  }
 }
-
-// drive.File pullDB() {
-
-// }
 
 void pushDB(String dbParent, String dbFileName) async {
   String url = join(dbParent, dbFileName);

@@ -4,25 +4,30 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:tagref/helpers/GoogleApiHelper.dart';
 import 'package:tagref/screen/HomeScreen.dart';
 import 'package:tagref/screen/SetupScreen.dart';
 
 import 'assets/DBHelper.dart';
 import 'firebase_options.dart';
 
+/// Should include all pre-start initializations here
 void main() async {
   sqfliteFfiInit();
 
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  // TODO: Create driveApi var if user has logged in before
+  await initializeGoogleApi();
 
-  // Initialize firebase
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
+  var remoteDBFile = await pullDB(
+      (await getApplicationSupportDirectory()).toString(), DBHelper.dbFileName);
+
+  if (remoteDBFile != null) {
+    // remoteDBFile.
+  }
 
   runApp(EasyLocalization(
       child: const MyApp(),
@@ -76,6 +81,7 @@ class _TagRefHomePageState extends State<TagRefHome> {
     String dbUrl = await DBHelper.getDBUrl();
     bool dbExists = await File(dbUrl).exists();
 
+    // Initialize database when exists, create while not
     await DBHelper.initializeDatabase();
 
     if (!dbExists) {
