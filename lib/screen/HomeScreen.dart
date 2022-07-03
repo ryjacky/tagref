@@ -38,7 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (result != null) {
       for (var path in result.paths) {
         DBHelper.db.rawInsert(""
-            "INSERT INTO images (src_url, src_id) VALUES ('$path', 1)");
+            "INSERT INTO images (src_url, src_id) VALUES ('$path', 2)");
       }
       setState(() {
         _resetEnv();

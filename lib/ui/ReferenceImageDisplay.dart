@@ -61,7 +61,7 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                         // Use 0.001 instead of 0 for browser compatibility
                         sigmaX: hovered ? 5 : 0.001,
                         sigmaY: hovered ? 5 : 0.001),
-                    child: widget.srcId == 2
+                    child: widget.srcId == 1
                         ? Image.network(widget.srcUrl)
                         : Image.file(File(widget.srcUrl))),
                 Visibility(
