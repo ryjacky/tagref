@@ -19,5 +19,9 @@
   "icloud": "iCloud",
   "dropbox": "Dropbox",
   "pref": "設定",
-  "edit-tag": "タグを編集する"
+  "edit-tag": "タグを編集する",
+  "disconnect-gdrive": "グーグルドライブとの連携を外します、実行しますか？",
+  "yes": "はい",
+  "no": "いいえ"
+
 }

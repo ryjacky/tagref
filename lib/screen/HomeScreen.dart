@@ -36,15 +36,12 @@ class _HomeScreenState extends State<HomeScreen> {
         await FilePicker.platform.pickFiles(allowMultiple: true);
 
     if (result != null) {
-      for (var path in result.paths){
+      for (var path in result.paths) {
         DBHelper.db.rawInsert(""
             "INSERT INTO images (src_url, src_id) VALUES ('$path', 1)");
       }
       setState(() {
-        // Reset the masonry view
-        currentGridCount = 0;
-        gridMaxCounts = 50;
-        masonryGrids.clear();
+        _resetEnv();
       });
     } else {
       // User canceled the picker
@@ -52,8 +49,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> loadImages() async {
-    List<Map<String, Object?>> queryResult =
-        await DBHelper.db.rawQuery("SELECT * FROM images ORDER BY img_id DESC;");
+    List<Map<String, Object?>> queryResult = await DBHelper.db
+        .rawQuery("SELECT * FROM images ORDER BY img_id DESC;");
 
     // Limit gridMaxCounts to prevent overflow
     // (gridMaxCounts > number of all images in the database)
@@ -68,18 +65,17 @@ class _HomeScreenState extends State<HomeScreen> {
           currentGridCount < gridMaxCounts;
           currentGridCount++) {
         late ReferenceImageDisplay rid;
-        masonryGrids.add(
-            rid = ReferenceImageDisplay(
-              onDeleted: () {
-                setState(() {
-                  masonryGrids.remove(rid);
-                  currentGridCount -= 1;
-                });
-              },
-              srcId: queryResult[currentGridCount]["src_id"] as int,
-              imgId: queryResult[currentGridCount]["img_id"] as int,
-              srcUrl: queryResult[currentGridCount]["src_url"].toString(),
-            ));
+        masonryGrids.add(rid = ReferenceImageDisplay(
+          onDeleted: () {
+            setState(() {
+              masonryGrids.remove(rid);
+              currentGridCount -= 1;
+            });
+          },
+          srcId: queryResult[currentGridCount]["src_id"] as int,
+          imgId: queryResult[currentGridCount]["img_id"] as int,
+          srcUrl: queryResult[currentGridCount]["src_url"].toString(),
+        ));
       }
 
       // Re-enable update when loading is done
@@ -131,9 +127,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 iconSize: 28,
                 onPressed: () {
                   Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const SettingScreen()));
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const SettingScreen()))
+                      .then((remoteChanged) => setState(() {
+                        // Refreshes home page when local db is updated from source
+                            remoteChanged ? _resetEnv() : "";
+                          }));
                 },
               ),
             ],
@@ -187,5 +187,12 @@ class _HomeScreenState extends State<HomeScreen> {
             )
           ],
         ));
+  }
+
+  /// Reset masonry view environment variables
+  void _resetEnv() {
+    currentGridCount = 0;
+    gridMaxCounts = 50;
+    masonryGrids.clear();
   }
 }

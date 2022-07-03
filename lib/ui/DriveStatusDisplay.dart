@@ -6,11 +6,15 @@ import '../assets/constant.dart';
 class DriveStatusDisplay extends StatefulWidget {
   final String driveLogoSrc;
   final String driveName;
+  final VoidCallback onTap;
+  final bool statusOn;
 
   const DriveStatusDisplay(
       {Key? key,
       required this.driveLogoSrc,
-      required this.driveName})
+      required this.driveName,
+      this.statusOn = false,
+      required this.onTap})
       : super(key: key);
 
   @override
@@ -18,12 +22,11 @@ class DriveStatusDisplay extends StatefulWidget {
 }
 
 class _DriveStatusDisplayState extends State<DriveStatusDisplay> {
-  bool statusOn = false;
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: () {},
+      onTap: widget.onTap,
       child: ClipRRect(
           borderRadius: BorderRadius.circular(cornerRadius),
           child: Container(
@@ -35,8 +38,9 @@ class _DriveStatusDisplayState extends State<DriveStatusDisplay> {
                   width: 150,
                   color: primaryColor,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                    child: Text("Status: " + (statusOn ? "ON" : "OFF"),
+                    padding:
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                    child: Text("Status: " + (widget.statusOn ? "ON" : "OFF"),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                             backgroundColor: primaryColor,
