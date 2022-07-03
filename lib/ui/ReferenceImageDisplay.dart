@@ -58,12 +58,12 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
               children: [
                 ImageFiltered(
                     imageFilter: ImageFilter.blur(
-                        // Use 0.001 instead of 0 for browser compatibility
-                        sigmaX: hovered ? 5 : 0.001,
-                        sigmaY: hovered ? 5 : 0.001),
+                      tileMode: TileMode.decal,
+                        sigmaX: hovered ? 5 : 0,
+                        sigmaY: hovered ? 5 : 0),
                     child: widget.srcId == 1
-                        ? Image.network(widget.srcUrl)
-                        : Image.file(File(widget.srcUrl))),
+                        ? Image.network(widget.srcUrl, fit: BoxFit.fill,)
+                        : Image.file(File(widget.srcUrl), fit: BoxFit.fill,)),
                 Visibility(
                   visible: hovered,
                   child: Padding(
