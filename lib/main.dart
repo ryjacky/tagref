@@ -1,17 +1,17 @@
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tagref/helpers/GoogleApiHelper.dart';
 import 'package:tagref/screen/HomeScreen.dart';
 import 'package:tagref/screen/SetupScreen.dart';
 
 import 'assets/DBHelper.dart';
-import 'firebase_options.dart';
+import 'assets/constant.dart';
 
 /// Should include all pre-start initializations here
 void main() async {
@@ -20,13 +20,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  await initializeGoogleApi();
-
-  var remoteDBFile = await pullDB(
-      (await getApplicationSupportDirectory()).toString(), DBHelper.dbFileName);
-
-  if (remoteDBFile != null) {
-    // remoteDBFile.
+  // Initializes DriveApi and update local DB file
+  SharedPreferences pref = await SharedPreferences.getInstance();
+  if (pref.getBool(gDriveConnected) != null) {
+    await initializeDriveApiAndPullDB(
+        (await getApplicationSupportDirectory()).toString(), DBHelper.dbFileName);
   }
 
   runApp(EasyLocalization(
@@ -85,42 +83,7 @@ class _TagRefHomePageState extends State<TagRefHome> {
     await DBHelper.initializeDatabase();
 
     if (!dbExists) {
-      await DBHelper.db.execute('''
-      CREATE TABLE images
-      (
-          img_id         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-          src_url        TEXT,
-          src_id         INTEGER,
-          FOREIGN KEY (src_id) REFERENCES sources (src_id)
-      );
-      CREATE TABLE sources
-      (
-          src_id         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-          name           TEXT
-      );
-      CREATE TABLE tags
-      (
-          tag_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-          name   varchar
-      );
-      CREATE TABLE pins
-      (
-          pin_id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-          img_id int,
-          FOREIGN KEY (img_id) REFERENCES images (img_id)
-      );
-      CREATE TABLE image_tag
-      (
-          id     INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-          img_id int,
-          tag_id int,
-          FOREIGN KEY (img_id) REFERENCES images (img_id),
-          FOREIGN KEY (tag_id) REFERENCES tags (tag_id)
-      );
-      ''');
-
-      await DBHelper.db
-          .rawInsert("INSERT INTO sources (name) VALUES ('web'), ('local');");
+      await DBHelper.createDBWithTemplate();
       return const SetupScreen();
     }
 

@@ -17,26 +17,42 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
 import 'dart:io' show File, Platform;
 
-late drive.DriveApi driveApi;
+drive.DriveApi? driveApi;
+
+const secureStorage = FlutterSecureStorage();
 
 /// Base client used by the Google Drive API
 final http.Client _baseClient = http.Client();
 
+/// Client ID and secret obtained from Google Cloud Console
 ClientId _clientId = ClientId(
     '252111377436-r8hlo5t1l81rjv0ov4nhfojrktrjnih2.apps.googleusercontent.com',
     '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');
 
-// Controls Google Sign In flow (desktop/mobile flow)
-Future<void> initializeGoogleApi() async {
-  // check if accessCredential is already available
-  const storage = FlutterSecureStorage();
+/// Initialize Google API, connect to GDrive, download remote db file
+/// All database connections should be closed before calling this function
+Future<void> initializeDriveApiAndPullDB(
+    String localDBPath, String dbFileName) async {
+  await initializeGoogleApi();
+  pullAndReplaceLocalDB(localDBPath, dbFileName);
+}
 
-  String? accessCredentialsJString = await storage.read(key: gAccessCredential);
+/// Controls Google Sign In flow (desktop/mobile flow)
+Future<void> initializeGoogleApi() async {
+  if (driveApi != null) {
+    throw Exception(
+        "Google API have already been initialized, you should not initialize it twice!");
+  }
+
+  // check if accessCredential is already available
+  String? accessCredentialsJString =
+      await secureStorage.read(key: gAccessCredential);
 
   late AuthClient client;
 
-  // Build the auth client
   if (accessCredentialsJString == null) {
+    // Build the auth client with user consent
+
     if (Platform.isAndroid || Platform.isIOS) {
       try {
         // Using GoogleSignIn library
@@ -55,12 +71,13 @@ Future<void> initializeGoogleApi() async {
       // Using googleapis_auth library
       client = await obtainCredentials();
 
-      // Write to the secure storage
-      storage.write(
+      // Write to the secure secureStorage
+      secureStorage.write(
           key: gAccessCredential,
           value: jsonEncode(client.credentials.toJson()));
     }
   } else {
+    // Build the auth client from secure secureStorage
     client = autoRefreshingClient(
         _clientId,
         AccessCredentials.fromJson(jsonDecode(accessCredentialsJString)),
@@ -68,14 +85,26 @@ Future<void> initializeGoogleApi() async {
   }
 
   driveApi = drive.DriveApi(client);
+
+  // Check for validity of locally stored access credentials
+  try {
+    drive.FileList appDataFileList = await driveApi!.files
+        .list(spaces: "appDataFolder");
+  } catch (e){
+    // Erase locally stored access credentials when it is invalid and
+    // try to obtain new credentials
+    driveApi = null;
+    await secureStorage.delete(key: gAccessCredential);
+    await initializeGoogleApi();
+  }
 }
 
-// Google Sign in function for desktop (mac, windows, linux?)
+/// Google Sign in function for desktop (mac, windows, linux?)
 Future<AuthClient> obtainCredentials() async => await clientViaUserConsent(
     _clientId, [drive.DriveApi.driveAppdataScope], _prompt,
     baseClient: _baseClient);
 
-// prompt for user to log in (Opens authentication link with browser)
+/// prompt for user consent (Opens authentication link with browser)
 void _prompt(String url) {
   launchUrl(Uri.parse(url));
 }
@@ -84,16 +113,23 @@ void _prompt(String url) {
 /// and updates the local copy located at [dbParent].
 /// Returns null if there is no remote copy of the file and returns the file
 /// itself if the remote copy is available.
-Future<bool> pullDB(String dbParent, String dbFileName) async {
+///
+/// You SHOULD close all database connection before calling this method
+Future<bool> pullAndReplaceLocalDB(String dbParent, String dbFileName) async {
+  if (driveApi == null) {
+    throw GoogleAPINotInitializedException(
+        "Google API has not been initialized!");
+  }
+
   // Search for tagref_db.db
-  drive.FileList appDataFileList = await driveApi.files
+  drive.FileList appDataFileList = await driveApi!.files
       .list(spaces: "appDataFolder", q: "name='$dbFileName'");
 
   // Upload or update the local db file based on the search result
   if (appDataFileList.files!.isNotEmpty) {
     var localDBFile = File(await DBHelper.getDBUrl()).openWrite();
 
-    Media remoteDBMedia = await driveApi.files.get(
+    Media remoteDBMedia = await driveApi!.files.get(
         appDataFileList.files!.first.id!,
         downloadOptions: DownloadOptions.fullMedia) as Media;
 
@@ -109,6 +145,11 @@ Future<bool> pullDB(String dbParent, String dbFileName) async {
 }
 
 void pushDB(String dbParent, String dbFileName) async {
+  if (driveApi == null) {
+    throw GoogleAPINotInitializedException(
+        "Google API has not been initialized!");
+  }
+
   String url = join(dbParent, dbFileName);
 
   if (url.contains(".db") ||
@@ -126,16 +167,16 @@ void pushDB(String dbParent, String dbFileName) async {
     drive.Media uploadMedia = drive.Media(dbFileStream, dbFileStreamLength);
 
     // Search for tagref_db.db
-    drive.FileList appDataFileList = await driveApi.files
+    drive.FileList appDataFileList = await driveApi!.files
         .list(spaces: "appDataFolder", q: "name='$dbFileName'");
 
     // Upload or update db file based on the search result
     if (appDataFileList.files!.isNotEmpty) {
-      driveApi.files.update(dbFileUpload, appDataFileList.files!.first.id!,
+      driveApi!.files.update(dbFileUpload, appDataFileList.files!.first.id!,
           uploadMedia: uploadMedia);
     } else {
       dbFileUpload.parents = ["appDataFolder"];
-      driveApi.files.create(dbFileUpload, uploadMedia: uploadMedia);
+      driveApi!.files.create(dbFileUpload, uploadMedia: uploadMedia);
     }
   } else {
     throw Error(
@@ -143,4 +184,16 @@ void pushDB(String dbParent, String dbFileName) async {
         reason:
             "Either the url is wrong or the database file type is not supported.");
   }
+}
+
+/// Remove all locally stored credentials, clear active driveApi instances
+void purgeAccessCredentials(){
+  secureStorage.delete(key: gAccessCredential);
+  driveApi = null;
+}
+
+class GoogleAPINotInitializedException implements Exception {
+  String cause;
+
+  GoogleAPINotInitializedException(this.cause);
 }

@@ -7,11 +7,13 @@ class DriveStatusDisplay extends StatefulWidget {
   final String driveLogoSrc;
   final String driveName;
   final VoidCallback onTap;
+  final bool statusOn;
 
   const DriveStatusDisplay(
       {Key? key,
       required this.driveLogoSrc,
       required this.driveName,
+      this.statusOn = false,
       required this.onTap})
       : super(key: key);
 
@@ -20,7 +22,6 @@ class DriveStatusDisplay extends StatefulWidget {
 }
 
 class _DriveStatusDisplayState extends State<DriveStatusDisplay> {
-  bool statusOn = false;
 
   @override
   Widget build(BuildContext context) {
@@ -39,7 +40,7 @@ class _DriveStatusDisplayState extends State<DriveStatusDisplay> {
                   child: Padding(
                     padding:
                         const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                    child: Text("Status: " + (statusOn ? "ON" : "OFF"),
+                    child: Text("Status: " + (widget.statusOn ? "ON" : "OFF"),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                             backgroundColor: primaryColor,
