@@ -31,10 +31,12 @@ ClientId _clientId = ClientId(
 
 /// Initialize Google API, connect to GDrive, download remote db file
 /// All database connections should be closed before calling this function
+///
+/// You SHOULD close all database connection before calling this function
 Future<void> initializeDriveApiAndPullDB(
     String localDBPath, String dbFileName) async {
   await initializeGoogleApi();
-  pullAndReplaceLocalDB(localDBPath, dbFileName);
+  await pullAndReplaceLocalDB(localDBPath, dbFileName);
 }
 
 /// Controls Google Sign In flow (desktop/mobile flow)

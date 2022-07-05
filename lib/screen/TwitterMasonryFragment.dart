@@ -42,6 +42,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
     for (int i = 0; i <= 3; i++){
       if (i == 3){
         print("something went wrong, please try again");
+        return;
       }
 
       try {
