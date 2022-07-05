@@ -101,7 +101,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   hintText: tr("search-hint"),
                   onSubmitted: (val) {
                     setState(() {
-                      if (val.isNotEmpty) {
+                      if (val.isNotEmpty && !keywordList.contains(val)) {
                         keywordList.add(val);
                       }
                     });
@@ -161,6 +161,9 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             TagSearchBarKeywordsView(
               keywordList: keywordList,
+              onKeywordRemoved: (keywordRemoved) {
+                keywordList.remove(keywordRemoved);
+              }
             ),
             twitterModeOn ? tmf : trmf,
           ],
