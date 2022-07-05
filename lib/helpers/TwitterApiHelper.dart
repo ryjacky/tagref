@@ -1,6 +1,7 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
-import 'package:twitter_oauth2_pkce/twitter_oauth2_pkce.dart';
+import 'package:twitter_login/entity/auth_result.dart';
+import 'package:twitter_login/twitter_login.dart';
 
 class TwitterApiHelper {
   late final TwitterApi twitterClient;
@@ -20,7 +21,7 @@ class TwitterApiHelper {
         } else {
           authTwitterMobile().then((response) {
             twitterClient = TwitterApi(
-              bearerToken: response.accessToken,
+              bearerToken: response.authToken!,
 
               //! The default timeout is 10 seconds.
               timeout: const Duration(seconds: 20),
@@ -29,7 +30,8 @@ class TwitterApiHelper {
             twitterClient.usersService.lookupMe().then((myData) {
               userId = myData.data.id;
 
-              secureStorage.write(key: tTokenSSKey, value: response.accessToken);
+              secureStorage.write(
+                  key: tTokenSSKey, value: response.authToken);
               secureStorage.write(key: uidSSKey, value: userId);
             });
           });
@@ -38,17 +40,15 @@ class TwitterApiHelper {
     });
   }
 
-  Future<OAuthResponse> authTwitterMobile() async {
-    final oauth2 = TwitterOAuth2Client(
-      clientId: 'emVVNlIxSDdnOWlnNzI2bTJUdVE6MTpjaQ',
-      clientSecret: 'Y2e5UtaH6-eUNG9ktanPMC8CQGrML-ke9oWnR0pf26SeDazeeI',
-      redirectUri: 'com.tagref.oauth://callback/',
-      customUriScheme: 'com.tagref.oauth',
+  Future<AuthResult> authTwitterMobile() async {
+    final twitterLogin = TwitterLogin(
+      apiKey: 'o02QkROyeZ34MMN7bnuNycUxe',
+      apiSecretKey: 'IdETUEilwnLdMN0C04HNS0dSuYQ4XCl3WJR675sPtG0Jf3GTnD',
+      redirectURI: 'com.tagref.oauth://callback/',
+      // customUriScheme: 'com.tagref.oauth',
     );
 
-    final response = await oauth2.executeAuthCodeFlowWithPKCE(
-      scopes: Scope.values,
-    );
+    final response = await twitterLogin.loginV2();
 
     return response;
   }
