@@ -101,7 +101,6 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
     }
 
     // Calculates the padding from the application window width
-    // TODO: Use .w function
     double paddingH = MediaQuery.of(context).size.width / 10;
 
     return Expanded(

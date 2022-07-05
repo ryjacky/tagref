@@ -55,7 +55,7 @@ class _TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
         _resetEnv();
       });
     } else {
-      // TODO: User canceled the picker
+      // Do nothing when user closed the dialog
     }
   }
 
@@ -105,7 +105,6 @@ class _TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
     }
 
     // Calculates the padding from the application window width
-    // TODO: Use .w function
     double paddingH = MediaQuery.of(context).size.width / 10;
 
     return Expanded(

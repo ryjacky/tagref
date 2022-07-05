@@ -5,7 +5,6 @@ import '../../assets/constant.dart';
 @Deprecated("This class is replaced by a more generalized class, FaIconButton,"
     "for improved UI consistency.")
 class SourceButtonSmall extends StatelessWidget {
-  //TODO: use_key_in_widget_constructors
   const SourceButtonSmall({required this.onPressed});
   final GestureTapCallback onPressed;
 

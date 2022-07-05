@@ -26,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   /// Upload FAB is dynamically updated with this variable
   bool syncing = false;
+  bool syncingFailed = false;
 
   bool twitterModeOn = false;
 
@@ -35,14 +36,17 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     // Calculates the padding from the application window width
-    // TODO: Use .w function
-    double paddingH = MediaQuery.of(context).size.width / 10;
+    // double paddingH = MediaQuery.of(context).size.width / 10;
 
     return Scaffold(
         floatingActionButton: Visibility(
           visible: !twitterModeOn,
           child: FloatingActionButton.extended(
-            backgroundColor: syncing ? Colors.orangeAccent : primaryColorDark,
+            backgroundColor: syncingFailed
+                ? Colors.red
+                : syncing
+                    ? Colors.orangeAccent
+                    : primaryColorDark,
             onPressed: () async {
               pushDB((await getApplicationSupportDirectory()).path,
                       DBHelper.dbFileName)
@@ -51,6 +55,15 @@ class _HomeScreenState extends State<HomeScreen> {
                           {
                             setState(() {
                               syncing = false;
+                            })
+                          }
+                        else
+                          {
+                            setState(() {
+                              syncing = false;
+                              syncingFailed = true;
+                              Future.delayed(const Duration(seconds: 3))
+                                  .then((value) => syncingFailed = false);
                             })
                           }
                       });
