@@ -27,6 +27,8 @@ class _HomeScreenState extends State<HomeScreen> {
   int currentGridCount = 0;
   final masonryUpdateStep = 50;
 
+  bool twitterModeOn = false;
+
   final List<Widget> masonryGrids = [];
 
   bool isUpdating = true;
@@ -120,6 +122,20 @@ class _HomeScreenState extends State<HomeScreen> {
                       }
                     });
                   }),
+              IconButton(
+                icon: FaIcon(
+                  FontAwesomeIcons.twitter,
+                  color: twitterModeOn ? Colors.blue : Colors.white,
+                ),
+                iconSize: 28,
+                padding: const EdgeInsets.all(20),
+                splashRadius: 1,
+                onPressed: () {
+                  setState(() {
+                    twitterModeOn = !twitterModeOn;
+                  });
+                },
+              ),
               Expanded(child: Container()),
               IconButton(
                 icon: const FaIcon(FontAwesomeIcons.bars),
@@ -131,7 +147,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           MaterialPageRoute(
                               builder: (context) => const SettingScreen()))
                       .then((remoteChanged) => setState(() {
-                        // Refreshes home page when local db is updated from source
+                            // Refreshes home page when local db is updated from source
                             remoteChanged ? _resetEnv() : "";
                           }));
                 },

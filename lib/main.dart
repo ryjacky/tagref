@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tagref/helpers/GoogleApiHelper.dart';
+import 'package:tagref/helpers/TwitterApiHelper.dart';
 import 'package:tagref/screen/HomeScreen.dart';
 import 'package:tagref/screen/SetupScreen.dart';
 
@@ -15,6 +16,9 @@ import 'assets/constant.dart';
 
 /// Should include all pre-start initializations here
 void main() async {
+  // TODO: Remove this
+  TwitterApiHelper();
+
   sqfliteFfiInit();
 
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,7 +28,8 @@ void main() async {
   SharedPreferences pref = await SharedPreferences.getInstance();
   if (pref.getBool(gDriveConnected) != null) {
     await initializeDriveApiAndPullDB(
-        (await getApplicationSupportDirectory()).toString(), DBHelper.dbFileName);
+        (await getApplicationSupportDirectory()).toString(),
+        DBHelper.dbFileName);
   }
 
   runApp(EasyLocalization(
