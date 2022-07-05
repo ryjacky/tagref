@@ -34,23 +34,15 @@ class _TagLabelState extends State<TagLabel> {
                 borderRadius: BorderRadius.circular(cornerRadius)),
             elevation: 0.1,
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                const SizedBox(
-                  width: 8,
-                ),
-                Text(
-                  widget.tagWd,
-                  style: TextStyle(
-                      decoration: onHover ? TextDecoration.lineThrough : TextDecoration.none,
-                      color: Colors.white, fontWeight: FontWeight.w500),
-                ),
-                const SizedBox(
-                  width: 8,
-                ),
-              ],
-            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+              child: Text(
+                widget.tagWd,
+                style: TextStyle(
+                    decoration: onHover ? TextDecoration.lineThrough : TextDecoration.none,
+                    color: Colors.white, fontWeight: FontWeight.w500),
+              ),
+            )
           ),
         )
     );
