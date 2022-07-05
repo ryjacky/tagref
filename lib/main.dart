@@ -16,9 +16,6 @@ import 'assets/constant.dart';
 
 /// Should include all pre-start initializations here
 void main() async {
-  // TODO: Remove this
-  TwitterApiHelper();
-
   sqfliteFfiInit();
 
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,8 +25,7 @@ void main() async {
   SharedPreferences pref = await SharedPreferences.getInstance();
   if (pref.getBool(gDriveConnected) != null) {
     await initializeDriveApiAndPullDB(
-        (await getApplicationSupportDirectory()).toString(),
-        DBHelper.dbFileName);
+        (await getApplicationSupportDirectory()).path, DBHelper.dbFileName);
   }
 
   runApp(EasyLocalization(
@@ -46,7 +42,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(1280, 720),
+      designSize:
+          Platform.isAndroid ? const Size(720, 1280) : const Size(1280, 720),
       minTextAdapt: true,
       splitScreenMode: true,
       child: const TagRefHome(title: 'TagRef Home'),

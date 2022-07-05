@@ -149,7 +149,7 @@ class _SetupScreenState extends State<SetupScreen> {
             ],
           ),
           Padding(
-            padding: const EdgeInsets.all(40),
+            padding: EdgeInsets.fromLTRB(20.w, 60.w, 20.w, 20.w),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -160,32 +160,33 @@ class _SetupScreenState extends State<SetupScreen> {
                         fontWeight: FontWeight.w300,
                         fontSize: FontSize.l2.sp)),
                 Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                    padding: EdgeInsets.fromLTRB(0, 20.w, 0, 0),
                     child: Row(
                       children: [
-                        SizedBox(
-                          width: width / 1.3,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(tr("auto-tag"),
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: FontSize.l3.sp,
-                                      color: fontColorDark)),
-                              Text(tr("auto-tag-desc"),
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w300,
-                                      fontSize: FontSize.body1.sp,
-                                      color: fontColorDark)),
-                            ],
+
+                        Expanded(
+                          child: SizedBox(
+                            width: (width / 1.3).w,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(tr("auto-tag"),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: FontSize.l3.sp,
+                                        color: fontColorDark)),
+                                Text(tr("auto-tag-desc"),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w300,
+                                        fontSize: FontSize.body1.sp,
+                                        color: fontColorDark)),
+                              ],
+                            ),
                           ),
                         ),
-                        Expanded(
-                          child: Container(),
-                        ),
-                        const Center(
-                          child: ToggleSwitch(),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(40.w,0,0,0),
+                          child: const ToggleSwitch(),
                         )
                       ],
                     )),
@@ -193,30 +194,31 @@ class _SetupScreenState extends State<SetupScreen> {
                     padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                     child: Row(
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(tr("cache"),
-                                style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: FontSize.l3.sp,
-                                    color: fontColorDark)),
-                            SizedBox(
-                              width: width / 1.3,
-                              child: Text(tr("cache-desc"),
-                                  softWrap: true,
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w300,
-                                      fontSize: FontSize.body1.sp,
-                                      color: fontColorDark)),
-                            )
-                          ],
-                        ),
+
                         Expanded(
-                          child: Container(),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(tr("cache"),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: FontSize.l3.sp,
+                                      color: fontColorDark)),
+                              SizedBox(
+                                width: width / 1.3,
+                                child: Text(tr("cache-desc"),
+                                    softWrap: true,
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w300,
+                                        fontSize: FontSize.body1.sp,
+                                        color: fontColorDark)),
+                              )
+                            ],
+                          ),
                         ),
-                        const Center(
-                          child: ToggleSwitch(),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(40.w,0,0,0),
+                          child: const ToggleSwitch(),
                         )
                       ],
                     )),
@@ -224,29 +226,30 @@ class _SetupScreenState extends State<SetupScreen> {
                     padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                     child: Row(
                       children: [
-                        SizedBox(
-                          width: width / 1.3,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(tr("twitter-link"),
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: FontSize.l3.sp,
-                                      color: fontColorDark)),
-                              Text(tr("twitter-link-desc"),
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w300,
-                                      fontSize: FontSize.body1.sp,
-                                      color: fontColorDark)),
-                            ],
+
+                        Expanded(
+                          child: SizedBox(
+                            width: width / 1.3,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(tr("twitter-link"),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: FontSize.l3.sp,
+                                        color: fontColorDark)),
+                                Text(tr("twitter-link-desc"),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.w300,
+                                        fontSize: FontSize.body1.sp,
+                                        color: fontColorDark)),
+                              ],
+                            ),
                           ),
                         ),
-                        Expanded(
-                          child: Container(),
-                        ),
-                        const Center(
-                          child: ToggleSwitch(),
+                        Padding(
+                          padding: EdgeInsets.fromLTRB(40.w,0,0,0),
+                          child: const ToggleSwitch(),
                         )
                       ],
                     )),

@@ -22,6 +22,9 @@
   "edit-tag": "タグを編集する",
   "disconnect-gdrive": "グーグルドライブとの連携を外します、実行しますか？",
   "yes": "はい",
-  "no": "いいえ"
+  "no": "いいえ",
+  "sync": "同期します",
+  "back-to-tagref": "TagRefへ戻ります"
+
 
 }

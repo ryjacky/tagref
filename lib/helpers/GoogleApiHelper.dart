@@ -144,7 +144,7 @@ Future<bool> pullAndReplaceLocalDB(String dbParent, String dbFileName) async {
   }
 }
 
-void pushDB(String dbParent, String dbFileName) async {
+Future<bool> pushDB(String dbParent, String dbFileName) async {
   if (driveApi == null) {
     throw GoogleAPINotInitializedException(
         "Google API has not been initialized!");
@@ -184,6 +184,9 @@ void pushDB(String dbParent, String dbFileName) async {
         reason:
             "Either the url is wrong or the database file type is not supported.");
   }
+
+  // TODO: Check if drive contains the latest version, return false if not
+  return true;
 }
 
 /// Remove all locally stored credentials, clear active driveApi instances

@@ -268,6 +268,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_web_auth:
+    dependency: transitive
+    description:
+      name: flutter_web_auth
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.4.1"
   flutter_web_plugins:
     dependency: transitive
     description: flutter
@@ -663,6 +670,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "2.8.1"
+  twitter_oauth2_pkce:
+    dependency: "direct main"
+    description:
+      name: twitter_oauth2_pkce
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.3.0"
   typed_data:
     dependency: transitive
     description:

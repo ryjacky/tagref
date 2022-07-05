@@ -22,7 +22,7 @@ class AddButton extends StatelessWidget {
             ImageFiltered(
               // Stronger blur (than ReferenceImageDisplay) for differentiation
               // (visually)
-              imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10, tileMode: TileMode.decal),
               child: Image.network(
                 imgUrl,
                 color: Colors.grey.shade800,

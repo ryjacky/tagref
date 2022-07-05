@@ -1,4 +1,5 @@
 class FontSize{
+
   static double l1 = 72;
   static double l2 = 56;
   static double l3 = 32;

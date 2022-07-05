@@ -1,34 +1,56 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
+import 'package:twitter_oauth2_pkce/twitter_oauth2_pkce.dart';
 
 class TwitterApiHelper {
-  final TwitterApi twitterClient = TwitterApi(
-    // TODO: Change token
-    bearerToken:
-        'AAAAAAAAAAAAAAAAAAAAAIrkdAEAAAAA2lsF%2BGa7pDUOFxelcJssNv%2FwkDE%3DoZE4KjmSOxkqQZ73n7HkAOlNW83rSbFL3HxLxOgOe6EzWJz0tT',
+  late final TwitterApi twitterClient;
 
-    //! Or perhaps you would prefer to use the good old OAuth1.0a method
-    //! over the OAuth2.0 PKCE method. Then you can use the following code
-    //! to set the OAuth1.0a tokens.
-    //!
-    //! However, note that some endpoints cannot be used for OAuth 1.0a method
-    //! authentication.
-    oauthTokens: OAuthTokens(
-      consumerKey: 'XVJd59U7iSFcYci4zJw3m2dj9',
-      consumerSecret: 'WQiZScrcngnHz7csVgtTGGCWkIGfcxrpX8EiDOL5vuKeJGCPwl',
-      accessToken: '1471331069781630976-13Lir0zhQQyNbFtWoOAGHxSgxtQXOO',
-      accessTokenSecret: 'cAehjZglTTmUhe3JkmQjXQhNkZYGuAP4QHO74pHgITCgu',
-    ),
+  late final String userId;
+  final FlutterSecureStorage secureStorage;
 
-    //! The default timeout is 10 seconds.
-    timeout: Duration(seconds: 20),
-  );
+  final tTokenSSKey = "com.tagref.twitterUserToken";
+  final uidSSKey = "com.tagref.twitterUserId";
 
-  late final String userId = "1471331069781630976";
+  TwitterApiHelper({required this.secureStorage}) {
+    secureStorage.read(key: uidSSKey).then((uid) {
+      secureStorage.read(key: tTokenSSKey).then((tToken) {
+        if (tToken != null && uid != null) {
+          userId = uid;
+          twitterClient = TwitterApi(bearerToken: tToken);
+        } else {
+          authTwitterMobile().then((response) {
+            twitterClient = TwitterApi(
+              bearerToken: response.accessToken,
 
-  TwitterApiHelper() {
-    print("slkdjf");
-    // twitterClient
-    //.usersService.lookupMe().then((user) => userId = user.data.id);
+              //! The default timeout is 10 seconds.
+              timeout: const Duration(seconds: 20),
+            );
+
+            twitterClient.usersService.lookupMe().then((myData) {
+              userId = myData.data.id;
+
+              secureStorage.write(key: tTokenSSKey, value: response.accessToken);
+              secureStorage.write(key: uidSSKey, value: userId);
+            });
+          });
+        }
+      });
+    });
+  }
+
+  Future<OAuthResponse> authTwitterMobile() async {
+    final oauth2 = TwitterOAuth2Client(
+      clientId: 'emVVNlIxSDdnOWlnNzI2bTJUdVE6MTpjaQ',
+      clientSecret: 'Y2e5UtaH6-eUNG9ktanPMC8CQGrML-ke9oWnR0pf26SeDazeeI',
+      redirectUri: 'com.tagref.oauth://callback/',
+      customUriScheme: 'com.tagref.oauth',
+    );
+
+    final response = await oauth2.executeAuthCodeFlowWithPKCE(
+      scopes: Scope.values,
+    );
+
+    return response;
   }
 
   /// Look up the reverse chronological home timeline for the user and
@@ -41,7 +63,7 @@ class TwitterApiHelper {
     // Query for home timeline
     TwitterResponse<List<TweetData>, TweetMeta> response = await twitterClient
         .tweetsService
-        .lookupHomeTimeline(userId: userId, excludes: [
+        .lookupHomeTimeline(userId: userId, maxResults: 50, excludes: [
       ExcludeTweetType.replies
     ], expansions: [
       TweetExpansion.attachmentsMediaKeys,
@@ -80,7 +102,7 @@ class TwitterApiHelper {
 
   /// Takes in a TwitterResponse, extract the image url when an image is included
   /// in the tweet.
-  /// 
+  ///
   /// Returns a list of string containing the image urls extracted.
   List<String> _extractImageUrlFromResponse(TwitterResponse response) {
     List<String> imageUrls = [];
