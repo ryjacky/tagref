@@ -1,7 +1,9 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
-import 'package:twitter_login/entity/auth_result.dart';
-import 'package:twitter_login/twitter_login.dart';
+import 'package:uni_links/uni_links.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:oauth2/oauth2.dart' as oauth2;
+import 'package:webview_flutter/webview_flutter.dart';
 
 class TwitterApiHelper {
   late final TwitterApi twitterClient;
@@ -13,45 +15,56 @@ class TwitterApiHelper {
   final uidSSKey = "com.tagref.twitterUserId";
 
   TwitterApiHelper({required this.secureStorage}) {
+    authTwitterMobile();
+
     secureStorage.read(key: uidSSKey).then((uid) {
       secureStorage.read(key: tTokenSSKey).then((tToken) {
         if (tToken != null && uid != null) {
           userId = uid;
           twitterClient = TwitterApi(bearerToken: tToken);
         } else {
-          authTwitterMobile().then((response) {
-            twitterClient = TwitterApi(
-              bearerToken: response.authToken!,
-
-              //! The default timeout is 10 seconds.
-              timeout: const Duration(seconds: 20),
-            );
-
-            twitterClient.usersService.lookupMe().then((myData) {
-              userId = myData.data.id;
-
-              secureStorage.write(
-                  key: tTokenSSKey, value: response.authToken);
-              secureStorage.write(key: uidSSKey, value: userId);
-            });
-          });
+          authTwitterMobile();
+          // authTwitterMobile().then((response) {
+          //   twitterClient = TwitterApi(
+          //     bearerToken: response.authToken!,
+          //
+          //     //! The default timeout is 10 seconds.
+          //     timeout: const Duration(seconds: 20),
+          //   );
+          //
+          //   twitterClient.usersService.lookupMe().then((myData) {
+          //     userId = myData.data.id;
+          //
+          //     secureStorage.write(
+          //         key: tTokenSSKey, value: response.authToken);
+          //     secureStorage.write(key: uidSSKey, value: userId);
+          //   });
+          // });
         }
       });
     });
   }
 
-  Future<AuthResult> authTwitterMobile() async {
-    final twitterLogin = TwitterLogin(
-      apiKey: 'o02QkROyeZ34MMN7bnuNycUxe',
-      apiSecretKey: 'IdETUEilwnLdMN0C04HNS0dSuYQ4XCl3WJR675sPtG0Jf3GTnD',
-      redirectURI: 'com.tagref.oauth://callback/',
-      // customUriScheme: 'com.tagref.oauth',
+  Future<void> authTwitterMobile() async {
+    print(await launchUrl(
+        Uri.parse("https://twitter.com/i/oauth2/authorize?response_type=code&client_id=emVVNlIxSDdnOWlnNzI2bTJUdVE6MTpjaQ&redirect_uri=com.tagref.oauth://callback/&scope=tweet.read%20users.read%20follows.read%20offline.access&state=state&code_challenge=challenge&code_challenge_method=plain"),
+    ));
+
+    WebView(
+      javascriptMode: JavascriptMode.unrestricted,
+      initialUrl:         "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=emVVNlIxSDdnOWlnNzI2bTJUdVE6MTpjaQ&redirect_uri=com.tagref.oauth://callback/&scope=tweet.read%20users.read%20follows.read%20offline.access&state=state&code_challenge=challenge&code_challenge_method=plain",
+      navigationDelegate: (navReq) {
+        if (navReq.url.startsWith("com.tagref.oauth://callback/")) {
+          Uri.parse(navReq.url);
+          return NavigationDecision.prevent;
+        }
+        return NavigationDecision.navigate;
+      },
+      // ------- 8< -------
     );
-
-    final response = await twitterLogin.loginV2();
-
-    return response;
+    // DUFbAjOMGIDq57gZ54nGw1N4IwIJhHRHARxY5T0d_LWbwVwXty
   }
+
 
   /// Look up the reverse chronological home timeline for the user and
   /// retrieve all images in its url form, includes retweets, excludes replies
