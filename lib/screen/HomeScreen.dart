@@ -31,7 +31,15 @@ class _HomeScreenState extends State<HomeScreen> {
   bool twitterModeOn = false;
 
   final TwitterMasonryFragment tmf = const TwitterMasonryFragment();
-  final TagRefMasonryFragment trmf = const TagRefMasonryFragment();
+
+  GlobalKey<TagRefMasonryFragmentState> trmfKey = GlobalKey();
+  late final TagRefMasonryFragment trmf;
+
+
+  @override
+  void initState() {
+    trmf = TagRefMasonryFragment(key: trmfKey,);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -143,12 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               },
                               pageBuilder: (context, a1, a2) =>
                                   const SettingScreen()))
-                      .then((remoteChanged) => setState(() {
-                            // Refreshes home page when local db is updated from source/
-                            //TODO CHANGE THIS IN TAGREFMASONRYFRAGMENT
-
-                            // remoteChanged ? _resetEnv() : "";
-                          }));
+                      .then((remoteChanged) => trmfKey.currentState?.setStateAndResetEnv());
                 },
               ),
             ],

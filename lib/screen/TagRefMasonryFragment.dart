@@ -23,10 +23,10 @@ class TagRefMasonryFragment extends StatefulWidget {
   const TagRefMasonryFragment({Key? key}) : super(key: key);
 
   @override
-  State<TagRefMasonryFragment> createState() => _TagRefMasonryFragmentState();
+  State<TagRefMasonryFragment> createState() => TagRefMasonryFragmentState();
 }
 
-class _TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
+class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   final List<String> keywordList = [];
 
   final masonryUpdateStep = 50;
@@ -51,9 +51,7 @@ class _TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
         DBHelper.db.rawInsert(""
             "INSERT INTO images (src_url, src_id) VALUES ('$path', 2)");
       }
-      setState(() {
-        _resetEnv();
-      });
+      setStateAndResetEnv();
     } else {
       // Do nothing when user closed the dialog
     }
@@ -151,9 +149,11 @@ class _TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   }
 
   /// Reset masonry view environment variables
-  void _resetEnv() {
-    currentGridCount = 0;
-    gridMaxCounts = 50;
-    masonryGrids.clear();
+  void setStateAndResetEnv() {
+    setState((){
+      currentGridCount = 0;
+      gridMaxCounts = 50;
+      masonryGrids.clear();
+    });
   }
 }
