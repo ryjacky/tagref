@@ -22,6 +22,8 @@
   "edit-tag": "Edit Tag",
   "disconnect-gdrive": "You are going to disconnect your Google account, are you sure you want to continue?",
   "yes": "Yes",
-  "no": "No"
+  "no": "No",
+  "sync": "Sync",
+  "back-to-tagref": "Back to TagRef"
 
 }

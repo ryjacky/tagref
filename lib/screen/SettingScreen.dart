@@ -40,11 +40,19 @@ class _SettingScreenState extends State<SettingScreen> {
     return Scaffold(
         appBar: AppBar(
           elevation: 0,
+          automaticallyImplyLeading: false,
           backgroundColor: primaryColor,
           title: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              const IconButton(
+                icon: FaIcon(FontAwesomeIcons.xmark),
+                disabledColor: primaryColor,
+                alignment: Alignment.center,
+                iconSize: 28,
+                onPressed: null,
+              ),
               Expanded(child: Container()),
               Text(tr("pref"),
                   style: TextStyle(
@@ -146,26 +154,29 @@ class _SettingScreenState extends State<SettingScreen> {
                   padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                   child: Row(
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(tr("auto-tag"),
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: FontSize.l3.sp,
-                                  color: fontColorDark)),
-                          Text(tr("auto-tag-desc"),
-                              style: TextStyle(
-                                  fontWeight: FontWeight.w300,
-                                  fontSize: FontSize.body2.sp,
-                                  color: fontColorDark)),
-                        ],
-                      ),
                       Expanded(
-                        child: Container(),
+                        child: SizedBox(
+                          width: (1.sw / 1.3).w,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(tr("auto-tag"),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: FontSize.l3.sp,
+                                      color: fontColorDark)),
+                              Text(tr("auto-tag-desc"),
+                                  style: TextStyle(
+                                      fontWeight: FontWeight.w300,
+                                      fontSize: FontSize.body1.sp,
+                                      color: fontColorDark)),
+                            ],
+                          ),
+                        ),
                       ),
-                      const Center(
-                        child: ToggleSwitch(),
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(40.w,0,0,0),
+                        child: const ToggleSwitch(),
                       )
                     ],
                   ))
@@ -179,7 +190,7 @@ class _SettingScreenState extends State<SettingScreen> {
   Future<void> _applyRemoteDBChanges() async {
     await DBHelper.db.close();
     await pullAndReplaceLocalDB(
-        (await getApplicationSupportDirectory()).toString(),
+        (await getApplicationSupportDirectory()).path,
         DBHelper.dbFileName);
     await DBHelper.initializeDatabase();
   }

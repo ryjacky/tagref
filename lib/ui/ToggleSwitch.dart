@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_switch/flutter_switch.dart';
@@ -16,8 +18,12 @@ class _SwitchButtonState extends State<ToggleSwitch> {
 
   @override
   Widget build(BuildContext context) {
-    double width = 70.w;
-    double height = 40.h;
+    double width = 70;
+    double height = 40;
+    if (!Platform.isWindows) {
+      width = 60;
+      height = 35;
+    }
 
     return FlutterSwitch(
       width: width,

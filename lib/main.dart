@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tagref/helpers/GoogleApiHelper.dart';
+import 'package:tagref/helpers/TwitterApiHelper.dart';
 import 'package:tagref/screen/HomeScreen.dart';
 import 'package:tagref/screen/SetupScreen.dart';
 
@@ -24,7 +25,7 @@ void main() async {
   SharedPreferences pref = await SharedPreferences.getInstance();
   if (pref.getBool(gDriveConnected) != null) {
     await initializeDriveApiAndPullDB(
-        (await getApplicationSupportDirectory()).toString(), DBHelper.dbFileName);
+        (await getApplicationSupportDirectory()).path, DBHelper.dbFileName);
   }
 
   runApp(EasyLocalization(
@@ -41,7 +42,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ScreenUtilInit(
-      designSize: const Size(1280, 720),
+      designSize:
+          Platform.isAndroid ? const Size(720, 1280) : const Size(1280, 720),
       minTextAdapt: true,
       splitScreenMode: true,
       child: const TagRefHome(title: 'TagRef Home'),

@@ -88,9 +88,9 @@ Future<void> initializeGoogleApi() async {
 
   // Check for validity of locally stored access credentials
   try {
-    drive.FileList appDataFileList = await driveApi!.files
-        .list(spaces: "appDataFolder");
-  } catch (e){
+    drive.FileList appDataFileList =
+        await driveApi!.files.list(spaces: "appDataFolder");
+  } catch (e) {
     // Erase locally stored access credentials when it is invalid and
     // try to obtain new credentials
     driveApi = null;
@@ -144,7 +144,7 @@ Future<bool> pullAndReplaceLocalDB(String dbParent, String dbFileName) async {
   }
 }
 
-void pushDB(String dbParent, String dbFileName) async {
+Future<bool> pushDB(String dbParent, String dbFileName) async {
   if (driveApi == null) {
     throw GoogleAPINotInitializedException(
         "Google API has not been initialized!");
@@ -184,10 +184,12 @@ void pushDB(String dbParent, String dbFileName) async {
         reason:
             "Either the url is wrong or the database file type is not supported.");
   }
+
+  return true;
 }
 
 /// Remove all locally stored credentials, clear active driveApi instances
-void purgeAccessCredentials(){
+void purgeAccessCredentials() {
   secureStorage.delete(key: gAccessCredential);
   driveApi = null;
 }
