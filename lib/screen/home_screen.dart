@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
+import 'package:tagref/main.dart';
 
 import '../assets/db_helper.dart';
 import '../assets/constant.dart';
@@ -41,6 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
+    secureStorage.deleteAll();
     _twitterApiHelper =
         TwitterApiHelper(context: context, secureStorage: secureStorage);
     trmf = TagRefMasonryFragment(

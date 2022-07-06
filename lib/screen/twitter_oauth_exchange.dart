@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_macos_webview/flutter_macos_webview.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -19,17 +20,20 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
   final String clientSecret =
       "DUFbAjOMGIDq57gZ54nGw1N4IwIJhHRHARxY5T0d_LWbwVwXty";
   final String callback = "https://com.tagref.app/twitter/oauth";
+
   // final String callback = "tagref://twitter/oauth";
 
   late final String authURI;
 
   late final FlutterMacOSWebView webview;
 
+  bool winWebViewShown = false;
+
   @override
   void initState() {
     super.initState();
     authURI =
-        "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=$clientId&redirect_uri=$callback&scope=tweet.read%20users.read%20follows.read&state=state&code_challenge=challenge&code_challenge_method=plain";
+    "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=$clientId&redirect_uri=$callback&scope=tweet.read%20users.read%20follows.read&state=state&code_challenge=challenge&code_challenge_method=plain";
   }
 
   @override
@@ -41,8 +45,44 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
     );
   }
 
+  void launchWindowsWebView() async {
+    if (!winWebViewShown) {
+      winWebViewShown = true;
+
+      final webview = await WebviewWindow.create(
+        configuration: const CreateConfiguration(
+          windowHeight: 700,
+          windowWidth: 400,
+          title: "Twitter Authorization"
+          // userDataFolderWindows: await _getWebViewPath(),
+        ),
+      );
+
+      webview.launch(authURI);
+      webview.addOnUrlRequestCallback((url) {
+        if (url.startsWith(callback)) {
+          Uri callbackUri = Uri.parse(url);
+          String? authCode = callbackUri.queryParameters["code"];
+
+          if (authCode == null) {
+            throw Exception("The end point returned an unknown result.");
+          }
+
+          log(
+              "WebView has returned the auth code, exchanging for access token...");
+          log("auth code: $authCode");
+          exchangeForAccessToken(authCode).then((acecssToken) {
+            webview.close();
+            Navigator.pop(context, acecssToken);
+          });
+        }
+      });
+    }
+  }
+
   Widget getWindowsWebView() {
-    return Scaffold();
+    launchWindowsWebView();
+    return Text("Please complete the login process in the popup.");
   }
 
   Future<void> _onOpenPressed(PresentationStyle presentationStyle) async {
@@ -59,7 +99,8 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
             throw Exception("The end point returned an unknown result.");
           }
 
-          log("WebView has returned the auth code, exchanging for access token...");
+          log(
+              "WebView has returned the auth code, exchanging for access token...");
           log("auth code: $authCode");
           exchangeForAccessToken(authCode).then((acecssToken) {
             webview.close();
@@ -80,7 +121,7 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
       presentationStyle: presentationStyle,
       size: const Size(400.0, 600.0),
       userAgent:
-          'Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
     );
 
     // await Future.delayed(Duration(seconds: 5));

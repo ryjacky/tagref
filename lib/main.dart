@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -17,8 +18,12 @@ import 'assets/db_helper.dart';
 const secureStorage = FlutterSecureStorage();
 
 /// Should include all pre-start initializations here
-void main() async {
+void main(List<String> args) async {
   sqfliteFfiInit();
+
+  if (runWebViewTitleBarWidget(args)) {
+    return;
+  }
 
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
