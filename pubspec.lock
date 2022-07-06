@@ -186,6 +186,13 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_macos_webview:
+    dependency: "direct main"
+    description:
+      name: flutter_macos_webview
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.0.6"
   flutter_plugin_android_lifecycle:
     dependency: transitive
     description:
@@ -684,6 +691,13 @@ packages:
       url: "https://pub.dartlang.org"
     source: hosted
     version: "0.5.1"
+  uni_links_macos:
+    dependency: "direct main"
+    description:
+      name: uni_links_macos
+      url: "https://pub.dartlang.org"
+    source: hosted
+    version: "0.4.0"
   uni_links_platform_interface:
     dependency: transitive
     description:

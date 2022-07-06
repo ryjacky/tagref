@@ -122,12 +122,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(20),
                 splashRadius: 1,
                 onPressed: () async {
-                  if (twitterModeOn == false &&
-                      (Platform.isAndroid || Platform.isIOS)) {
+                  if (twitterModeOn == false) {
                     if (!_twitterApiHelper.authorized) {
-                      await _twitterApiHelper.authTwitterMobile();
+                      await _twitterApiHelper.authTwitter();
                     }
                   }
+
                   setState(() {
                     twitterModeOn = !twitterModeOn;
                   });

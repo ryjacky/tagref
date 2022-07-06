@@ -1,6 +1,8 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_macos_webview/flutter_macos_webview.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:http/http.dart' as http;
 
@@ -20,26 +22,66 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: WebView(
-        javascriptMode: JavascriptMode.unrestricted,
-        initialUrl:
-            "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=$clientId&redirect_uri=$callback&scope=tweet.read%20users.read%20follows.read&state=state&code_challenge=challenge&code_challenge_method=plain",
-        navigationDelegate: (navReq) {
-          if (navReq.url.startsWith("tagref://twitter/oauth")) {
-            Uri callbackUri = Uri.parse(navReq.url);
-            String? authCode = callbackUri.queryParameters["code"];
+      body: (Platform.isAndroid || Platform.isIOS)
+          ? getMobileWebView()
+          : (Platform.isWindows ? getWindowsWebView() : getMacWebView()),
+    );
+  }
 
-            if (authCode == null) {
-              throw Exception("The end point returned an unknown result.");
-            }
-            exchangeForAccessToken(authCode).then((acecssToken) {
-              Navigator.pop(context, acecssToken);
-            });
-            // return NavigationDecision.prevent;
+  Widget getWindowsWebView() {
+    return Scaffold();
+  }
+
+  Future<void> _onOpenPressed(PresentationStyle presentationStyle) async {
+    final webview = FlutterMacOSWebView(
+      onOpen: () => print('Opened'),
+      onClose: () => print('Closed'),
+      onPageStarted: (url) => print('Page started: $url'),
+      onPageFinished: (url) => print('Page finished: $url'),
+      onWebResourceError: (err) {
+        print(
+          'Error: ${err.errorCode}, ${err.errorType}, ${err.domain}, ${err.description}',
+        );
+      },
+    );
+
+    await webview.open(
+      url: 'https://google.com',
+      presentationStyle: presentationStyle,
+      size: Size(400.0, 400.0),
+      userAgent:
+          'Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+    );
+
+    // await Future.delayed(Duration(seconds: 5));
+    // await webview.close();
+  }
+
+  Widget getMacWebView() {
+    _onOpenPressed(PresentationStyle.modal);
+    return Scaffold();
+  }
+
+  WebView getMobileWebView() {
+    return WebView(
+      javascriptMode: JavascriptMode.unrestricted,
+      initialUrl:
+          "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=$clientId&redirect_uri=$callback&scope=tweet.read%20users.read%20follows.read&state=state&code_challenge=challenge&code_challenge_method=plain",
+      navigationDelegate: (navReq) {
+        if (navReq.url.startsWith("tagref://twitter/oauth")) {
+          Uri callbackUri = Uri.parse(navReq.url);
+          String? authCode = callbackUri.queryParameters["code"];
+
+          if (authCode == null) {
+            throw Exception("The end point returned an unknown result.");
           }
-          return NavigationDecision.navigate;
-        },
-      ),
+          exchangeForAccessToken(authCode).then((acecssToken) {
+            Navigator.pop(context, acecssToken);
+          });
+          // return NavigationDecision.prevent;
+        }
+        return NavigationDecision.navigate;
+      },
     );
   }
 

@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:tagref/screen/twitter_oauth_exchange.dart';
@@ -17,18 +19,28 @@ class TwitterApiHelper {
 
   TwitterApiHelper({required this.context, required this.secureStorage});
 
-  Future<bool> authTwitterMobile() async {
+  Future<bool> authTwitter() async {
     if (authorized) {
+      log("Twitter client is already authorized, skipping...");
       return true;
     }
 
     secureStorage.read(key: uidSSKey).then((uid) {
       secureStorage.read(key: tTokenSSKey).then((tToken) {
         if (tToken != null && uid != null) {
+          log("Twitter OAUth credentials are found in system's secure storage");
+          log("Creating twitter client with the stored credentials...");
+
+          // Initializes twitterClient with the access token stored in
+          // system's secure storage
           userId = uid;
           twitterClient = TwitterApi(bearerToken: tToken);
           authorized = true;
         } else {
+          log("Twitter client is not authorized");
+          log("Twitter OAuth credentials not found locally");
+          log("Sending user consent, please login with your browser");
+
           // Show twitter oauth 2.0 authorization page, save and apply userId and
           // access token when complete
           Navigator.push(
@@ -56,6 +68,8 @@ class TwitterApiHelper {
             // Save and apply userId and access token
             twitterClient = TwitterApi(bearerToken: tToken);
             twitterClient.usersService.lookupMe().then((value) {
+              log("Twitter oauth consent has returned, continuing with the result");
+
               userId = value.data.id;
               secureStorage.write(key: tTokenSSKey, value: tToken);
               secureStorage.write(key: uidSSKey, value: userId);
@@ -76,6 +90,7 @@ class TwitterApiHelper {
     List<String> imageUrls = [];
 
     // Query for home timeline
+    log("Fetching home timeline images for the users, extracting from tweets");
     TwitterResponse<List<TweetData>, TweetMeta> response = await twitterClient
         .tweetsService
         .lookupHomeTimeline(userId: userId, maxResults: 50, excludes: [
@@ -91,6 +106,7 @@ class TwitterApiHelper {
 
     // Search for all retweets in home timeline, add image urls from the
     // original tweets to imageUrls when available
+    log("Fetching home timeline images for the users, extracting from retweets");
     List<String> retweetIds = [];
     for (TweetData tweetData in response.data) {
       // Gather retweets
