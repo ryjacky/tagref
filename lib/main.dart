@@ -6,13 +6,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:tagref/helpers/GoogleApiHelper.dart';
-import 'package:tagref/helpers/TwitterApiHelper.dart';
-import 'package:tagref/screen/HomeScreen.dart';
-import 'package:tagref/screen/SetupScreen.dart';
-import 'package:tagref/screen/TwitterOAuthExchange.dart';
+import 'package:tagref/helpers/google_api_helper.dart';
+import 'package:tagref/helpers/twitter_api_helper.dart';
+import 'package:tagref/screen/home_screen.dart';
+import 'package:tagref/screen/setup_screen.dart';
+import 'package:tagref/screen/twitter_oauth_exchange.dart';
 
-import 'assets/DBHelper.dart';
+import 'assets/db_helper.dart';
 import 'assets/constant.dart';
 
 /// Should include all pre-start initializations here

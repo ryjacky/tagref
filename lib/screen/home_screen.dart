@@ -4,15 +4,15 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:tagref/helpers/GoogleApiHelper.dart';
-import 'package:tagref/helpers/TwitterApiHelper.dart';
+import 'package:tagref/helpers/google_api_helper.dart';
+import 'package:tagref/helpers/twitter_api_helper.dart';
 
-import '../assets/DBHelper.dart';
+import '../assets/db_helper.dart';
 import '../assets/constant.dart';
-import '../ui/TagSearchBar.dart';
-import 'SettingScreen.dart';
-import 'TagRefMasonryFragment.dart';
-import 'TwitterMasonryFragment.dart';
+import '../ui/tag_search_bar.dart';
+import 'setting_screen.dart';
+import 'tagref_masonry_fragment.dart';
+import 'twitter_masonry_fragment.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -122,15 +122,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 padding: const EdgeInsets.all(20),
                 splashRadius: 1,
                 onPressed: () async {
-                  if (Platform.isAndroid || Platform.isIOS) {
+                  if (twitterModeOn == false &&
+                      (Platform.isAndroid || Platform.isIOS)) {
                     if (!_twitterApiHelper.authorized) {
                       await _twitterApiHelper.authTwitterMobile();
                     }
-
-                    setState(() {
-                      twitterModeOn = !twitterModeOn;
-                    });
                   }
+                  setState(() {
+                    twitterModeOn = !twitterModeOn;
+                  });
                 },
               ),
               Expanded(child: Container()),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tagref/assets/constant.dart';
-import 'package:tagref/ui/TagLabel.dart';
+import 'package:tagref/ui/tag_label.dart';
 
 typedef VoidCallback = Function(String val);
 

@@ -1,27 +1,24 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tagref/assets/DBHelper.dart';
-import 'package:tagref/ui/FaIconButton.dart';
-import 'package:tagref/ui/PinButton.dart';
-import 'package:tagref/ui/TagInputField.dart';
+import 'package:tagref/assets/db_helper.dart';
+import 'package:tagref/ui/fa_icon_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../assets/constant.dart';
 
 typedef VoidCallback = Function();
 
-class ReferenceImageDisplay extends StatefulWidget {
+class TwitterImageDisplay extends StatefulWidget {
   final String srcUrl;
   final int imgId;
   final int srcId;
 
   final VoidCallback onDeleted;
 
-  const ReferenceImageDisplay(
+  const TwitterImageDisplay(
       {Key? key,
       required this.srcUrl,
       required this.imgId,
@@ -30,10 +27,10 @@ class ReferenceImageDisplay extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<ReferenceImageDisplay> createState() => _ReferenceImageDisplayState();
+  State<TwitterImageDisplay> createState() => _TwitterImageDisplayState();
 }
 
-class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
+class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
   bool hovered = false;
   static const double padding = 4;
 
@@ -59,12 +56,12 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                 ColorFiltered(
                   colorFilter:
                       ColorFilter.mode(
-                          hovered ? Colors.black54 : Colors.transparent, BlendMode.darken),
+                          hovered ? Colors.black12 : Colors.transparent, BlendMode.darken),
                   child: ImageFiltered(
                       imageFilter: ImageFilter.blur(
                           tileMode: TileMode.decal,
-                          sigmaX: hovered ? 5 : 0,
-                          sigmaY: hovered ? 5 : 0),
+                          sigmaX: hovered ? 2 : 0,
+                          sigmaY: hovered ? 2 : 0),
                       child: widget.srcId == 1
                           ? Image.network(
                               widget.srcUrl,
@@ -88,14 +85,6 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                             Padding(
                               padding: const EdgeInsets.all(padding),
                               child: FaIconButton(
-                                  faIcon: FontAwesomeIcons.trash,
-                                  onPressed: () {
-                                    removeImageFromDB(widget.imgId);
-                                  }),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(padding),
-                              child: FaIconButton(
                                   faIcon: FontAwesomeIcons.link,
                                   onPressed: () {
                                     _launchUrl(Uri.parse(widget.srcUrl));
@@ -104,21 +93,11 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                             Padding(
                               padding: const EdgeInsets.all(padding),
                               child: FaIconButton(
-                                  faIcon: FontAwesomeIcons.magnifyingGlass,
+                                  faIcon: FontAwesomeIcons.plus,
                                   onPressed: () {}),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(padding),
-                              child: PinButton(onPressed: (pinned) {}),
                             ),
                           ],
                         ),
-                        Padding(
-                          padding: const EdgeInsets.all(padding),
-                          child: TagInputField(
-                            hintText: tr("add-tag-field-hint"),
-                          ),
-                        )
                       ],
                     ),
                   ),

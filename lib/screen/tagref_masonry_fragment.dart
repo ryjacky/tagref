@@ -1,24 +1,23 @@
 import 'dart:io';
 import 'dart:math';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:tagref/helpers/GoogleApiHelper.dart';
-import 'package:tagref/helpers/TwitterApiHelper.dart';
 
-import '../ui/TwitterImageDisplay.dart';
+import '../assets/db_helper.dart';
+import '../ui/add_button.dart';
+import '../ui/reference_image_display.dart';
 
-class TwitterMasonryFragment extends StatefulWidget {
-  final TwitterApiHelper twitterHelper;
-
-  const TwitterMasonryFragment({Key? key, required this.twitterHelper}) : super(key: key);
+class TagRefMasonryFragment extends StatefulWidget {
+  const TagRefMasonryFragment({Key? key}) : super(key: key);
 
   @override
-  State<TwitterMasonryFragment> createState() => _TwitterMasonryFragmentState();
+  State<TagRefMasonryFragment> createState() => TagRefMasonryFragmentState();
 }
 
-class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
+class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   final List<String> keywordList = [];
 
   final masonryUpdateStep = 50;
@@ -34,48 +33,40 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
   /// Indicates if masonry grid view is updating
   bool isUpdating = true;
 
-  List<Map<String, Object?>> queryResult = [];
-  late List<String> imageUrls = [];
+  Future<void> pickFile() async {
+    FilePickerResult? result =
+        await FilePicker.platform.pickFiles(allowMultiple: true);
+
+    if (result != null) {
+      for (var path in result.paths) {
+        DBHelper.db.rawInsert(""
+            "INSERT INTO images (src_url, src_id) VALUES ('$path', 2)");
+      }
+      setStateAndResetEnv();
+    } else {
+      // Do nothing when user closed the dialog
+    }
+  }
 
   Future<void> loadImages() async {
-    late List<String> tempImageUrls;
-
-    for (int i = 0; i <= 3; i++) {
-      if (i == 3) {
-        print("something went wrong, please try again");
-        return;
-      }
-
-      try {
-        tempImageUrls = await widget.twitterHelper.lookupHomeTimelineImages();
-        break;
-      } catch (e) {
-        await Future.delayed(const Duration(milliseconds: 500));
-      }
-    }
-
-    for (int i = 0; i < tempImageUrls.length; i++) {
-      var gridElement = {"src_id": 1, "img_id": 0, "src_url": tempImageUrls[i]};
-      if (!imageUrls.contains(tempImageUrls[i])) {
-        imageUrls.add(tempImageUrls[i]);
-        queryResult.add(gridElement);
-      }
-    }
+    late List<Map<String, Object?>> queryResult;
+       queryResult = await DBHelper.db
+          .rawQuery("SELECT * FROM images ORDER BY img_id DESC;");
 
     // Limit gridMaxCounts to prevent overflow
     // (gridMaxCounts > number of all images in the database)
     gridMaxCounts = min(gridMaxCounts, queryResult.length);
 
     // Go through each record from the query result and creates an
-    // TwitterImageDisplay widget which delegates the image for the record
+    // ReferenceImageDisplay widget which delegates the image for the record
 
     // Only creates 50 widgets per setState()
     setState(() {
       for (currentGridCount;
           currentGridCount < gridMaxCounts;
           currentGridCount++) {
-        late TwitterImageDisplay rid;
-        masonryGrids.add(rid = TwitterImageDisplay(
+        late ReferenceImageDisplay rid;
+        masonryGrids.add(rid = ReferenceImageDisplay(
           onDeleted: () {
             setState(() {
               masonryGrids.remove(rid);
@@ -109,7 +100,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
       child: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification.metrics.pixels >=
-                  scrollNotification.metrics.maxScrollExtent - 500 &&
+              scrollNotification.metrics.maxScrollExtent - 500 &&
               isUpdating) {
             // set isUpdating to false to prevent calling setState
             // more than once
@@ -126,13 +117,22 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
         },
         child: MasonryGridView.count(
           crossAxisCount: (Platform.isWindows || Platform.isMacOS) ? 3 : 1,
-          padding: EdgeInsets.symmetric(vertical: 20, horizontal: paddingH.w),
+          padding:
+          EdgeInsets.symmetric(vertical: 20, horizontal: paddingH.w),
           mainAxisSpacing: 15,
           crossAxisSpacing: 15,
           // Reserve one seat for the AddButton
-          itemCount: currentGridCount,
+          itemCount: currentGridCount + 1,
           itemBuilder: (context, index) {
-            return masonryGrids[index];
+            if (index == 0) {
+              return AddButton(
+                  onPressed: () {
+                    pickFile();
+                  },
+                  imgUrl:
+                  "https://picsum.photos/seed/${DateTime.now().day}/1000/1000");
+            }
+            return masonryGrids[index - 1];
           },
         ),
       ),
@@ -140,9 +140,11 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
   }
 
   /// Reset masonry view environment variables
-  void _resetEnv() {
-    currentGridCount = 0;
-    gridMaxCounts = 50;
-    masonryGrids.clear();
+  void setStateAndResetEnv() {
+    setState((){
+      currentGridCount = 0;
+      gridMaxCounts = 50;
+      masonryGrids.clear();
+    });
   }
 }

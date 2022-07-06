@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:tagref/screen/TwitterOAuthExchange.dart';
+import 'package:tagref/screen/twitter_oauth_exchange.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
 
 class TwitterApiHelper {
@@ -18,11 +18,16 @@ class TwitterApiHelper {
   TwitterApiHelper({required this.context, required this.secureStorage});
 
   Future<bool> authTwitterMobile() async {
+    if (authorized) {
+      return true;
+    }
+
     secureStorage.read(key: uidSSKey).then((uid) {
       secureStorage.read(key: tTokenSSKey).then((tToken) {
         if (tToken != null && uid != null) {
           userId = uid;
           twitterClient = TwitterApi(bearerToken: tToken);
+          authorized = true;
         } else {
           // Show twitter oauth 2.0 authorization page, save and apply userId and
           // access token when complete
