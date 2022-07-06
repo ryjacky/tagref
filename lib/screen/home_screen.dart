@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
@@ -36,8 +37,11 @@ class _HomeScreenState extends State<HomeScreen> {
   GlobalKey<TagRefMasonryFragmentState> trmfKey = GlobalKey();
   late final TagRefMasonryFragment trmf;
 
+  final secureStorage = const FlutterSecureStorage();
+
   @override
   void initState() {
+    secureStorage.deleteAll();
     _twitterApiHelper =
         TwitterApiHelper(context: context, secureStorage: secureStorage);
     trmf = TagRefMasonryFragment(

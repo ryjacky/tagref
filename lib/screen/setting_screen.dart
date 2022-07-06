@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,6 +22,8 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
+  final secureStorage = FlutterSecureStorage();
+
   /// Controls the displayed text for DriveStatusDisplay widget, shows "ON"
   /// when value is true, otherwise "OFF"
   bool gDriveStatusOn = false;
@@ -112,7 +115,7 @@ class _SettingScreenState extends State<SettingScreen> {
                             // The only case when driveApi will be null should be
                             // when GDrive has never been set up before
                             if (driveApi == null) {
-                              await initializeGoogleApi();
+                              await initializeGoogleApi(secureStorage);
                               await _applyRemoteDBChanges();
                             }
 
@@ -198,7 +201,7 @@ class _SettingScreenState extends State<SettingScreen> {
     SharedPreferences.getInstance().then((pref) => setState(() {
       pref.remove(gDriveConnected);
     }));
-    purgeAccessCredentials();
+    purgeAccessCredentials(secureStorage);
     Navigator.pop(context);
     setState(() {
       gDriveStatusOn = true;
