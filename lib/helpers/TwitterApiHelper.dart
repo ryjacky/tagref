@@ -1,12 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:tagref/screen/TwitterOAuthExchange.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
-import 'package:uni_links/uni_links.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:oauth2/oauth2.dart' as oauth2;
-import 'package:webview_flutter/webview_flutter.dart';
 
 class TwitterApiHelper {
   late final TwitterApi twitterClient;
+  bool authorized = false;
 
   late final String userId;
   final FlutterSecureStorage secureStorage;
@@ -14,57 +13,55 @@ class TwitterApiHelper {
   final tTokenSSKey = "com.tagref.twitterUserToken";
   final uidSSKey = "com.tagref.twitterUserId";
 
-  TwitterApiHelper({required this.secureStorage}) {
-    authTwitterMobile();
+  final BuildContext context;
 
+  TwitterApiHelper({required this.context, required this.secureStorage});
+
+  Future<bool> authTwitterMobile() async {
     secureStorage.read(key: uidSSKey).then((uid) {
       secureStorage.read(key: tTokenSSKey).then((tToken) {
         if (tToken != null && uid != null) {
           userId = uid;
           twitterClient = TwitterApi(bearerToken: tToken);
         } else {
-          authTwitterMobile();
-          // authTwitterMobile().then((response) {
-          //   twitterClient = TwitterApi(
-          //     bearerToken: response.authToken!,
-          //
-          //     //! The default timeout is 10 seconds.
-          //     timeout: const Duration(seconds: 20),
-          //   );
-          //
-          //   twitterClient.usersService.lookupMe().then((myData) {
-          //     userId = myData.data.id;
-          //
-          //     secureStorage.write(
-          //         key: tTokenSSKey, value: response.authToken);
-          //     secureStorage.write(key: uidSSKey, value: userId);
-          //   });
-          // });
+          // Show twitter oauth 2.0 authorization page, save and apply userId and
+          // access token when complete
+          Navigator.push(
+              context,
+              PageRouteBuilder(
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(0, -1.0);
+                    const end = Offset.zero;
+                    const curve = Curves.ease;
+
+                    final tween = Tween(begin: begin, end: end);
+                    final curvedAnimation = CurvedAnimation(
+                      parent: animation,
+                      curve: curve,
+                    );
+
+                    return SlideTransition(
+                      position: tween.animate(curvedAnimation),
+                      child: child,
+                    );
+                  },
+                  pageBuilder: (context, a1, a2) =>
+                      const TwitterOAuthExchange())).then((tToken) {
+            // Save and apply userId and access token
+            twitterClient = TwitterApi(bearerToken: tToken);
+            twitterClient.usersService.lookupMe().then((value) {
+              userId = value.data.id;
+              secureStorage.write(key: tTokenSSKey, value: tToken);
+              secureStorage.write(key: uidSSKey, value: userId);
+              authorized = true;
+            });
+          });
         }
       });
     });
+    return true;
   }
-
-  Future<void> authTwitterMobile() async {
-    print(await launchUrl(
-        Uri.parse("https://twitter.com/i/oauth2/authorize?response_type=code&client_id=emVVNlIxSDdnOWlnNzI2bTJUdVE6MTpjaQ&redirect_uri=com.tagref.oauth://callback/&scope=tweet.read%20users.read%20follows.read%20offline.access&state=state&code_challenge=challenge&code_challenge_method=plain"),
-    ));
-
-    WebView(
-      javascriptMode: JavascriptMode.unrestricted,
-      initialUrl:         "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=emVVNlIxSDdnOWlnNzI2bTJUdVE6MTpjaQ&redirect_uri=com.tagref.oauth://callback/&scope=tweet.read%20users.read%20follows.read%20offline.access&state=state&code_challenge=challenge&code_challenge_method=plain",
-      navigationDelegate: (navReq) {
-        if (navReq.url.startsWith("com.tagref.oauth://callback/")) {
-          Uri.parse(navReq.url);
-          return NavigationDecision.prevent;
-        }
-        return NavigationDecision.navigate;
-      },
-      // ------- 8< -------
-    );
-    // DUFbAjOMGIDq57gZ54nGw1N4IwIJhHRHARxY5T0d_LWbwVwXty
-  }
-
 
   /// Look up the reverse chronological home timeline for the user and
   /// retrieve all images in its url form, includes retweets, excludes replies

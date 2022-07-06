@@ -30,15 +30,22 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool twitterModeOn = false;
 
-  final TwitterMasonryFragment tmf = const TwitterMasonryFragment();
+  late final TwitterMasonryFragment tmf;
+  late final TwitterApiHelper _twitterApiHelper;
 
   GlobalKey<TagRefMasonryFragmentState> trmfKey = GlobalKey();
   late final TagRefMasonryFragment trmf;
 
-
   @override
   void initState() {
-    trmf = TagRefMasonryFragment(key: trmfKey,);
+    _twitterApiHelper =
+        TwitterApiHelper(context: context, secureStorage: secureStorage);
+    trmf = TagRefMasonryFragment(
+      key: trmfKey,
+    );
+    tmf = TwitterMasonryFragment(
+      twitterHelper: _twitterApiHelper,
+    );
   }
 
   @override
@@ -114,12 +121,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 iconSize: 28,
                 padding: const EdgeInsets.all(20),
                 splashRadius: 1,
-                onPressed: () {
-                  setState(() {
-                    twitterModeOn = !twitterModeOn;
-                  });
+                onPressed: () async {
                   if (Platform.isAndroid || Platform.isIOS) {
-                    // TwitterApiHelper().authTwitterMobile();
+                    if (!_twitterApiHelper.authorized) {
+                      await _twitterApiHelper.authTwitterMobile();
+                    }
+
+                    setState(() {
+                      twitterModeOn = !twitterModeOn;
+                    });
                   }
                 },
               ),
@@ -130,28 +140,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 iconSize: 28,
                 onPressed: () {
                   Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                              transitionsBuilder: (context, animation,
-                                  secondaryAnimation, child) {
-                                const begin = Offset(0, -1.0);
-                                const end = Offset.zero;
-                                const curve = Curves.ease;
+                      context,
+                      PageRouteBuilder(
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = Offset(0, -1.0);
+                            const end = Offset.zero;
+                            const curve = Curves.ease;
 
-                                final tween = Tween(begin: begin, end: end);
-                                final curvedAnimation = CurvedAnimation(
-                                  parent: animation,
-                                  curve: curve,
-                                );
+                            final tween = Tween(begin: begin, end: end);
+                            final curvedAnimation = CurvedAnimation(
+                              parent: animation,
+                              curve: curve,
+                            );
 
-                                return SlideTransition(
-                                  position: tween.animate(curvedAnimation),
-                                  child: child,
-                                );
-                              },
-                              pageBuilder: (context, a1, a2) =>
-                                  const SettingScreen()))
-                      .then((remoteChanged) => trmfKey.currentState?.setStateAndResetEnv());
+                            return SlideTransition(
+                              position: tween.animate(curvedAnimation),
+                              child: child,
+                            );
+                          },
+                          pageBuilder: (context, a1, a2) =>
+                              const SettingScreen())).then((remoteChanged) =>
+                      trmfKey.currentState?.setStateAndResetEnv());
                 },
               ),
             ],
@@ -160,11 +170,10 @@ class _HomeScreenState extends State<HomeScreen> {
         body: Column(
           children: [
             TagSearchBarKeywordsView(
-              keywordList: keywordList,
-              onKeywordRemoved: (keywordRemoved) {
-                keywordList.remove(keywordRemoved);
-              }
-            ),
+                keywordList: keywordList,
+                onKeywordRemoved: (keywordRemoved) {
+                  keywordList.remove(keywordRemoved);
+                }),
             twitterModeOn ? tmf : trmf,
           ],
         ));
