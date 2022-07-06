@@ -4,7 +4,6 @@ import 'dart:io';
 
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_macos_webview/flutter_macos_webview.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:http/http.dart' as http;
 
@@ -25,8 +24,6 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
 
   late final String authURI;
 
-  late final FlutterMacOSWebView webview;
-
   bool winWebViewShown = false;
 
   @override
@@ -41,7 +38,7 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
     return Scaffold(
       body: (Platform.isAndroid || Platform.isIOS)
           ? getMobileWebView()
-          : (Platform.isWindows ? getWindowsWebView() : getMacWebView()),
+          : getDesktopWebView(),
     );
   }
 
@@ -50,9 +47,11 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
       winWebViewShown = true;
 
       final webview = await WebviewWindow.create(
-        configuration: const CreateConfiguration(
+        configuration: CreateConfiguration(
           windowHeight: 700,
           windowWidth: 400,
+          titleBarHeight: 0,
+          titleBarTopPadding: Platform.isMacOS ? 0 : 0,
           title: "Twitter Authorization"
           // userDataFolderWindows: await _getWebViewPath(),
         ),
@@ -80,57 +79,9 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
     }
   }
 
-  Widget getWindowsWebView() {
+  Widget getDesktopWebView() {
     launchWindowsWebView();
     return Text("Please complete the login process in the popup.");
-  }
-
-  Future<void> _onOpenPressed(PresentationStyle presentationStyle) async {
-    webview = FlutterMacOSWebView(
-      onOpen: () {},
-      onClose: () {},
-      onPageStarted: (url) {
-        if (url == null) return;
-        if (url.startsWith(callback)) {
-          Uri callbackUri = Uri.parse(url);
-          String? authCode = callbackUri.queryParameters["code"];
-
-          if (authCode == null) {
-            throw Exception("The end point returned an unknown result.");
-          }
-
-          log(
-              "WebView has returned the auth code, exchanging for access token...");
-          log("auth code: $authCode");
-          exchangeForAccessToken(authCode).then((acecssToken) {
-            webview.close();
-            Navigator.pop(context, acecssToken);
-          });
-        }
-      },
-      onPageFinished: (url) {},
-      onWebResourceError: (err) {
-        // print(
-        //   'Error: ${err.errorCode}, ${err.errorType}, ${err.domain}, ${err.description}',
-        // );
-      },
-    );
-
-    await webview.open(
-      url: authURI,
-      presentationStyle: presentationStyle,
-      size: const Size(400.0, 600.0),
-      userAgent:
-      'Mozilla/5.0 (iPhone; CPU iPhone OS 14_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
-    );
-
-    // await Future.delayed(Duration(seconds: 5));
-    // await webview.close();
-  }
-
-  Widget getMacWebView() {
-    _onOpenPressed(PresentationStyle.modal);
-    return Text("Please complete the login in the pop up.");
   }
 
   WebView getMobileWebView() {
