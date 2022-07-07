@@ -3,10 +3,20 @@ import 'package:flutter/src/foundation/key.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:tagref/ui/tag_label.dart';
 
+typedef OnTagDeleted = Function(String tagWd);
+
 class TagDisplay extends StatefulWidget {
   final double height;
+  final List<String> tagList;
 
-  const TagDisplay({Key? key, required this.height}) : super(key: key);
+  final OnTagDeleted onTagDeleted;
+
+  const TagDisplay(
+      {Key? key,
+      required this.height,
+      required this.tagList,
+      required this.onTagDeleted})
+      : super(key: key);
 
   @override
   State<TagDisplay> createState() => _TagDisplayState();
@@ -15,6 +25,10 @@ class TagDisplay extends StatefulWidget {
 class _TagDisplayState extends State<TagDisplay> {
   @override
   Widget build(BuildContext context) {
+    List<TagLabel> tagLabelList = widget.tagList
+        .map((tagWd) => TagLabel(onPressed: widget.onTagDeleted, tagWd: tagWd))
+        .toList();
+
     return Row(
       children: [
         Expanded(
@@ -25,38 +39,7 @@ class _TagDisplayState extends State<TagDisplay> {
                     borderRadius: BorderRadius.all(Radius.circular(4))),
                 child: SingleChildScrollView(
                   child: Wrap(
-                    children: [
-                      TagLabel(onPressed: () {}, tagWd: "lskdjf"),
-                      TagLabel(onPressed: () {}, tagWd: "qweyui"),
-                      TagLabel(onPressed: () {}, tagWd: "ayuisd"),
-                      TagLabel(onPressed: () {}, tagWd: "zyuixc"),
-                      TagLabel(onPressed: () {}, tagWd: "iiivbn"),
-                      TagLabel(onPressed: () {}, tagWd: "lskdjf"),
-                      TagLabel(onPressed: () {}, tagWd: "qweyui"),
-                      TagLabel(onPressed: () {}, tagWd: "ayuisd"),
-                      TagLabel(onPressed: () {}, tagWd: "zyuixc"),
-                      TagLabel(onPressed: () {}, tagWd: "iiivbn"),
-                      TagLabel(onPressed: () {}, tagWd: "lskdjf"),
-                      TagLabel(onPressed: () {}, tagWd: "qweyui"),
-                      TagLabel(onPressed: () {}, tagWd: "ayuisd"),
-                      TagLabel(onPressed: () {}, tagWd: "zyuixc"),
-                      TagLabel(onPressed: () {}, tagWd: "iiivbn"),
-                      TagLabel(onPressed: () {}, tagWd: "lskdjf"),
-                      TagLabel(onPressed: () {}, tagWd: "qweyui"),
-                      TagLabel(onPressed: () {}, tagWd: "ayuisd"),
-                      TagLabel(onPressed: () {}, tagWd: "zyuixc"),
-                      TagLabel(onPressed: () {}, tagWd: "iiivbn"),
-                      TagLabel(onPressed: () {}, tagWd: "lskdjf"),
-                      TagLabel(onPressed: () {}, tagWd: "qweyui"),
-                      TagLabel(onPressed: () {}, tagWd: "ayuisd"),
-                      TagLabel(onPressed: () {}, tagWd: "zyuixc"),
-                      TagLabel(onPressed: () {}, tagWd: "iiivbn"),
-                      TagLabel(onPressed: () {}, tagWd: "lskdjf"),
-                      TagLabel(onPressed: () {}, tagWd: "qweyui"),
-                      TagLabel(onPressed: () {}, tagWd: "ayuisd"),
-                      TagLabel(onPressed: () {}, tagWd: "zyuixc"),
-                      TagLabel(onPressed: () {}, tagWd: "iiivbn"),
-                    ],
+                    children: tagLabelList,
                   ),
                 )))
       ],

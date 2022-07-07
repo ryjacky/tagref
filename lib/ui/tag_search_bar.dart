@@ -79,7 +79,7 @@ class _TagSearchBarKeywordsViewState extends State<TagSearchBarKeywordsView> {
     for (int i = 0; i < widget.keywordList.length; i++) {
       late TagLabel iLabel;
       iLabel = TagLabel(
-          onPressed: () => setState(() {
+          onPressed: (tagId) => setState(() {
                 widget.onKeywordRemoved(widget.keywordList[i]);
               }),
           tagWd: widget.keywordList[i]);

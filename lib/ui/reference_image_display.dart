@@ -38,6 +38,35 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
   bool hovered = false;
   static const double padding = 4;
 
+  List<String> tagList = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    // TODO: get the tag list from tag_img table with imgId
+  }
+
+  void addTag(String tag) {
+    setState(() {
+      if (!tagList.contains(tag)) {
+        tagList.add(tag);
+      }
+    });
+
+    // TODO: Also add the tag to the db table tag_img
+  }
+
+  void removeTag(String tagWd) {
+    setState(() {
+      if (tagList.contains(tagWd)) {
+        tagList.remove(tagWd);
+      }
+    });
+
+    // TODO: Also remove the tag from the database for this image only
+  }
+
   void _launchUrl(Uri url) async {
     if (!await launchUrl(url)) print('Could not launch $url');
   }
@@ -57,26 +86,27 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
             child: Stack(
               fit: StackFit.passthrough,
               children: [
-                ConstrainedBox(constraints: BoxConstraints(minHeight: 300), 
-                child: ColorFiltered(
-                  colorFilter:
-                      ColorFilter.mode(
-                          hovered ? Colors.black54 : Colors.transparent, BlendMode.darken),
-                  child: ImageFiltered(
-                      imageFilter: ImageFilter.blur(
-                          tileMode: TileMode.decal,
-                          sigmaX: hovered ? 5 : 0,
-                          sigmaY: hovered ? 5 : 0),
-                      child: widget.srcId == 1
-                          ? Image.network(
-                              widget.srcUrl,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.file(
-                              File(widget.srcUrl),
-                              fit: BoxFit.cover,
-                            )),
-                ),
+                ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: 300),
+                  child: ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                        hovered ? Colors.black54 : Colors.transparent,
+                        BlendMode.darken),
+                    child: ImageFiltered(
+                        imageFilter: ImageFilter.blur(
+                            tileMode: TileMode.decal,
+                            sigmaX: hovered ? 5 : 0,
+                            sigmaY: hovered ? 5 : 0),
+                        child: widget.srcId == 1
+                            ? Image.network(
+                                widget.srcUrl,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.file(
+                                File(widget.srcUrl),
+                                fit: BoxFit.cover,
+                              )),
+                  ),
                 ),
                 Visibility(
                   visible: hovered,
@@ -119,13 +149,15 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                         Padding(
                           padding: const EdgeInsets.all(padding),
                           child: TagInputField(
-                            hintText: tr("add-tag-field-hint"),
-                          ),
+                              hintText: tr("add-tag-field-hint"),
+                              onSubmitted: addTag),
                         ),
-                        const Padding(
-                          padding: EdgeInsets.all(padding),
+                        Padding(
+                          padding: const EdgeInsets.all(padding),
                           child: TagDisplay(
-                            height: 185
+                            height: 185,
+                            tagList: tagList,
+                            onTagDeleted: removeTag,
                           ),
                         )
                       ],
