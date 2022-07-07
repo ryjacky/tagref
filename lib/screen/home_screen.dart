@@ -42,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
-    secureStorage.deleteAll();
+    // secureStorage.deleteAll();
     _twitterApiHelper =
         TwitterApiHelper(context: context, secureStorage: secureStorage);
     trmf = TagRefMasonryFragment(

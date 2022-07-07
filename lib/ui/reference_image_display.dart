@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tagref/assets/db_helper.dart';
 import 'package:tagref/ui/fa_icon_button.dart';
 import 'package:tagref/ui/pin_button.dart';
+import 'package:tagref/ui/tag_display.dart';
 import 'package:tagref/ui/tag_input_field.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -56,7 +57,8 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
             child: Stack(
               fit: StackFit.passthrough,
               children: [
-                ColorFiltered(
+                ConstrainedBox(constraints: BoxConstraints(minHeight: 300), 
+                child: ColorFiltered(
                   colorFilter:
                       ColorFilter.mode(
                           hovered ? Colors.black54 : Colors.transparent, BlendMode.darken),
@@ -68,12 +70,13 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                       child: widget.srcId == 1
                           ? Image.network(
                               widget.srcUrl,
-                              fit: BoxFit.fill,
+                              fit: BoxFit.cover,
                             )
                           : Image.file(
                               File(widget.srcUrl),
-                              fit: BoxFit.fill,
+                              fit: BoxFit.cover,
                             )),
+                ),
                 ),
                 Visibility(
                   visible: hovered,
@@ -117,6 +120,12 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                           padding: const EdgeInsets.all(padding),
                           child: TagInputField(
                             hintText: tr("add-tag-field-hint"),
+                          ),
+                        ),
+                        const Padding(
+                          padding: EdgeInsets.all(padding),
+                          child: TagDisplay(
+                            height: 185
                           ),
                         )
                       ],
