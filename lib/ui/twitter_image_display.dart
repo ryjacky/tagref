@@ -49,7 +49,6 @@ class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(cornerRadius),
           child: Container(
-            color: Colors.white,
             child: Stack(
               fit: StackFit.passthrough,
               children: [

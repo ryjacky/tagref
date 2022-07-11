@@ -49,7 +49,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
         tempImageUrls = await widget.twitterHelper.lookupHomeTimelineImages();
         break;
       } catch (e) {
-        await Future.delayed(const Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 1000));
       }
     }
 

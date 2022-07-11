@@ -50,6 +50,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
     trmf = TagRefMasonryFragment(
       key: trmfKey,
     );
+
     tmf = TwitterMasonryFragment(
       twitterHelper: _twitterApiHelper,
     );
