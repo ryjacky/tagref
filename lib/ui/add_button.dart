@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tagref/assets/constant.dart';
-import 'package:tagref/ui/FaIconButton.dart';
+import 'package:tagref/ui/fa_icon_button.dart';
 
 class AddButton extends StatelessWidget {
   final String imgUrl;

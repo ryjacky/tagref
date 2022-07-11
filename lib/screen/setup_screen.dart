@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tagref/assets/constant.dart';
-import 'package:tagref/screen/HomeScreen.dart';
+import 'package:tagref/screen/home_screen.dart';
 
-import '../assets/FontSize.dart';
-import '../ui/ToggleSwitch.dart';
+import '../assets/font_size.dart';
+import '../ui/toggle_switch.dart';
 
 class SetupScreen extends StatefulWidget {
   const SetupScreen({Key? key}) : super(key: key);

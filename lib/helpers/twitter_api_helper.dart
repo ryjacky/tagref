@@ -1,9 +1,13 @@
+import 'dart:developer';
+
+import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:tagref/screen/twitter_oauth_exchange.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
-import 'package:twitter_oauth2_pkce/twitter_oauth2_pkce.dart';
 
 class TwitterApiHelper {
   late final TwitterApi twitterClient;
+  bool authorized = false;
 
   late final String userId;
   final FlutterSecureStorage secureStorage;
@@ -11,46 +15,71 @@ class TwitterApiHelper {
   final tTokenSSKey = "com.tagref.twitterUserToken";
   final uidSSKey = "com.tagref.twitterUserId";
 
-  TwitterApiHelper({required this.secureStorage}) {
+  final BuildContext context;
+
+  TwitterApiHelper({required this.context, required this.secureStorage});
+
+  Future<bool> authTwitter() async {
+    if (authorized) {
+      log("Twitter client is already authorized, skipping...");
+      return true;
+    }
+
     secureStorage.read(key: uidSSKey).then((uid) {
       secureStorage.read(key: tTokenSSKey).then((tToken) {
         if (tToken != null && uid != null) {
+          log("Twitter OAUth credentials are found in system's secure storage");
+          log("Creating twitter client with the stored credentials...");
+
+          // Initializes twitterClient with the access token stored in
+          // system's secure storage
           userId = uid;
           twitterClient = TwitterApi(bearerToken: tToken);
+          authorized = true;
         } else {
-          authTwitterMobile().then((response) {
-            twitterClient = TwitterApi(
-              bearerToken: response.accessToken,
+          log("Twitter client is not authorized");
+          log("Twitter OAuth credentials not found locally");
+          log("Sending user consent, please login with your browser");
 
-              //! The default timeout is 10 seconds.
-              timeout: const Duration(seconds: 20),
-            );
+          // Show twitter oauth 2.0 authorization page, save and apply userId and
+          // access token when complete
+          Navigator.push(
+              context,
+              PageRouteBuilder(
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    const begin = Offset(0, -1.0);
+                    const end = Offset.zero;
+                    const curve = Curves.ease;
 
-            twitterClient.usersService.lookupMe().then((myData) {
-              userId = myData.data.id;
+                    final tween = Tween(begin: begin, end: end);
+                    final curvedAnimation = CurvedAnimation(
+                      parent: animation,
+                      curve: curve,
+                    );
 
-              secureStorage.write(key: tTokenSSKey, value: response.accessToken);
+                    return SlideTransition(
+                      position: tween.animate(curvedAnimation),
+                      child: child,
+                    );
+                  },
+                  pageBuilder: (context, a1, a2) =>
+                      const TwitterOAuthExchange())).then((tToken) {
+            // Save and apply userId and access token
+            twitterClient = TwitterApi(bearerToken: tToken);
+            twitterClient.usersService.lookupMe().then((value) {
+              log("Twitter oauth consent has returned, continuing with the result");
+
+              userId = value.data.id;
+              secureStorage.write(key: tTokenSSKey, value: tToken);
               secureStorage.write(key: uidSSKey, value: userId);
+              authorized = true;
             });
           });
         }
       });
     });
-  }
-
-  Future<OAuthResponse> authTwitterMobile() async {
-    final oauth2 = TwitterOAuth2Client(
-      clientId: 'emVVNlIxSDdnOWlnNzI2bTJUdVE6MTpjaQ',
-      clientSecret: 'Y2e5UtaH6-eUNG9ktanPMC8CQGrML-ke9oWnR0pf26SeDazeeI',
-      redirectUri: 'com.tagref.oauth://callback/',
-      customUriScheme: 'com.tagref.oauth',
-    );
-
-    final response = await oauth2.executeAuthCodeFlowWithPKCE(
-      scopes: Scope.values,
-    );
-
-    return response;
+    return true;
   }
 
   /// Look up the reverse chronological home timeline for the user and
@@ -61,6 +90,7 @@ class TwitterApiHelper {
     List<String> imageUrls = [];
 
     // Query for home timeline
+    log("Fetching home timeline images for the users, extracting from tweets");
     TwitterResponse<List<TweetData>, TweetMeta> response = await twitterClient
         .tweetsService
         .lookupHomeTimeline(userId: userId, maxResults: 50, excludes: [
@@ -76,6 +106,7 @@ class TwitterApiHelper {
 
     // Search for all retweets in home timeline, add image urls from the
     // original tweets to imageUrls when available
+    log("Fetching home timeline images for the users, extracting from retweets");
     List<String> retweetIds = [];
     for (TweetData tweetData in response.data) {
       // Gather retweets

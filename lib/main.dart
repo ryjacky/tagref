@@ -1,22 +1,29 @@
 import 'dart:io';
 
+import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
-import 'package:tagref/helpers/GoogleApiHelper.dart';
-import 'package:tagref/helpers/TwitterApiHelper.dart';
-import 'package:tagref/screen/HomeScreen.dart';
-import 'package:tagref/screen/SetupScreen.dart';
+import 'package:tagref/helpers/google_api_helper.dart';
+import 'package:tagref/screen/home_screen.dart';
+import 'package:tagref/screen/setup_screen.dart';
 
-import 'assets/DBHelper.dart';
 import 'assets/constant.dart';
+import 'assets/db_helper.dart';
+
+const secureStorage = FlutterSecureStorage();
 
 /// Should include all pre-start initializations here
-void main() async {
+void main(List<String> args) async {
   sqfliteFfiInit();
+
+  if (runWebViewTitleBarWidget(args)) {
+    return;
+  }
 
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
@@ -25,7 +32,7 @@ void main() async {
   SharedPreferences pref = await SharedPreferences.getInstance();
   if (pref.getBool(gDriveConnected) != null) {
     await initializeDriveApiAndPullDB(
-        (await getApplicationSupportDirectory()).path, DBHelper.dbFileName);
+        (await getApplicationSupportDirectory()).path, DBHelper.dbFileName, secureStorage);
   }
 
   runApp(EasyLocalization(

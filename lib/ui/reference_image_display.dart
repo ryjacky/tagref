@@ -4,10 +4,11 @@ import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tagref/assets/DBHelper.dart';
-import 'package:tagref/ui/FaIconButton.dart';
-import 'package:tagref/ui/PinButton.dart';
-import 'package:tagref/ui/TagInputField.dart';
+import 'package:tagref/assets/db_helper.dart';
+import 'package:tagref/ui/fa_icon_button.dart';
+import 'package:tagref/ui/pin_button.dart';
+import 'package:tagref/ui/tag_display.dart';
+import 'package:tagref/ui/tag_input_field.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../assets/constant.dart';
@@ -37,6 +38,66 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
   bool hovered = false;
   static const double padding = 4;
 
+  List<String> tagList = [];
+
+  @override
+  void initState() {
+    super.initState();
+
+    DBHelper.db
+        .rawQuery(
+            "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=${widget.imgId});")
+        .then((existedTags) {
+      for (int i = 0; i < existedTags.length; i++) {
+        tagList.add(existedTags[i]["name"]);
+      }
+
+      // Triggering setState in case tagList update completes after initial build
+      setState(() {});
+    });
+  }
+
+  void addTagToImage(String tag) async {
+    setState(() {
+      if (!tagList.contains(tag)) {
+        tagList.add(tag);
+      }
+    });
+
+    String tagQuery = "SELECT * FROM tags WHERE name=\"$tag\";";
+    List<Map> tagExists = await DBHelper.db.rawQuery(tagQuery);
+
+    // Create tag (if not existed in 'tags' table) and creates
+    // new record in 'image_tag' table
+    late int newTagId;
+    if (tagExists.isEmpty) {
+      String newTagStatement = "INSERT INTO tags (name) VALUES (\"$tag\");";
+      newTagId = await DBHelper.db.rawInsert(newTagStatement);
+    } else {
+      newTagId = tagExists.first["tag_id"];
+    }
+
+    // Creates the relation record in image_tag when it does not exists
+    String imageTagQuery = "SELECT * FROM image_tag WHERE img_id=${widget.imgId} AND tag_id=$newTagId;";
+    List<Map> imageTagExists = await DBHelper.db.rawQuery(imageTagQuery);
+    if (imageTagExists.isEmpty){
+      DBHelper.db.rawInsert(
+          "INSERT INTO image_tag (img_id, tag_id) VALUES (${widget.imgId},$newTagId);");
+    }
+  }
+
+  void removeTag(String tagWd) {
+    setState(() {
+      if (tagList.contains(tagWd)) {
+        tagList.remove(tagWd);
+      }
+    });
+
+    String deleteTagStatement =
+        "DELETE FROM image_tag WHERE img_id=${widget.imgId} AND tag_id=(SELECT tag_id FROM tags WHERE name=\"$tagWd\");";
+    DBHelper.db.rawDelete(deleteTagStatement);
+  }
+
   void _launchUrl(Uri url) async {
     if (!await launchUrl(url)) print('Could not launch $url');
   }
@@ -56,24 +117,27 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
             child: Stack(
               fit: StackFit.passthrough,
               children: [
-                ColorFiltered(
-                  colorFilter:
-                      ColorFilter.mode(
-                          hovered ? Colors.black54 : Colors.transparent, BlendMode.darken),
-                  child: ImageFiltered(
-                      imageFilter: ImageFilter.blur(
-                          tileMode: TileMode.decal,
-                          sigmaX: hovered ? 5 : 0,
-                          sigmaY: hovered ? 5 : 0),
-                      child: widget.srcId == 1
-                          ? Image.network(
-                              widget.srcUrl,
-                              fit: BoxFit.fill,
-                            )
-                          : Image.file(
-                              File(widget.srcUrl),
-                              fit: BoxFit.fill,
-                            )),
+                ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: 300),
+                  child: ColorFiltered(
+                    colorFilter: ColorFilter.mode(
+                        hovered ? Colors.black54 : Colors.transparent,
+                        BlendMode.darken),
+                    child: ImageFiltered(
+                        imageFilter: ImageFilter.blur(
+                            tileMode: TileMode.decal,
+                            sigmaX: hovered ? 5 : 0,
+                            sigmaY: hovered ? 5 : 0),
+                        child: widget.srcId == 1
+                            ? Image.network(
+                                widget.srcUrl,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.file(
+                                File(widget.srcUrl),
+                                fit: BoxFit.cover,
+                              )),
+                  ),
                 ),
                 Visibility(
                   visible: hovered,
@@ -116,7 +180,15 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                         Padding(
                           padding: const EdgeInsets.all(padding),
                           child: TagInputField(
-                            hintText: tr("add-tag-field-hint"),
+                              hintText: tr("add-tag-field-hint"),
+                              onSubmitted: addTagToImage),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(padding),
+                          child: TagDisplay(
+                            height: 185,
+                            tagList: tagList,
+                            onTagDeleted: removeTag,
                           ),
                         )
                       ],

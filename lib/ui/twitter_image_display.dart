@@ -1,13 +1,10 @@
 import 'dart:io';
 import 'dart:ui';
 
-import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tagref/assets/DBHelper.dart';
-import 'package:tagref/ui/FaIconButton.dart';
-import 'package:tagref/ui/PinButton.dart';
-import 'package:tagref/ui/TagInputField.dart';
+import 'package:tagref/assets/db_helper.dart';
+import 'package:tagref/ui/fa_icon_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../assets/constant.dart';

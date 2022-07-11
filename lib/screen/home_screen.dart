@@ -2,17 +2,19 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:tagref/helpers/GoogleApiHelper.dart';
-import 'package:tagref/helpers/TwitterApiHelper.dart';
+import 'package:tagref/helpers/google_api_helper.dart';
+import 'package:tagref/helpers/twitter_api_helper.dart';
+import 'package:tagref/main.dart';
 
-import '../assets/DBHelper.dart';
+import '../assets/db_helper.dart';
 import '../assets/constant.dart';
-import '../ui/TagSearchBar.dart';
-import 'SettingScreen.dart';
-import 'TagRefMasonryFragment.dart';
-import 'TwitterMasonryFragment.dart';
+import '../ui/tag_search_bar.dart';
+import 'setting_screen.dart';
+import 'tagref_masonry_fragment.dart';
+import 'twitter_masonry_fragment.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -22,7 +24,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<String> keywordList = [];
+  final List<String> tagFilterList = [];
 
   /// Upload FAB is dynamically updated with this variable
   bool syncing = false;
@@ -30,15 +32,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   bool twitterModeOn = false;
 
-  final TwitterMasonryFragment tmf = const TwitterMasonryFragment();
+  late final TwitterMasonryFragment tmf;
+  late final TwitterApiHelper _twitterApiHelper;
 
   GlobalKey<TagRefMasonryFragmentState> trmfKey = GlobalKey();
   late final TagRefMasonryFragment trmf;
 
+  final secureStorage = const FlutterSecureStorage();
 
   @override
   void initState() {
-    trmf = TagRefMasonryFragment(key: trmfKey,);
+    // secureStorage.deleteAll();
+    _twitterApiHelper =
+        TwitterApiHelper(context: context, secureStorage: secureStorage);
+    trmf = TagRefMasonryFragment(
+      key: trmfKey,
+    );
+    tmf = TwitterMasonryFragment(
+      twitterHelper: _twitterApiHelper,
+    );
   }
 
   @override
@@ -101,9 +113,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   hintText: tr("search-hint"),
                   onSubmitted: (val) {
                     setState(() {
-                      if (val.isNotEmpty) {
-                        keywordList.add(val);
+                      if (val.isNotEmpty && !tagFilterList.contains(val)) {
+                        tagFilterList.add(val);
                       }
+
+                      trmfKey.currentState?.filterImages(tagFilterList);
+
                     });
                   }),
               IconButton(
@@ -114,13 +129,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 iconSize: 28,
                 padding: const EdgeInsets.all(20),
                 splashRadius: 1,
-                onPressed: () {
+                onPressed: () async {
+                  if (twitterModeOn == false) {
+                    if (!_twitterApiHelper.authorized) {
+                      await _twitterApiHelper.authTwitter();
+                    }
+                  }
+
                   setState(() {
                     twitterModeOn = !twitterModeOn;
                   });
-                  if (Platform.isAndroid || Platform.isIOS) {
-                    // TwitterApiHelper().authTwitterMobile();
-                  }
                 },
               ),
               Expanded(child: Container()),
@@ -130,28 +148,28 @@ class _HomeScreenState extends State<HomeScreen> {
                 iconSize: 28,
                 onPressed: () {
                   Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                              transitionsBuilder: (context, animation,
-                                  secondaryAnimation, child) {
-                                const begin = Offset(0, -1.0);
-                                const end = Offset.zero;
-                                const curve = Curves.ease;
+                      context,
+                      PageRouteBuilder(
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            const begin = Offset(0, -1.0);
+                            const end = Offset.zero;
+                            const curve = Curves.ease;
 
-                                final tween = Tween(begin: begin, end: end);
-                                final curvedAnimation = CurvedAnimation(
-                                  parent: animation,
-                                  curve: curve,
-                                );
+                            final tween = Tween(begin: begin, end: end);
+                            final curvedAnimation = CurvedAnimation(
+                              parent: animation,
+                              curve: curve,
+                            );
 
-                                return SlideTransition(
-                                  position: tween.animate(curvedAnimation),
-                                  child: child,
-                                );
-                              },
-                              pageBuilder: (context, a1, a2) =>
-                                  const SettingScreen()))
-                      .then((remoteChanged) => trmfKey.currentState?.setStateAndResetEnv());
+                            return SlideTransition(
+                              position: tween.animate(curvedAnimation),
+                              child: child,
+                            );
+                          },
+                          pageBuilder: (context, a1, a2) =>
+                              const SettingScreen())).then((remoteChanged) =>
+                      trmfKey.currentState?.setStateAndResetEnv());
                 },
               ),
             ],
@@ -160,8 +178,11 @@ class _HomeScreenState extends State<HomeScreen> {
         body: Column(
           children: [
             TagSearchBarKeywordsView(
-              keywordList: keywordList,
-            ),
+                keywordList: tagFilterList,
+                onKeywordRemoved: (keywordRemoved) {
+                  tagFilterList.remove(keywordRemoved);
+                  trmfKey.currentState?.filterImages(tagFilterList);
+                }),
             twitterModeOn ? tmf : trmf,
           ],
         ));

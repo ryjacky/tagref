@@ -4,13 +4,14 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'package:tagref/helpers/GoogleApiHelper.dart';
-import 'package:tagref/helpers/TwitterApiHelper.dart';
+import 'package:tagref/helpers/twitter_api_helper.dart';
 
-import '../ui/TwitterImageDisplay.dart';
+import '../ui/twitter_image_display.dart';
 
 class TwitterMasonryFragment extends StatefulWidget {
-  const TwitterMasonryFragment({Key? key}) : super(key: key);
+  final TwitterApiHelper twitterHelper;
+
+  const TwitterMasonryFragment({Key? key, required this.twitterHelper}) : super(key: key);
 
   @override
   State<TwitterMasonryFragment> createState() => _TwitterMasonryFragmentState();
@@ -18,7 +19,6 @@ class TwitterMasonryFragment extends StatefulWidget {
 
 class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
   final List<String> keywordList = [];
-  static TwitterApiHelper twitterHelper = TwitterApiHelper(secureStorage: secureStorage);
 
   final masonryUpdateStep = 50;
 
@@ -39,13 +39,14 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
   Future<void> loadImages() async {
     late List<String> tempImageUrls;
 
-    for (int i = 0; i <= 3; i++){
-      if (i == 3){
+    for (int i = 0; i <= 3; i++) {
+      if (i == 3) {
         print("something went wrong, please try again");
+        return;
       }
 
       try {
-        tempImageUrls = await twitterHelper.lookupHomeTimelineImages();
+        tempImageUrls = await widget.twitterHelper.lookupHomeTimelineImages();
         break;
       } catch (e) {
         await Future.delayed(const Duration(milliseconds: 500));
@@ -54,7 +55,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
 
     for (int i = 0; i < tempImageUrls.length; i++) {
       var gridElement = {"src_id": 1, "img_id": 0, "src_url": tempImageUrls[i]};
-      if (!imageUrls.contains(tempImageUrls[i])){
+      if (!imageUrls.contains(tempImageUrls[i])) {
         imageUrls.add(tempImageUrls[i]);
         queryResult.add(gridElement);
       }
@@ -107,7 +108,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
       child: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification.metrics.pixels >=
-              scrollNotification.metrics.maxScrollExtent - 500 &&
+                  scrollNotification.metrics.maxScrollExtent - 500 &&
               isUpdating) {
             // set isUpdating to false to prevent calling setState
             // more than once
@@ -124,8 +125,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
         },
         child: MasonryGridView.count(
           crossAxisCount: (Platform.isWindows || Platform.isMacOS) ? 3 : 1,
-          padding:
-          EdgeInsets.symmetric(vertical: 20, horizontal: paddingH.w),
+          padding: EdgeInsets.symmetric(vertical: 20, horizontal: paddingH.w),
           mainAxisSpacing: 15,
           crossAxisSpacing: 15,
           // Reserve one seat for the AddButton

@@ -1,19 +1,35 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../assets/constant.dart';
 
+typedef OnSubmitted = Function(String val);
+
 class TagInputField extends StatefulWidget {
   final String hintText;
-  const TagInputField({Key? key, required this.hintText}) : super(key: key);
+  final OnSubmitted onSubmitted;
+  const TagInputField(
+      {Key? key, required this.hintText, required this.onSubmitted})
+      : super(key: key);
 
   @override
   State<TagInputField> createState() => _TagInputFieldState();
 }
 
 class _TagInputFieldState extends State<TagInputField> {
+  TextEditingController _controller = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return TextField(
+      onSubmitted: (val) {
+        widget.onSubmitted(val);
+        _controller.clear();
+      },
+      controller: _controller,
+      inputFormatters: [
+        FilteringTextInputFormatter(RegExp("[\"'~!@#\$%^&*()_+{}\\[\\]:;,.<>/?-]"), allow: false)
+      ],
       decoration: InputDecoration(
           fillColor: Colors.grey.shade400.withOpacity(0.5),
           filled: true,
@@ -27,4 +43,5 @@ class _TagInputFieldState extends State<TagInputField> {
           constraints: const BoxConstraints(maxHeight: 42)),
       style: const TextStyle(color: Colors.white),
     );
-  }}
+  }
+}

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tagref/assets/constant.dart';
-import 'package:tagref/ui/TagLabel.dart';
+import 'package:tagref/ui/tag_label.dart';
 
 typedef VoidCallback = Function(String val);
 
@@ -9,6 +9,7 @@ class TagSearchBar extends StatefulWidget {
   final VoidCallback onSubmitted;
 
   final String hintText;
+
   const TagSearchBar(
       {Key? key, required this.onSubmitted, required this.hintText})
       : super(key: key);
@@ -19,6 +20,7 @@ class TagSearchBar extends StatefulWidget {
 
 class _TagSearchBarState extends State<TagSearchBar> {
   final controller = TextEditingController();
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -53,10 +55,15 @@ class _TagSearchBarState extends State<TagSearchBar> {
   }
 }
 
+typedef OnKeywordRemovedCallBack = Function(String keywordRemoved);
+
 class TagSearchBarKeywordsView extends StatefulWidget {
   final List<String> keywordList;
 
-  const TagSearchBarKeywordsView({Key? key, required this.keywordList})
+  final OnKeywordRemovedCallBack onKeywordRemoved;
+
+  const TagSearchBarKeywordsView(
+      {Key? key, required this.keywordList, required this.onKeywordRemoved})
       : super(key: key);
 
   @override
@@ -67,16 +74,26 @@ class TagSearchBarKeywordsView extends StatefulWidget {
 class _TagSearchBarKeywordsViewState extends State<TagSearchBarKeywordsView> {
   @override
   Widget build(BuildContext context) {
+    List<TagLabel> tagLabels = [];
+
+    for (int i = 0; i < widget.keywordList.length; i++) {
+      late TagLabel iLabel;
+      iLabel = TagLabel(
+          onPressed: (tagId) => setState(() {
+                widget.onKeywordRemoved(widget.keywordList[i]);
+              }),
+          tagWd: widget.keywordList[i]);
+      tagLabels.add(iLabel);
+    }
+
     return Container(
-      color: accentColor,
-      width: MediaQuery.of(context).size.width,
-      padding: EdgeInsets.all((widget.keywordList.isEmpty) ? 0 : 10),
-      child: Wrap(
+        color: accentColor,
+        width: MediaQuery.of(context).size.width,
+        padding: EdgeInsets.all((widget.keywordList.isEmpty) ? 0 : 10),
+        child: Wrap(
           // Creates List<TagLabel> from List<String> which stores the searched
           // keywords
-          children: widget.keywordList
-              .map((keyword) => TagLabel(onPressed: () {}, tagWd: keyword))
-              .toList()),
-    );
+          children: tagLabels,
+        ));
   }
 }

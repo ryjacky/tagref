@@ -1,25 +1,20 @@
 import 'dart:convert';
-import 'dart:typed_data';
-
-import 'package:googleapis/youtube/v3.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:tagref/assets/DBHelper.dart';
+import 'dart:io' show File, Platform;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/datastream/v1.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
+import 'package:googleapis/youtube/v3.dart';
 import 'package:googleapis_auth/auth_io.dart';
-import 'package:tagref/assets/constant.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:http/http.dart' as http;
-import 'dart:io' show File, Platform;
+import 'package:path/path.dart';
+import 'package:tagref/assets/constant.dart';
+import 'package:tagref/assets/db_helper.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 drive.DriveApi? driveApi;
-
-const secureStorage = FlutterSecureStorage();
 
 /// Base client used by the Google Drive API
 final http.Client _baseClient = http.Client();
@@ -31,14 +26,16 @@ ClientId _clientId = ClientId(
 
 /// Initialize Google API, connect to GDrive, download remote db file
 /// All database connections should be closed before calling this function
+///
+/// You SHOULD close all database connection before calling this function
 Future<void> initializeDriveApiAndPullDB(
-    String localDBPath, String dbFileName) async {
-  await initializeGoogleApi();
-  pullAndReplaceLocalDB(localDBPath, dbFileName);
+    String localDBPath, String dbFileName, FlutterSecureStorage secureStorage) async {
+  await initializeGoogleApi(secureStorage);
+  await pullAndReplaceLocalDB(localDBPath, dbFileName);
 }
 
 /// Controls Google Sign In flow (desktop/mobile flow)
-Future<void> initializeGoogleApi() async {
+Future<void> initializeGoogleApi(FlutterSecureStorage secureStorage) async {
   if (driveApi != null) {
     throw Exception(
         "Google API have already been initialized, you should not initialize it twice!");
@@ -95,7 +92,7 @@ Future<void> initializeGoogleApi() async {
     // try to obtain new credentials
     driveApi = null;
     await secureStorage.delete(key: gAccessCredential);
-    await initializeGoogleApi();
+    await initializeGoogleApi(secureStorage);
   }
 }
 
@@ -189,7 +186,7 @@ Future<bool> pushDB(String dbParent, String dbFileName) async {
 }
 
 /// Remove all locally stored credentials, clear active driveApi instances
-void purgeAccessCredentials() {
+void purgeAccessCredentials(FlutterSecureStorage secureStorage) {
   secureStorage.delete(key: gAccessCredential);
   driveApi = null;
 }
