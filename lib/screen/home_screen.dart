@@ -24,7 +24,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final List<String> keywordList = [];
+  final List<String> tagFilterList = [];
 
   /// Upload FAB is dynamically updated with this variable
   bool syncing = false;
@@ -113,9 +113,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   hintText: tr("search-hint"),
                   onSubmitted: (val) {
                     setState(() {
-                      if (val.isNotEmpty && !keywordList.contains(val)) {
-                        keywordList.add(val);
+                      if (val.isNotEmpty && !tagFilterList.contains(val)) {
+                        tagFilterList.add(val);
                       }
+
+                      trmfKey.currentState?.filterImages(tagFilterList);
 
                     });
                   }),
@@ -176,9 +178,10 @@ class _HomeScreenState extends State<HomeScreen> {
         body: Column(
           children: [
             TagSearchBarKeywordsView(
-                keywordList: keywordList,
+                keywordList: tagFilterList,
                 onKeywordRemoved: (keywordRemoved) {
-                  keywordList.remove(keywordRemoved);
+                  tagFilterList.remove(keywordRemoved);
+                  trmfKey.currentState?.filterImages(tagFilterList);
                 }),
             twitterModeOn ? tmf : trmf,
           ],

@@ -33,6 +33,8 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   /// Indicates if masonry grid view is updating
   bool isUpdating = true;
 
+  String filterTagString = "";
+
   Future<void> pickFile() async {
     FilePickerResult? result =
         await FilePicker.platform.pickFiles(allowMultiple: true);
@@ -48,10 +50,31 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
     }
   }
 
+  void filterImages(List<String> tags) {
+    filterTagString = "";
+
+    if (tags.isNotEmpty) {
+      for (var tag in tags) {
+        filterTagString += "\"$tag\",";
+      }
+
+      filterTagString =
+          filterTagString.substring(0, filterTagString.length - 1);
+    }
+
+    setStateAndResetEnv();
+  }
+
   Future<void> loadImages() async {
+    String queryImages = "SELECT * FROM images ORDER BY img_id DESC;";
+    if (filterTagString != "") {
+      queryImages =
+          "SELECT * FROM images WHERE img_id IN (SELECT DISTINCT img_id FROM image_tag INNER JOIN tags on image_tag.tag_id = tags.tag_id WHERE tags.name IN ($filterTagString)) ORDER BY img_id DESC;";
+      print(queryImages);
+    }
+
     late List<Map<String, Object?>> queryResult;
-       queryResult = await DBHelper.db
-          .rawQuery("SELECT * FROM images ORDER BY img_id DESC;");
+    queryResult = await DBHelper.db.rawQuery(queryImages);
 
     // Limit gridMaxCounts to prevent overflow
     // (gridMaxCounts > number of all images in the database)
@@ -100,7 +123,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
       child: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification.metrics.pixels >=
-              scrollNotification.metrics.maxScrollExtent - 500 &&
+                  scrollNotification.metrics.maxScrollExtent - 500 &&
               isUpdating) {
             // set isUpdating to false to prevent calling setState
             // more than once
@@ -117,8 +140,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
         },
         child: MasonryGridView.count(
           crossAxisCount: (Platform.isWindows || Platform.isMacOS) ? 3 : 1,
-          padding:
-          EdgeInsets.symmetric(vertical: 20, horizontal: paddingH.w),
+          padding: EdgeInsets.symmetric(vertical: 20, horizontal: paddingH.w),
           mainAxisSpacing: 15,
           crossAxisSpacing: 15,
           // Reserve one seat for the AddButton
@@ -130,7 +152,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
                     pickFile();
                   },
                   imgUrl:
-                  "https://picsum.photos/seed/${DateTime.now().day}/1000/1000");
+                      "https://picsum.photos/seed/${DateTime.now().day}/1000/1000");
             }
             return masonryGrids[index - 1];
           },
@@ -141,7 +163,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
 
   /// Reset masonry view environment variables
   void setStateAndResetEnv() {
-    setState((){
+    setState(() {
       currentGridCount = 0;
       gridMaxCounts = 50;
       masonryGrids.clear();
