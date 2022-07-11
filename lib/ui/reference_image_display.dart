@@ -113,7 +113,6 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
         child: ClipRRect(
           borderRadius: BorderRadius.circular(cornerRadius),
           child: Container(
-            color: Colors.white,
             child: Stack(
               fit: StackFit.passthrough,
               children: [

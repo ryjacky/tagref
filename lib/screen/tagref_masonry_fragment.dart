@@ -140,7 +140,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
         },
         child: MasonryGridView.count(
           crossAxisCount: (Platform.isWindows || Platform.isMacOS) ? 3 : 1,
-          padding: EdgeInsets.symmetric(vertical: 20, horizontal: paddingH.w),
+          padding: const EdgeInsets.all(20),
           mainAxisSpacing: 15,
           crossAxisSpacing: 15,
           // Reserve one seat for the AddButton

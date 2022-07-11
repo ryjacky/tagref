@@ -34,7 +34,7 @@ class _TagLabelState extends State<TagLabel> {
           },
           child: RawMaterialButton(
               onPressed: () => widget.onPressed(widget.tagWd),
-              fillColor: primaryColorDark,
+              fillColor: desktopColorLight,
               constraints: const BoxConstraints.tightFor(height: 33),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(cornerRadius)),
@@ -56,3 +56,4 @@ class _TagLabelState extends State<TagLabel> {
         ));
   }
 }
+

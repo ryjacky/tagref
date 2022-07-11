@@ -57,20 +57,23 @@ class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
                   colorFilter:
                       ColorFilter.mode(
                           hovered ? Colors.black12 : Colors.transparent, BlendMode.darken),
-                  child: ImageFiltered(
-                      imageFilter: ImageFilter.blur(
-                          tileMode: TileMode.decal,
-                          sigmaX: hovered ? 2 : 0,
-                          sigmaY: hovered ? 2 : 0),
-                      child: widget.srcId == 1
-                          ? Image.network(
-                              widget.srcUrl,
-                              fit: BoxFit.fill,
-                            )
-                          : Image.file(
-                              File(widget.srcUrl),
-                              fit: BoxFit.fill,
-                            )),
+                  child: SizedBox(
+                    height: 300,
+                    child: ImageFiltered(
+                        imageFilter: ImageFilter.blur(
+                            tileMode: TileMode.decal,
+                            sigmaX: hovered ? 2 : 0,
+                            sigmaY: hovered ? 2 : 0),
+                        child: widget.srcId == 1
+                            ? Image.network(
+                          widget.srcUrl,
+                          fit: BoxFit.cover,
+                        )
+                            : Image.file(
+                          File(widget.srcUrl),
+                          fit: BoxFit.cover,
+                        )),
+                  )
                 ),
                 Visibility(
                   visible: hovered,

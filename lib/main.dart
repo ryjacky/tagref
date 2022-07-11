@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/screen/home_screen.dart';
+import 'package:tagref/screen/home_screen_desktop.dart';
 import 'package:tagref/screen/setup_screen.dart';
 
 import 'assets/constant.dart';
@@ -40,6 +42,14 @@ void main(List<String> args) async {
       fallbackLocale: const Locale('en'),
       supportedLocales: const [Locale('en'), Locale('ja')],
       path: 'assets/translations'));
+
+  doWhenWindowReady(() {
+    const initialSize = Size(1280, 720);
+    appWindow.minSize = initialSize;
+    appWindow.size = initialSize;
+    appWindow.alignment = Alignment.center;
+    appWindow.show();
+  });
 }
 
 class MyApp extends StatelessWidget {
@@ -96,6 +106,6 @@ class _TagRefHomePageState extends State<TagRefHome> {
       return const SetupScreen();
     }
 
-    return const HomeScreen();
+    return (Platform.isWindows || Platform.isMacOS) ? const HomeScreenDesktop() : const HomeScreen();
   }
 }

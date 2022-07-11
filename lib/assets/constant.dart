@@ -13,6 +13,10 @@ const Color primaryColorDark = Color.fromRGBO(187, 107, 217, 1);
 const Color fontColorDark = Color.fromRGBO(61, 34, 71, 1);
 const Color fontColorLight = Color.fromRGBO(255, 255, 255, 1);
 
+const Color desktopColorDark = Color.fromRGBO(34, 28, 68, 1);
+const Color desktopColorDarker = Color.fromRGBO(15, 11, 33, 1);
+const Color desktopColorLight = Color.fromRGBO(114, 105, 255, 1);
+
 // Secure storage key
 const String gAccessCredential = "gAccessCredential";
 
