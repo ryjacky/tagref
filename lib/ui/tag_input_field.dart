@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../assets/constant.dart';
 
@@ -26,6 +27,9 @@ class _TagInputFieldState extends State<TagInputField> {
         _controller.clear();
       },
       controller: _controller,
+      inputFormatters: [
+        FilteringTextInputFormatter(RegExp("[\"'~!@#\$%^&*()_+{}\\[\\]:;,.<>/?-]"), allow: false)
+      ],
       decoration: InputDecoration(
           fillColor: Colors.grey.shade400.withOpacity(0.5),
           filled: true,

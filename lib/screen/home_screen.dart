@@ -116,6 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (val.isNotEmpty && !keywordList.contains(val)) {
                         keywordList.add(val);
                       }
+
                     });
                   }),
               IconButton(

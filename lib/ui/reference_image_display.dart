@@ -44,17 +44,46 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
   void initState() {
     super.initState();
 
-    // TODO: get the tag list from tag_img table with imgId
+    DBHelper.db
+        .rawQuery(
+            "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=${widget.imgId});")
+        .then((existedTags) {
+      for (int i = 0; i < existedTags.length; i++) {
+        tagList.add(existedTags[i]["name"]);
+      }
+
+      // Triggering setState in case tagList update completes after initial build
+      setState(() {});
+    });
   }
 
-  void addTag(String tag) {
+  void addTagToImage(String tag) async {
     setState(() {
       if (!tagList.contains(tag)) {
         tagList.add(tag);
       }
     });
 
-    // TODO: Also add the tag to the db table tag_img
+    String tagQuery = "SELECT * FROM tags WHERE name=\"$tag\";";
+    List<Map> tagExists = await DBHelper.db.rawQuery(tagQuery);
+
+    // Create tag (if not existed in 'tags' table) and creates
+    // new record in 'image_tag' table
+    late int newTagId;
+    if (tagExists.isEmpty) {
+      String newTagStatement = "INSERT INTO tags (name) VALUES (\"$tag\");";
+      newTagId = await DBHelper.db.rawInsert(newTagStatement);
+    } else {
+      newTagId = tagExists.first["tag_id"];
+    }
+
+    // Creates the relation record in image_tag when it does not exists
+    String imageTagQuery = "SELECT * FROM image_tag WHERE img_id=${widget.imgId} AND tag_id=$newTagId;";
+    List<Map> imageTagExists = await DBHelper.db.rawQuery(imageTagQuery);
+    if (imageTagExists.isEmpty){
+      DBHelper.db.rawInsert(
+          "INSERT INTO image_tag (img_id, tag_id) VALUES (${widget.imgId},$newTagId);");
+    }
   }
 
   void removeTag(String tagWd) {
@@ -64,7 +93,9 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
       }
     });
 
-    // TODO: Also remove the tag from the database for this image only
+    String deleteTagStatement =
+        "DELETE FROM image_tag WHERE img_id=${widget.imgId} AND tag_id=(SELECT tag_id FROM tags WHERE name=\"$tagWd\");";
+    DBHelper.db.rawDelete(deleteTagStatement);
   }
 
   void _launchUrl(Uri url) async {
@@ -150,7 +181,7 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
                           padding: const EdgeInsets.all(padding),
                           child: TagInputField(
                               hintText: tr("add-tag-field-hint"),
-                              onSubmitted: addTag),
+                              onSubmitted: addTagToImage),
                         ),
                         Padding(
                           padding: const EdgeInsets.all(padding),
