@@ -35,14 +35,14 @@ class _TagLabelState extends State<TagLabel> {
           child: RawMaterialButton(
               onPressed: () => widget.onPressed(widget.tagWd),
               fillColor: desktopColorLight,
-              constraints: const BoxConstraints.tightFor(height: 33),
+              constraints: const BoxConstraints.tightFor(height: 28),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(cornerRadius)),
               elevation: 0.1,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
               child: Padding(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
                 child: Text(
                   widget.tagWd,
                   style: TextStyle(
