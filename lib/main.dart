@@ -34,7 +34,9 @@ void main(List<String> args) async {
   SharedPreferences pref = await SharedPreferences.getInstance();
   if (pref.getBool(gDriveConnected) != null) {
     await initializeDriveApiAndPullDB(
-        (await getApplicationSupportDirectory()).path, DBHelper.dbFileName, secureStorage);
+        (await getApplicationSupportDirectory()).path,
+        DBHelper.dbFileName,
+        secureStorage);
   }
 
   runApp(EasyLocalization(
@@ -70,7 +72,15 @@ class MyApp extends StatelessWidget {
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,
-          theme: ThemeData(primarySwatch: Colors.purple),
+          theme: ThemeData(
+              textTheme: const TextTheme(
+                  bodySmall: TextStyle(color: Colors.white60, fontSize: 18),
+                  headlineLarge: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 30),
+                  headlineSmall: TextStyle(fontWeight: FontWeight.w600, color: Colors.white, fontSize: 20)),
+              primarySwatch: Colors.purple),
           home: child,
         );
       },
@@ -106,6 +116,8 @@ class _TagRefHomePageState extends State<TagRefHome> {
       return const SetupScreen();
     }
 
-    return (Platform.isWindows || Platform.isMacOS) ? const HomeScreenDesktop() : const HomeScreen();
+    return (Platform.isWindows || Platform.isMacOS)
+        ? const HomeScreenDesktop()
+        : const HomeScreen();
   }
 }

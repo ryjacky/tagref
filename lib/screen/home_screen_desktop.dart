@@ -3,20 +3,20 @@ import 'dart:io';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
-import 'package:tagref/main.dart';
+import 'package:tagref/screen/setting_screen.dart';
 
 import '../assets/db_helper.dart';
 import '../assets/constant.dart';
 import '../ui/tag_search_bar.dart';
-import 'setting_screen.dart';
 import 'tagref_masonry_fragment.dart';
 import 'twitter_masonry_fragment.dart';
+
+enum Fragments { twitterMasonry, tagrefMasonry, preferences }
 
 class HomeScreenDesktop extends StatefulWidget {
   const HomeScreenDesktop({Key? key}) : super(key: key);
@@ -32,7 +32,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
   bool syncing = false;
   bool syncingFailed = false;
 
-  bool twitterModeOn = false;
+  Fragments currentFragment = Fragments.tagrefMasonry;
 
   late final TwitterMasonryFragment tmf;
   late final TwitterApiHelper _twitterApiHelper;
@@ -72,16 +72,13 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
                     child: Column(
                       children: [
                         WindowTitleBarBox(child: MoveWindow()),
-                        const Padding(
-                          padding: EdgeInsets.all(20),
+                        Padding(
+                          padding: const EdgeInsets.all(20),
                           child: Align(
                             alignment: Alignment.centerLeft,
                             child: Text(
                               "TagRef",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white,
-                                  fontSize: 30),
+                              style: Theme.of(context).textTheme.headlineLarge,
                             ),
                           ),
                         ),
@@ -125,7 +122,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
                         ),
                         Expanded(child: Container()),
                         Padding(
-                          padding: EdgeInsets.fromLTRB(10, 0, 0, 0),
+                          padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
                           child: Row(
                             children: [
                               IconButton(
@@ -134,41 +131,21 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
                                 alignment: Alignment.centerRight,
                                 iconSize: 28,
                                 onPressed: () {
-                                  Navigator.push(
-                                      context,
-                                      PageRouteBuilder(
-                                          transitionsBuilder: (context,
-                                              animation,
-                                              secondaryAnimation,
-                                              child) {
-                                            const begin = Offset(0, -1.0);
-                                            const end = Offset.zero;
-                                            const curve = Curves.ease;
-
-                                            final tween =
-                                                Tween(begin: begin, end: end);
-                                            final curvedAnimation =
-                                                CurvedAnimation(
-                                              parent: animation,
-                                              curve: curve,
-                                            );
-
-                                            return SlideTransition(
-                                              position: tween
-                                                  .animate(curvedAnimation),
-                                              child: child,
-                                            );
-                                          },
-                                          pageBuilder: (context, a1, a2) =>
-                                              const SettingScreen())).then(
-                                      (remoteChanged) => trmfKey.currentState
-                                          ?.setStateAndResetEnv());
+                                  setState(() {
+                                    if (currentFragment !=
+                                        Fragments.preferences) {
+                                      currentFragment = Fragments.preferences;
+                                    } else {
+                                      currentFragment = Fragments.tagrefMasonry;
+                                    }
+                                  });
                                 },
                               ),
                               Expanded(child: Container()),
                               SizedBox(
                                 child: Visibility(
-                                  visible: !twitterModeOn,
+                                  visible: currentFragment ==
+                                      Fragments.tagrefMasonry,
                                   child: TextButton.icon(
                                     style: TextButton.styleFrom(
                                         padding: const EdgeInsets.all(20),
@@ -222,14 +199,28 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
                                 padding: const EdgeInsets.all(20),
                                 splashRadius: 1,
                                 onPressed: () async {
-                                  if (twitterModeOn == false) {
+                                  if (currentFragment !=
+                                      Fragments.twitterMasonry) {
                                     if (!_twitterApiHelper.authorized) {
                                       await _twitterApiHelper.authTwitter();
                                     }
                                   }
 
                                   setState(() {
-                                    twitterModeOn = !twitterModeOn;
+                                    switch (currentFragment) {
+                                      case Fragments.twitterMasonry:
+                                        {
+                                          currentFragment =
+                                              Fragments.tagrefMasonry;
+                                        }
+                                        break;
+                                      default:
+                                        {
+                                          currentFragment =
+                                              Fragments.twitterMasonry;
+                                        }
+                                        break;
+                                    }
                                   });
                                 },
                               ),
@@ -249,12 +240,23 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
                       ],
                     ),
                   ),
-                  twitterModeOn ? tmf : trmf,
+                  getFragment(),
                 ],
               ),
             ),
           ],
         ));
+  }
+
+  Widget getFragment() {
+    switch (currentFragment) {
+      case Fragments.twitterMasonry:
+        return tmf;
+      case Fragments.preferences:
+        return const SettingFragment();
+      default:
+        return trmf;
+    }
   }
 }
 
