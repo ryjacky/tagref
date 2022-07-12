@@ -7,6 +7,29 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:http/http.dart' as http;
 
+Future<Map<String, String>> refreshAccessToken(String refreshToken) async {
+  var headers = {
+    'Content-Type': 'application/x-www-form-urlencoded',
+  };
+
+  var data = {
+    'refresh_token': refreshToken,
+    'grant_type': 'refresh_token',
+    'client_id': 'emVVNlIxSDdnOWlnNzI2bTJUdVE6MTpjaQ',
+  };
+
+  log("Requesting new access token");
+
+  var url = Uri.parse('https://api.twitter.com/2/oauth2/token');
+  var res = await http.post(url, headers: headers, body: data);
+  if (res.statusCode != 200) throw Exception('http.post error: statusCode= ${res.statusCode}');
+
+  return {
+    "access_token": jsonDecode(res.body)["access_token"],
+    "refresh_token": jsonDecode(res.body)["refresh_token"]
+  };
+}
+
 class TwitterOAuthExchange extends StatefulWidget {
   const TwitterOAuthExchange({Key? key}) : super(key: key);
 
@@ -30,7 +53,7 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
   void initState() {
     super.initState();
     authURI =
-    "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=$clientId&redirect_uri=$callback&scope=tweet.read%20users.read%20follows.read&state=state&code_challenge=challenge&code_challenge_method=plain";
+        "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=$clientId&redirect_uri=$callback&scope=offline.access%20tweet.read%20users.read%20follows.read&state=state&code_challenge=challenge&code_challenge_method=plain";
   }
 
   @override
@@ -48,13 +71,13 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
 
       final webview = await WebviewWindow.create(
         configuration: CreateConfiguration(
-          windowHeight: 700,
-          windowWidth: 400,
-          titleBarHeight: 0,
-          titleBarTopPadding: Platform.isMacOS ? 0 : 0,
-          title: "Twitter Authorization"
-          // userDataFolderWindows: await _getWebViewPath(),
-        ),
+            windowHeight: 700,
+            windowWidth: 400,
+            titleBarHeight: 0,
+            titleBarTopPadding: Platform.isMacOS ? 0 : 0,
+            title: "Twitter Authorization"
+            // userDataFolderWindows: await _getWebViewPath(),
+            ),
       );
 
       webview.launch(authURI);
@@ -67,8 +90,7 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
             throw Exception("The end point returned an unknown result.");
           }
 
-          log(
-              "WebView has returned the auth code, exchanging for access token...");
+          log("WebView has returned the auth code, exchanging for access token...");
           log("auth code: $authCode");
           exchangeForAccessToken(authCode).then((acecssToken) {
             webview.close();
@@ -96,8 +118,8 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
           if (authCode == null) {
             throw Exception("The end point returned an unknown result.");
           }
-          exchangeForAccessToken(authCode).then((acecssToken) {
-            Navigator.pop(context, acecssToken);
+          exchangeForAccessToken(authCode).then((token) {
+            Navigator.pop(context, token);
           });
           // return NavigationDecision.prevent;
         }
@@ -106,7 +128,7 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
     );
   }
 
-  Future<String> exchangeForAccessToken(String authCode) async {
+  Future<Map<String, String>> exchangeForAccessToken(String authCode) async {
     var headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
       // 'Authorization': 'Basic $clientSecret',
@@ -126,6 +148,13 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
       throw Exception('http.post error: statusCode= ${res.statusCode}');
     }
 
-    return jsonDecode(res.body)["access_token"];
+    log("Twitter API V2 has returned the following results, it should not be shared to any third party.");
+    log("--hidden--");
+    // log(res.body);
+
+    return {
+      "access_token": jsonDecode(res.body)["access_token"],
+      "refresh_token": jsonDecode(res.body)["refresh_token"]
+    };
   }
 }

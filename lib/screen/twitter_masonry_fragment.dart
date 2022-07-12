@@ -103,7 +103,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
     }
 
     // Calculates the padding from the application window width
-    double paddingH = MediaQuery.of(context).size.width / 10;
+    double paddingH = 20;
 
     return Container(
       color: desktopColorDarker,
@@ -126,6 +126,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
           return true;
         },
         child: MasonryGridView.count(
+          controller: ScrollController(),
           crossAxisCount: (Platform.isWindows || Platform.isMacOS) ? 3 : 1,
           padding: EdgeInsets.symmetric(vertical: 20, horizontal: paddingH.w),
           mainAxisSpacing: 15,

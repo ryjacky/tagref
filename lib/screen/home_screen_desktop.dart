@@ -87,12 +87,16 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> with SingleTicker
                 onSettingClicked: () {
                   setState(() {
                     if (currentFragment != Fragments.preferences) {
-                      currentFragment = Fragments.preferences;
-                      _slideController.reset();
-                      _slideController.forward();
-                    } else {
-                      _slideController.reverse().then((value) => currentFragment = Fragments.tagrefMasonry);
+                      _slideController.reverse().whenComplete(() {
+                        setState(() => currentFragment = Fragments.preferences);
 
+                        _slideController.reset();
+                        _slideController.forward();
+                      });
+                    } else {
+                      _slideController.reverse().whenComplete(() {
+                        setState(() => currentFragment = Fragments.tagrefMasonry);
+                      });
                     }
                   });
                 },
@@ -116,22 +120,26 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> with SingleTicker
                 onTwitterClicked: () async {
                   if (currentFragment != Fragments.twitterMasonry) {
                     if (!_twitterApiHelper.authorized) {
-                      await _twitterApiHelper.authTwitter();
+                      bool success = await _twitterApiHelper.authTwitter();
+
+                      // try again
+                      if (!success) await _twitterApiHelper.authTwitter();
                     }
                   }
 
-                  setState(() {
-                    switch (currentFragment) {
-                      case Fragments.twitterMasonry:
-                        currentFragment = Fragments.tagrefMasonry;
-                        _slideController.reset();
-                        _slideController.forward();
-                        break;
-                      default:
-                        _slideController.reverse().then((value) => currentFragment = Fragments.twitterMasonry);
-                        break;
-                    }
-                  });
+
+                  if (currentFragment != Fragments.twitterMasonry) {
+                    _slideController.reverse().whenComplete(() {
+                      setState(() => currentFragment = Fragments.twitterMasonry);
+
+                      _slideController.reset();
+                      _slideController.forward();
+                    });
+                  } else {
+                    _slideController.reverse().whenComplete(() {
+                      setState(() => currentFragment = Fragments.tagrefMasonry);
+                    });
+                  }
                 },
                 syncButtonVisibility: true,
               ),
