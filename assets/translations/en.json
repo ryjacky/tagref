@@ -24,6 +24,7 @@
   "yes": "Yes",
   "no": "No",
   "sync": "Sync",
-  "back-to-tagref": "Back to TagRef"
+  "back-to-tagref": "Back to TagRef",
+  "filters": "Tag Filter"
 
 }

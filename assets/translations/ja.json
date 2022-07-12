@@ -24,7 +24,8 @@
   "yes": "はい",
   "no": "いいえ",
   "sync": "同期します",
-  "back-to-tagref": "TagRefへ戻ります"
+  "back-to-tagref": "TagRefへ戻ります",
+  "filters": "タグフィルター"
 
 
 }
