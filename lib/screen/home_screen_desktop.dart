@@ -26,8 +26,6 @@ class HomeScreenDesktop extends StatefulWidget {
 }
 
 class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
-  final List<String> tagFilterList = [];
-
   /// Upload FAB is dynamically updated with this variable
   bool syncing = false;
   bool syncingFailed = false;
@@ -45,6 +43,8 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
   @override
   void initState() {
     // secureStorage.deleteAll();
+    super.initState();
+
     _twitterApiHelper =
         TwitterApiHelper(context: context, secureStorage: secureStorage);
     trmf = TagRefMasonryFragment(
@@ -65,170 +65,57 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
         backgroundColor: desktopColorDarker,
         body: Row(
           children: [
-            SizedBox(
-                width: 300,
-                child: Container(
-                    color: desktopColorDark,
-                    child: Column(
-                      children: [
-                        WindowTitleBarBox(child: MoveWindow()),
-                        Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              "TagRef",
-                              style: Theme.of(context).textTheme.headlineLarge,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                          child: TagSearchBarDesktop(
-                              hintText: tr("search-hint"),
-                              onSubmitted: (val) {
-                                setState(() {
-                                  if (val.isNotEmpty &&
-                                      !tagFilterList.contains(val)) {
-                                    tagFilterList.add(val);
-                                  }
+            NavigationPanel(
+              onSearchChanged: (List<String> tags) =>
+                  trmfKey.currentState?.filterImages(tags),
+              onSettingClicked: () {
+                setState(() {
+                  if (currentFragment != Fragments.preferences) {
+                    currentFragment = Fragments.preferences;
+                  } else {
+                    currentFragment = Fragments.tagrefMasonry;
+                  }
+                });
+              },
+              onSyncButtonClicked: () async {
+                syncing = true;
+                bool success = await pushDB(
+                    (await getApplicationSupportDirectory()).path,
+                    DBHelper.dbFileName);
 
-                                  trmfKey.currentState
-                                      ?.filterImages(tagFilterList);
-                                });
-                              }),
-                        ),
-                        const Padding(
-                            padding: EdgeInsets.fromLTRB(20, 10, 10, 5),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                "Filters",
-                                textAlign: TextAlign.left,
-                                style: TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                            )),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-                          child: TagSearchBarKeywordsViewDesktop(
-                              keywordList: tagFilterList,
-                              onKeywordRemoved: (keywordRemoved) {
-                                tagFilterList.remove(keywordRemoved);
-                                trmfKey.currentState
-                                    ?.filterImages(tagFilterList);
-                              }),
-                        ),
-                        Expanded(child: Container()),
-                        Padding(
-                          padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
-                          child: Row(
-                            children: [
-                              IconButton(
-                                icon: const FaIcon(FontAwesomeIcons.gear),
-                                color: Colors.white,
-                                alignment: Alignment.centerRight,
-                                iconSize: 28,
-                                onPressed: () {
-                                  setState(() {
-                                    if (currentFragment !=
-                                        Fragments.preferences) {
-                                      currentFragment = Fragments.preferences;
-                                    } else {
-                                      currentFragment = Fragments.tagrefMasonry;
-                                    }
-                                  });
-                                },
-                              ),
-                              Expanded(child: Container()),
-                              SizedBox(
-                                child: Visibility(
-                                  visible: currentFragment ==
-                                      Fragments.tagrefMasonry,
-                                  child: TextButton.icon(
-                                    style: TextButton.styleFrom(
-                                        padding: const EdgeInsets.all(20),
-                                        backgroundColor: syncingFailed
-                                            ? Colors.red
-                                            : syncing
-                                                ? Colors.orangeAccent
-                                                : desktopColorDarker),
-                                    onPressed: () async {
-                                      pushDB(
-                                              (await getApplicationSupportDirectory())
-                                                  .path,
-                                              DBHelper.dbFileName)
-                                          .then((success) => {
-                                                if (success)
-                                                  {
-                                                    setState(() {
-                                                      syncing = false;
-                                                    })
-                                                  }
-                                                else
-                                                  {
-                                                    setState(() {
-                                                      syncing = false;
-                                                      syncingFailed = true;
-                                                      Future.delayed(
-                                                              const Duration(
-                                                                  seconds: 3))
-                                                          .then((value) =>
-                                                              syncingFailed =
-                                                                  false);
-                                                    })
-                                                  }
-                                              });
-                                      setState(() {
-                                        syncing = true;
-                                      });
-                                    },
-                                    label: Text(tr("sync")),
-                                    icon: const FaIcon(
-                                        FontAwesomeIcons.arrowsRotate),
-                                  ),
-                                ),
-                              ),
-                              IconButton(
-                                icon: const FaIcon(
-                                  FontAwesomeIcons.twitter,
-                                  color: Colors.white,
-                                ),
-                                iconSize: 28,
-                                padding: const EdgeInsets.all(20),
-                                splashRadius: 1,
-                                onPressed: () async {
-                                  if (currentFragment !=
-                                      Fragments.twitterMasonry) {
-                                    if (!_twitterApiHelper.authorized) {
-                                      await _twitterApiHelper.authTwitter();
-                                    }
-                                  }
+                setState(() {
+                  if (success) {
+                    syncing = false;
+                  } else {
+                    syncing = false;
+                    syncingFailed = true;
+                    Future.delayed(const Duration(seconds: 3))
+                        .then((value) => syncingFailed = false);
+                  }
+                });
+              },
+              onTwitterClicked: () async {
+                if (currentFragment != Fragments.twitterMasonry) {
+                  if (!_twitterApiHelper.authorized) {
+                    await _twitterApiHelper.authTwitter();
+                  }
+                }
 
-                                  setState(() {
-                                    switch (currentFragment) {
-                                      case Fragments.twitterMasonry:
-                                        {
-                                          currentFragment =
-                                              Fragments.tagrefMasonry;
-                                        }
-                                        break;
-                                      default:
-                                        {
-                                          currentFragment =
-                                              Fragments.twitterMasonry;
-                                        }
-                                        break;
-                                    }
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
-                    ))),
+                setState(() {
+                  switch (currentFragment) {
+                    case Fragments.twitterMasonry:
+                      currentFragment = Fragments.tagrefMasonry;
+                      break;
+                    default:
+                      currentFragment = Fragments.twitterMasonry;
+                      break;
+                  }
+                });
+              },
+              syncButtonVisibility: true,
+            ),
+
+            // Body
             Expanded(
               child: Column(
                 children: [
@@ -271,6 +158,169 @@ class WindowButtons extends StatelessWidget {
         MaximizeWindowButton(),
         CloseWindowButton(),
       ],
+    );
+  }
+}
+
+typedef OnSearchChanged = Function(List<String> tags);
+
+class NavigationPanel extends StatefulWidget {
+  final OnSearchChanged onSearchChanged;
+
+  final OnButtonClicked onSettingClicked;
+  final OnButtonClicked onSyncButtonClicked;
+  final OnButtonClicked onTwitterClicked;
+  final bool syncButtonVisibility;
+
+  const NavigationPanel(
+      {Key? key,
+      required this.onSearchChanged,
+      required this.onSettingClicked,
+      required this.onSyncButtonClicked,
+      required this.onTwitterClicked,
+      required this.syncButtonVisibility})
+      : super(key: key);
+
+  @override
+  State<NavigationPanel> createState() => _NavigationPanelState();
+}
+
+class _NavigationPanelState extends State<NavigationPanel> {
+  final List<String> _tagFilterList = [];
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+        width: 300,
+        child: Container(
+            color: desktopColorDark,
+            child: Column(
+              children: [
+                WindowTitleBarBox(child: MoveWindow()),
+
+                // App title
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "TagRef",
+                      style: Theme.of(context).textTheme.headlineLarge,
+                    ),
+                  ),
+                ),
+
+                // Search bar
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                  child: TagSearchBarDesktop(
+                      hintText: tr("search-hint"),
+                      onSubmitted: (val) {
+                        if (val.isNotEmpty && !_tagFilterList.contains(val)) {
+                          setState(() => _tagFilterList.add(val));
+                        }
+                        widget.onSearchChanged(_tagFilterList);
+                      }),
+                ),
+
+                // "Filters" label
+                Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 10, 5),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        tr("filters"),
+                        textAlign: TextAlign.left,
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                    )),
+
+                // Box storing all tags that are searched by user
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+                  child: TagSearchBarKeywordsViewDesktop(
+                      tagList: _tagFilterList,
+                      onKeywordRemoved: (val) {
+                        if (_tagFilterList.contains(val)) {
+                          setState(() => _tagFilterList.remove(val));
+                        }
+                        widget.onSearchChanged(_tagFilterList);
+                      }),
+                ),
+
+                // Spacer
+                Expanded(child: Container()),
+
+                NavigationPanelBottomNavigation(
+                  onSettingClicked: widget.onSettingClicked,
+                  onSyncButtonClicked: widget.onSyncButtonClicked,
+                  onTwitterClicked: widget.onTwitterClicked,
+                  syncButtonVisibility: widget.syncButtonVisibility,
+                )
+              ],
+            )));
+  }
+}
+
+typedef OnButtonClicked = Function();
+
+class NavigationPanelBottomNavigation extends StatefulWidget {
+  final OnButtonClicked onSettingClicked;
+  final OnButtonClicked onSyncButtonClicked;
+  final OnButtonClicked onTwitterClicked;
+  final bool syncButtonVisibility;
+
+  const NavigationPanelBottomNavigation(
+      {Key? key,
+      required this.onSettingClicked,
+      required this.onSyncButtonClicked,
+      required this.onTwitterClicked,
+      required this.syncButtonVisibility})
+      : super(key: key);
+
+  @override
+  State<NavigationPanelBottomNavigation> createState() =>
+      _NavigationPanelBottomNavigationState();
+}
+
+class _NavigationPanelBottomNavigationState
+    extends State<NavigationPanelBottomNavigation> {
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(10, 0, 0, 0),
+      child: Row(
+        children: [
+          IconButton(
+              icon: const FaIcon(FontAwesomeIcons.gear),
+              color: Colors.white,
+              alignment: Alignment.centerRight,
+              iconSize: 28,
+              onPressed: widget.onSettingClicked),
+          Expanded(child: Container()),
+          Visibility(
+            visible: widget.syncButtonVisibility,
+            // visible: currentFragment == Fragments.tagrefMasonry,
+            child: TextButton.icon(
+              style: TextButton.styleFrom(
+                  padding: const EdgeInsets.all(20),
+                  backgroundColor: desktopColorDarker),
+              onPressed: widget.onSyncButtonClicked,
+              label: Text(tr("sync")),
+              icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
+            ),
+          ),
+          IconButton(
+              icon: const FaIcon(
+                FontAwesomeIcons.twitter,
+                color: Colors.white,
+              ),
+              iconSize: 28,
+              padding: const EdgeInsets.all(20),
+              splashRadius: 1,
+              onPressed: widget.onTwitterClicked),
+        ],
+      ),
     );
   }
 }

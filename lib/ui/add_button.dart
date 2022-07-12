@@ -19,17 +19,24 @@ class AddButton extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            ImageFiltered(
-              // Stronger blur (than ReferenceImageDisplay) for differentiation
-              // (visually)
-              imageFilter: ImageFilter.blur(sigmaX: 10, sigmaY: 10, tileMode: TileMode.decal),
-              child: Image.network(
-                imgUrl,
-                color: Colors.grey.shade800,
-                colorBlendMode: BlendMode.screen,
+            SizedBox(
+              height: 350,
+              child: ImageFiltered(
+                // Stronger blur (than ReferenceImageDisplay) for differentiation
+                // (visually)
+                imageFilter: ImageFilter.blur(
+                    sigmaX: 10, sigmaY: 10, tileMode: TileMode.decal),
+                child: Image.network(
+                  imgUrl,
+                  fit: BoxFit.cover,
+                  color: Colors.grey.shade800,
+                  colorBlendMode: BlendMode.screen,
+                ),
               ),
             ),
-            FaIconButton(onPressed: (){onPressed();}, faIcon: FontAwesomeIcons.plus, size: const Size(65, 65),)
+            FaIconButton(onPressed: () {
+              onPressed();
+            }, faIcon: FontAwesomeIcons.plus, size: const Size(65, 65),)
           ],
         ));
   }

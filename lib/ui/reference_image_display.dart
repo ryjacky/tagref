@@ -112,90 +112,88 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
     return InkWell(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(cornerRadius),
-          child: Container(
-            child: Stack(
-              fit: StackFit.passthrough,
-              children: [
-                ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: 300),
-                  child: ColorFiltered(
-                    colorFilter: ColorFilter.mode(
-                        hovered ? Colors.black54 : Colors.transparent,
-                        BlendMode.darken),
-                    child: ImageFiltered(
-                        imageFilter: ImageFilter.blur(
-                            tileMode: TileMode.decal,
-                            sigmaX: hovered ? 5 : 0,
-                            sigmaY: hovered ? 5 : 0),
-                        child: widget.srcId == 1
-                            ? Image.network(
-                                widget.srcUrl,
-                                fit: BoxFit.cover,
-                              )
-                            : Image.file(
-                                File(widget.srcUrl),
-                                fit: BoxFit.cover,
-                              )),
+          child: Stack(
+            fit: StackFit.passthrough,
+            children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 350, maxHeight: 350),
+                child: ColorFiltered(
+                  colorFilter: ColorFilter.mode(
+                      hovered ? Colors.black54 : Colors.transparent,
+                      BlendMode.darken),
+                  child: ImageFiltered(
+                      imageFilter: ImageFilter.blur(
+                          tileMode: TileMode.decal,
+                          sigmaX: hovered ? 5 : 0,
+                          sigmaY: hovered ? 5 : 0),
+                      child: widget.srcId == 1
+                          ? Image.network(
+                              widget.srcUrl,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.file(
+                              File(widget.srcUrl),
+                              fit: BoxFit.cover,
+                            )),
+                ),
+              ),
+              Visibility(
+                visible: hovered,
+                child: Padding(
+                  // Extra padding for image overlay
+                  padding: const EdgeInsets.all(2),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(padding),
+                            child: FaIconButton(
+                                faIcon: FontAwesomeIcons.trash,
+                                onPressed: () {
+                                  removeImageFromDB(widget.imgId);
+                                }),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(padding),
+                            child: FaIconButton(
+                                faIcon: FontAwesomeIcons.link,
+                                onPressed: () {
+                                  _launchUrl(Uri.parse(widget.srcUrl));
+                                }),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(padding),
+                            child: FaIconButton(
+                                faIcon: FontAwesomeIcons.magnifyingGlass,
+                                onPressed: () {}),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(padding),
+                            child: PinButton(onPressed: (pinned) {}),
+                          ),
+                        ],
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(padding),
+                        child: TagInputField(
+                            hintText: tr("add-tag-field-hint"),
+                            onSubmitted: addTagToImage),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(padding),
+                        child: TagDisplay(
+                          height: 185,
+                          tagList: tagList,
+                          onTagDeleted: removeTag,
+                        ),
+                      )
+                    ],
                   ),
                 ),
-                Visibility(
-                  visible: hovered,
-                  child: Padding(
-                    // Extra padding for image overlay
-                    padding: const EdgeInsets.all(2),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(padding),
-                              child: FaIconButton(
-                                  faIcon: FontAwesomeIcons.trash,
-                                  onPressed: () {
-                                    removeImageFromDB(widget.imgId);
-                                  }),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(padding),
-                              child: FaIconButton(
-                                  faIcon: FontAwesomeIcons.link,
-                                  onPressed: () {
-                                    _launchUrl(Uri.parse(widget.srcUrl));
-                                  }),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(padding),
-                              child: FaIconButton(
-                                  faIcon: FontAwesomeIcons.magnifyingGlass,
-                                  onPressed: () {}),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(padding),
-                              child: PinButton(onPressed: (pinned) {}),
-                            ),
-                          ],
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(padding),
-                          child: TagInputField(
-                              hintText: tr("add-tag-field-hint"),
-                              onSubmitted: addTagToImage),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.all(padding),
-                          child: TagDisplay(
-                            height: 185,
-                            tagList: tagList,
-                            onTagDeleted: removeTag,
-                          ),
-                        )
-                      ],
-                    ),
-                  ),
-                )
-              ],
-            ),
+              )
+            ],
           ),
         ),
         onTap: () {},

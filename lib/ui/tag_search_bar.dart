@@ -149,12 +149,12 @@ class _TagSearchBarKeywordsViewState extends State<TagSearchBarKeywordsView> {
 }
 
 class TagSearchBarKeywordsViewDesktop extends StatefulWidget {
-  final List<String> keywordList;
+  final List<String> tagList;
 
   final OnKeywordRemovedCallBack onKeywordRemoved;
 
   const TagSearchBarKeywordsViewDesktop(
-      {Key? key, required this.keywordList, required this.onKeywordRemoved})
+      {Key? key, required this.tagList, required this.onKeywordRemoved})
       : super(key: key);
 
   @override
@@ -168,18 +168,18 @@ class _TagSearchBarKeywordsViewDesktopState
   Widget build(BuildContext context) {
     List<TagLabel> tagLabels = [];
 
-    for (int i = 0; i < widget.keywordList.length; i++) {
+    for (int i = 0; i < widget.tagList.length; i++) {
       late TagLabel iLabel;
       iLabel = TagLabel(
           onPressed: (tagId) => setState(() {
-                widget.onKeywordRemoved(widget.keywordList[i]);
+                widget.onKeywordRemoved(widget.tagList[i]);
               }),
-          tagWd: widget.keywordList[i]);
+          tagWd: widget.tagList[i]);
       tagLabels.add(iLabel);
     }
 
     return Container(
-      height: 200,
+      height: 130,
         decoration: const BoxDecoration(
             color: desktopColorDarker,
             borderRadius: BorderRadius.all(Radius.circular(4))),
