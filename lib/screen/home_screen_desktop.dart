@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:path_provider/path_provider.dart';
@@ -25,7 +26,7 @@ class HomeScreenDesktop extends StatefulWidget {
   State<HomeScreenDesktop> createState() => _HomeScreenDesktopState();
 }
 
-class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
+class _HomeScreenDesktopState extends State<HomeScreenDesktop> with SingleTickerProviderStateMixin {
   /// Upload FAB is dynamically updated with this variable
   bool syncing = false;
   bool syncingFailed = false;
@@ -40,10 +41,26 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
 
   final secureStorage = const FlutterSecureStorage();
 
+  // Setting Fragment transition related animation
+  late final AnimationController _slideController;
+
+  late final Animation<Offset> _bodyOffset;
+
+
+
   @override
   void initState() {
     // secureStorage.deleteAll();
     super.initState();
+
+    _slideController = AnimationController(
+        duration: const Duration(milliseconds: 250), vsync: this
+    );
+
+    _bodyOffset = Tween<Offset>(
+        begin: const Offset(1, 0),
+        end: const Offset(0, 0)
+    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
 
     _twitterApiHelper =
         TwitterApiHelper(context: context, secureStorage: secureStorage);
@@ -54,66 +71,70 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
     tmf = TwitterMasonryFragment(
       twitterHelper: _twitterApiHelper,
     );
+
+
   }
 
   @override
   Widget build(BuildContext context) {
-    // Calculates the padding from the application window width
-    // double paddingH = MediaQuery.of(context).size.width / 10;
-
     return Scaffold(
         backgroundColor: desktopColorDarker,
         body: Row(
           children: [
             NavigationPanel(
-              onSearchChanged: (List<String> tags) =>
-                  trmfKey.currentState?.filterImages(tags),
-              onSettingClicked: () {
-                setState(() {
-                  if (currentFragment != Fragments.preferences) {
-                    currentFragment = Fragments.preferences;
-                  } else {
-                    currentFragment = Fragments.tagrefMasonry;
-                  }
-                });
-              },
-              onSyncButtonClicked: () async {
-                syncing = true;
-                bool success = await pushDB(
-                    (await getApplicationSupportDirectory()).path,
-                    DBHelper.dbFileName);
+                onSearchChanged: (List<String> tags) =>
+                    trmfKey.currentState?.filterImages(tags),
+                onSettingClicked: () {
+                  setState(() {
+                    if (currentFragment != Fragments.preferences) {
+                      currentFragment = Fragments.preferences;
+                      _slideController.reset();
+                      _slideController.forward();
+                    } else {
+                      _slideController.reverse().then((value) => currentFragment = Fragments.tagrefMasonry);
 
-                setState(() {
-                  if (success) {
-                    syncing = false;
-                  } else {
-                    syncing = false;
-                    syncingFailed = true;
-                    Future.delayed(const Duration(seconds: 3))
-                        .then((value) => syncingFailed = false);
-                  }
-                });
-              },
-              onTwitterClicked: () async {
-                if (currentFragment != Fragments.twitterMasonry) {
-                  if (!_twitterApiHelper.authorized) {
-                    await _twitterApiHelper.authTwitter();
-                  }
-                }
+                    }
+                  });
+                },
+                onSyncButtonClicked: () async {
+                  syncing = true;
+                  bool success = await pushDB(
+                      (await getApplicationSupportDirectory()).path,
+                      DBHelper.dbFileName);
 
-                setState(() {
-                  switch (currentFragment) {
-                    case Fragments.twitterMasonry:
-                      currentFragment = Fragments.tagrefMasonry;
-                      break;
-                    default:
-                      currentFragment = Fragments.twitterMasonry;
-                      break;
+                  setState(() {
+                    if (success) {
+                      syncing = false;
+                    } else {
+                      syncing = false;
+                      syncingFailed = true;
+                      Future.delayed(const Duration(seconds: 3))
+                          .then((value) => syncingFailed = false);
+                    }
+                  });
+                },
+                onTwitterClicked: () async {
+                  if (currentFragment != Fragments.twitterMasonry) {
+                    if (!_twitterApiHelper.authorized) {
+                      await _twitterApiHelper.authTwitter();
+                    }
                   }
-                });
-              },
-              syncButtonVisibility: true,
-            ),
+
+                  setState(() {
+                    switch (currentFragment) {
+                      case Fragments.twitterMasonry:
+                        currentFragment = Fragments.tagrefMasonry;
+                        _slideController.reset();
+                        _slideController.forward();
+                        break;
+                      default:
+                        _slideController.reverse().then((value) => currentFragment = Fragments.twitterMasonry);
+                        break;
+                    }
+                  });
+                },
+                syncButtonVisibility: true,
+              ),
 
             // Body
             Expanded(
@@ -127,7 +148,12 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
                       ],
                     ),
                   ),
-                  getFragment(),
+                  Stack(
+                    children: [
+                      SizedBox(height: 1.sh * 0.95, child: trmf,),
+                      SlideTransition(position: _bodyOffset, child: SizedBox(height: 1.sh * 0.95, child: getFragment(),),)
+                    ],
+                  )
                 ],
               ),
             ),
@@ -142,7 +168,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop> {
       case Fragments.preferences:
         return const SettingFragment();
       default:
-        return trmf;
+        return Container();
     }
   }
 }

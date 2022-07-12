@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
+import '../assets/constant.dart';
 import '../assets/db_helper.dart';
 import '../ui/add_button.dart';
 import '../ui/reference_image_display.dart';
@@ -119,7 +120,8 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
     // Calculates the padding from the application window width
     double paddingH = MediaQuery.of(context).size.width / 10;
 
-    return Expanded(
+    return Container(
+      color: desktopColorDarker,
       child: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification.metrics.pixels >=

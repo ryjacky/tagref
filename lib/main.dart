@@ -74,6 +74,10 @@ class MyApp extends StatelessWidget {
           locale: context.locale,
           theme: ThemeData(
               textTheme: const TextTheme(
+                labelMedium: TextStyle(
+                    fontWeight: FontWeight.w300,
+                    fontSize: 18,
+                    color: Colors.white),
                   labelSmall: TextStyle(
                       fontSize: 16,
                       color: Colors.white,

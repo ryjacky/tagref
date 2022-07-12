@@ -31,22 +31,18 @@ class _DriveStatusDisplayState extends State<DriveStatusDisplay> {
           borderRadius: BorderRadius.circular(cornerRadius),
           child: Container(
             width: 150,
-            color: accentColor,
+            color: desktopColorDark,
             child: Column(
               children: [
                 Container(
                   width: 150,
-                  color: primaryColor,
+                  color: desktopColorLight,
                   child: Padding(
                     padding:
                         const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
                     child: Text("Status: " + (widget.statusOn ? "ON" : "OFF"),
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
-                            backgroundColor: primaryColor,
-                            fontWeight: FontWeight.w300,
-                            fontSize: 18,
-                            color: fontColorDark)),
+                        style: Theme.of(context).textTheme.labelMedium),
                   ),
                 ),
                 Padding(
@@ -61,10 +57,7 @@ class _DriveStatusDisplayState extends State<DriveStatusDisplay> {
                   padding: const EdgeInsets.fromLTRB(10, 15, 10, 20),
                   child: Text(widget.driveName,
                       textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: fontColorDark)),
+                      style: Theme.of(context).textTheme.labelSmall),
                 )
               ],
             ),

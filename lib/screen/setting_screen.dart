@@ -232,107 +232,112 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
           gDriveStatusOn = pref.getBool(gDriveConnected) != null ? true : false;
         }));
 
-    return Padding(
-      padding: const EdgeInsets.all(30),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            tr("pref"),
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-            child: Text(tr("linked-drives"),
-                style: Theme.of(context).textTheme.headlineLarge),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-            child: Row(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-                  child: DriveStatusDisplay(
-                    driveLogoSrc: "assets/images/gdrive_logo.svg",
-                    driveName: tr("gdrive"),
-                    statusOn: gDriveStatusOn,
-                    onTap: () async {
-                      if (gDriveStatusOn) {
-                        // Confirm google drive disconnection
-                        showDialog(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                                  title: Text(tr("disconnect-gdrive")),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: disconnectGDrive,
-                                        child: Text(tr("yes"))),
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text(tr("no"))),
-                                  ],
-                                ),
-                            barrierDismissible: false);
-                      } else {
-                        // The only case when driveApi will be null should be
-                        // when GDrive has never been set up before
-                        if (driveApi == null) {
-                          await initializeGoogleApi(secureStorage);
-                          await _applyRemoteDBChanges();
-                        }
-
-                        // Update shared preferences
-                        SharedPreferences.getInstance().then(
-                            (pref) => pref.setBool(gDriveConnected, true));
-
-                        remoteChanged = true;
-
-                        setState(() {
-                          gDriveStatusOn = true;
-                        });
-                      }
-                    },
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(8),
-                  child: DriveStatusDisplay(
-                    driveLogoSrc: "assets/images/gdrive_logo.svg",
-                    driveName: tr("icloud"),
-                    onTap: () => iCloudSignIn(),
-                  ),
-                ),
-              ],
+    return Container(
+      color: desktopColorDarker,
+      child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              tr("pref"),
+              style: Theme.of(context).textTheme.headlineSmall,
             ),
-          ),
-          Padding(
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+              child: Text(tr("linked-drives"),
+                  style: Theme.of(context).textTheme.headlineLarge),
+            ),
+            Padding(
               padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
               child: Row(
                 children: [
-                  Expanded(
-                    child: SizedBox(
-                      width: (1.sw / 1.3).w,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(tr("auto-tag"),
-                              style: Theme.of(context).textTheme.headlineLarge),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 10),
-                            child: Text(tr("auto-tag-desc"),
-                                style: Theme.of(context).textTheme.bodySmall),
-                          )
-                        ],
-                      ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
+                    child: DriveStatusDisplay(
+                      driveLogoSrc: "assets/images/gdrive_logo.svg",
+                      driveName: tr("gdrive"),
+                      statusOn: gDriveStatusOn,
+                      onTap: () async {
+                        if (gDriveStatusOn) {
+                          // Confirm google drive disconnection
+                          showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                    title: Text(tr("disconnect-gdrive")),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: disconnectGDrive,
+                                          child: Text(tr("yes"))),
+                                      TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: Text(tr("no"))),
+                                    ],
+                                  ),
+                              barrierDismissible: false);
+                        } else {
+                          // The only case when driveApi will be null should be
+                          // when GDrive has never been set up before
+                          if (driveApi == null) {
+                            await initializeGoogleApi(secureStorage);
+                            await _applyRemoteDBChanges();
+                          }
+
+                          // Update shared preferences
+                          SharedPreferences.getInstance().then(
+                              (pref) => pref.setBool(gDriveConnected, true));
+
+                          remoteChanged = true;
+
+                          setState(() {
+                            gDriveStatusOn = true;
+                          });
+                        }
+                      },
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
-                    child: const ToggleSwitch(),
-                  )
+                    padding: const EdgeInsets.all(8),
+                    child: DriveStatusDisplay(
+                      driveLogoSrc: "assets/images/gdrive_logo.svg",
+                      driveName: tr("icloud"),
+                      onTap: () => iCloudSignIn(),
+                    ),
+                  ),
                 ],
-              ))
-        ],
+              ),
+            ),
+            Padding(
+                padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        width: (1.sw / 1.3).w,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(tr("auto-tag"),
+                                style:
+                                    Theme.of(context).textTheme.headlineLarge),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Text(tr("auto-tag-desc"),
+                                  style: Theme.of(context).textTheme.bodySmall),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
+                      child: const ToggleSwitch(),
+                    )
+                  ],
+                ))
+          ],
+        ),
       ),
     );
   }

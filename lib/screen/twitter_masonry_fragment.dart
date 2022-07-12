@@ -4,6 +4,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:tagref/assets/constant.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
 
 import '../ui/twitter_image_display.dart';
@@ -104,7 +105,8 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
     // Calculates the padding from the application window width
     double paddingH = MediaQuery.of(context).size.width / 10;
 
-    return Expanded(
+    return Container(
+      color: desktopColorDarker,
       child: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification.metrics.pixels >=
