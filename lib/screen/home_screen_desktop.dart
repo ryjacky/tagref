@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
@@ -22,7 +23,8 @@ enum Fragments { twitterMasonry, tagrefMasonry, preferences }
 class HomeScreenDesktop extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
 
-  const HomeScreenDesktop({Key? key, required this.gApiHelper}) : super(key: key);
+  const HomeScreenDesktop({Key? key, required this.gApiHelper})
+      : super(key: key);
 
   @override
   State<HomeScreenDesktop> createState() => _HomeScreenDesktopState();
@@ -100,7 +102,17 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
               },
               onSyncButtonClicked: () async {
                 syncing = true;
-                bool success = await widget.gApiHelper.pushDB();
+                // Sync database
+
+                bool success = false;
+                int versionDifference = await widget.gApiHelper.compareDB();
+                if (versionDifference < 0) {
+                  log("Local version of the database is newer, uploading");
+                  success = await widget.gApiHelper.pushDB();
+                } else if (versionDifference > 0) {
+                  log("Remote version of the database is newer, downloading...");
+                  success = await widget.gApiHelper.pullAndReplaceLocalDB();
+                }
 
                 setState(() {
                   if (success) {
@@ -243,7 +255,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       "TagRef",
-                      style: Theme.of(context).textTheme.headlineLarge,
+                      style: Theme.of(context).textTheme.titleSmall,
                     ),
                   ),
                 ),

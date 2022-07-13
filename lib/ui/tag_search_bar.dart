@@ -33,6 +33,8 @@ class _TagSearchBarDesktopState extends State<TagSearchBarDesktop> {
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
           child: TextField(
+            textAlignVertical: TextAlignVertical.top,
+            
             controller: controller,
             onSubmitted: (val) {
               widget.onSubmitted(val);
@@ -41,14 +43,14 @@ class _TagSearchBarDesktopState extends State<TagSearchBarDesktop> {
               });
             },
             textInputAction: TextInputAction.unspecified,
-            style: const TextStyle(color: Colors.white),
+            style: Theme.of(context).textTheme.bodySmall,
             cursorColor: primaryColorDark,
             decoration: InputDecoration(
               isDense: true,
               icon: const FaIcon(FontAwesomeIcons.magnifyingGlass, color: Colors.white,),
               border: InputBorder.none,
               hintText: widget.hintText,
-              hintStyle: const TextStyle(color: Colors.white),
+              hintStyle: Theme.of(context).textTheme.bodySmall,
             ),
           ),
         ));

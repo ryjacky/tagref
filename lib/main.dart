@@ -33,24 +33,30 @@ void main(List<String> args) async {
   await EasyLocalization.ensureInitialized();
 
   // Initializes DriveApi and update local DB file
-  gApiHelper = GoogleApiHelper(secureStorage: secureStorage, localDBPath: (await getApplicationSupportDirectory()).path, dbFileName: DBHelper.dbFileName);
+  gApiHelper = GoogleApiHelper(
+      secureStorage: secureStorage,
+      localDBPath: (await getApplicationSupportDirectory()).path,
+      dbFileName: DBHelper.dbFileName);
   SharedPreferences pref = await SharedPreferences.getInstance();
   if (pref.getBool(gDriveConnected) != null) {
     await gApiHelper.initializeGoogleApi();
 
     // Sync database
     int versionDifference = await gApiHelper.compareDB();
-      if (versionDifference < 0) {
-        log("Local version of the database is newer, uploading");
-        await gApiHelper.pushDB();
-      } else if (versionDifference > 0) {
-        log("Remote version of the database is newer, downloading...");
-        await gApiHelper.pullAndReplaceLocalDB();
-      }
+    if (versionDifference < 0) {
+      log("Local version of the database is newer, uploading");
+      await gApiHelper.pushDB();
+    } else if (versionDifference > 0) {
+      log("Remote version of the database is newer, downloading...");
+      await gApiHelper.pullAndReplaceLocalDB();
+    }
   }
 
   runApp(EasyLocalization(
-      child: MyApp(gApiHelper: gApiHelper, secureStorage: secureStorage,),
+      child: MyApp(
+        gApiHelper: gApiHelper,
+        secureStorage: secureStorage,
+      ),
       fallbackLocale: const Locale('en'),
       supportedLocales: const [Locale('en'), Locale('ja')],
       path: 'assets/translations'));
@@ -68,7 +74,8 @@ class MyApp extends StatelessWidget {
   final FlutterSecureStorage secureStorage;
   final GoogleApiHelper gApiHelper;
 
-  const MyApp({Key? key, required this.secureStorage, required this.gApiHelper}) : super(key: key);
+  const MyApp({Key? key, required this.secureStorage, required this.gApiHelper})
+      : super(key: key);
 
   // This widget is the root of your application.
   @override
@@ -78,7 +85,11 @@ class MyApp extends StatelessWidget {
           Platform.isAndroid ? const Size(720, 1280) : const Size(1280, 720),
       minTextAdapt: true,
       splitScreenMode: true,
-      child: ScreenRouter(title: 'TagRef Home', secureStorage: secureStorage, gApiHelper: gApiHelper,),
+      child: ScreenRouter(
+        title: 'TagRef Home',
+        secureStorage: secureStorage,
+        gApiHelper: gApiHelper,
+      ),
       builder: (context, child) {
         return MaterialApp(
           title: 'TagRef',
@@ -87,8 +98,20 @@ class MyApp extends StatelessWidget {
           locale: context.locale,
           theme: ThemeData(
               textTheme: const TextTheme(
+                  titleLarge: TextStyle(
+                    fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 46),
+                  titleSmall: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                      fontSize: 30),
                   labelMedium: TextStyle(
                       fontWeight: FontWeight.w300,
+                      fontSize: 18,
+                      color: Colors.white),
+                  labelLarge: TextStyle(
+                      fontWeight: FontWeight.bold,
                       fontSize: 18,
                       color: Colors.white),
                   labelSmall: TextStyle(
@@ -96,14 +119,19 @@ class MyApp extends StatelessWidget {
                       color: Colors.white,
                       fontWeight: FontWeight.bold),
                   bodySmall: TextStyle(color: Colors.white60, fontSize: 18),
-                  headlineLarge: TextStyle(
+                  bodyMedium: TextStyle(color: Colors.white60, fontSize: 24),
+                  titleMedium: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontSize: 30),
                   headlineSmall: TextStyle(
                       fontWeight: FontWeight.w600,
                       color: Colors.white,
-                      fontSize: 20)),
+                      fontSize: 20),
+                  headlineMedium: TextStyle(
+                      fontWeight: FontWeight.w300,
+                      color: Colors.white,
+                      fontSize: 28)),
               primarySwatch: Colors.purple),
           home: child,
         );
@@ -116,7 +144,12 @@ class ScreenRouter extends StatefulWidget {
   final FlutterSecureStorage secureStorage;
   final GoogleApiHelper gApiHelper;
 
-  const ScreenRouter({Key? key, required this.title, required this.secureStorage, required this.gApiHelper}) : super(key: key);
+  const ScreenRouter(
+      {Key? key,
+      required this.title,
+      required this.secureStorage,
+      required this.gApiHelper})
+      : super(key: key);
   final String title;
 
   @override
@@ -144,7 +177,9 @@ class _ScreenRouterState extends State<ScreenRouter> {
     }
 
     return (Platform.isWindows || Platform.isMacOS)
-        ? HomeScreenDesktop(gApiHelper: widget.gApiHelper,)
+        ? HomeScreenDesktop(
+            gApiHelper: widget.gApiHelper,
+          )
         : HomeScreen(gApiHelper: widget.gApiHelper);
   }
 }

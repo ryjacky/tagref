@@ -251,7 +251,7 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
               child: Text(tr("linked-drives"),
-                  style: Theme.of(context).textTheme.headlineLarge),
+                  style: Theme.of(context).textTheme.titleMedium),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
@@ -326,7 +326,7 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
                           children: [
                             Text(tr("auto-tag"),
                                 style:
-                                    Theme.of(context).textTheme.headlineLarge),
+                                    Theme.of(context).textTheme.titleMedium),
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               child: Text(tr("auto-tag-desc"),

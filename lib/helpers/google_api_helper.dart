@@ -54,10 +54,10 @@ class GoogleApiHelper {
         }
       }
     } else {
-      // Login for desktop
-      // GoogleSignIn library is not available for desktop
-      // Using googleapis_auth library
-      _authClient = await obtainCredentials();
+      // // Login for desktop
+      // // GoogleSignIn library is not available for desktop
+      // // Using googleapis_auth library
+      // _authClient = await obtainCredentials();
 
       // Write to the secure secureStorage
       secureStorage.write(
