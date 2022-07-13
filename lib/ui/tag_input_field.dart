@@ -34,14 +34,14 @@ class _TagInputFieldState extends State<TagInputField> {
           fillColor: Colors.grey.shade400.withOpacity(0.5),
           filled: true,
           hintText: widget.hintText,
-          hintStyle: const TextStyle(color: Colors.white),
+          hintStyle: Theme.of(context).textTheme.bodySmall,
           contentPadding: const EdgeInsets.all(12),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(cornerRadius),
             borderSide: BorderSide.none,
           ),
           constraints: const BoxConstraints(maxHeight: 42)),
-      style: const TextStyle(color: Colors.white),
+      style: Theme.of(context).textTheme.bodySmall,
     );
   }
 }

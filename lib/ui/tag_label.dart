@@ -46,6 +46,7 @@ class _TagLabelState extends State<TagLabel> {
                 child: Text(
                   widget.tagWd,
                   style: TextStyle(
+                    fontSize: 16,
                       decoration: onHover
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,

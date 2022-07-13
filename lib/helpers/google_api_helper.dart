@@ -27,7 +27,7 @@ class GoogleApiHelper {
       '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');
 
   final FlutterSecureStorage secureStorage;
-  late final AuthClient _authClient;
+  late AuthClient _authClient;
 
   final String localDBPath;
   final String dbFileName;
@@ -57,7 +57,7 @@ class GoogleApiHelper {
       // // Login for desktop
       // // GoogleSignIn library is not available for desktop
       // // Using googleapis_auth library
-      // _authClient = await obtainCredentials();
+      _authClient = await obtainCredentials();
 
       // Write to the secure secureStorage
       secureStorage.write(

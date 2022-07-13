@@ -42,8 +42,10 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
 
     if (result != null) {
       for (var path in result.paths) {
-        DBHelper.db.rawInsert(""
-            "INSERT INTO images (src_url, src_id) VALUES (?, 2)", [path]);
+        DBHelper.db.rawInsert(
+            ""
+            "INSERT INTO images (src_url, src_id) VALUES (?, 2)",
+            [path]);
       }
       setStateAndResetEnv();
     } else {
@@ -69,7 +71,6 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
       String queryImages =
           "SELECT * FROM images WHERE img_id IN (SELECT DISTINCT img_id FROM image_tag INNER JOIN tags on image_tag.tag_id = tags.tag_id WHERE tags.name IN ($inString)) ORDER BY img_id DESC;";
       queryResult = await DBHelper.db.rawQuery(queryImages, filterTags);
-
     } else {
       String queryImages = "SELECT * FROM images ORDER BY img_id DESC;";
 
@@ -88,8 +89,8 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
       for (currentGridCount;
           currentGridCount < gridMaxCounts;
           currentGridCount++) {
-        late ReferenceImageDisplay rid;
-        masonryGrids.add(rid = ReferenceImageDisplay(
+        late ReferenceImage rid;
+        masonryGrids.add(rid = ReferenceImage(
           onDeleted: () {
             setState(() {
               masonryGrids.remove(rid);

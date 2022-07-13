@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
 
@@ -15,14 +16,14 @@ import '../assets/constant.dart';
 
 typedef VoidCallback = Function();
 
-class ReferenceImageDisplay extends StatefulWidget {
+class ReferenceImage extends StatefulWidget {
   final String srcUrl;
   final int imgId;
   final int srcId;
 
   final VoidCallback onDeleted;
 
-  const ReferenceImageDisplay(
+  const ReferenceImage(
       {Key? key,
       required this.srcUrl,
       required this.imgId,
@@ -31,10 +32,10 @@ class ReferenceImageDisplay extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<ReferenceImageDisplay> createState() => _ReferenceImageDisplayState();
+  State<ReferenceImage> createState() => _ReferenceImageState();
 }
 
-class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
+class _ReferenceImageState extends State<ReferenceImage> {
   bool hovered = false;
   static const double padding = 4;
 
@@ -44,16 +45,19 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
   void initState() {
     super.initState();
 
-    DBHelper.db
-        .rawQuery(
-            "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);", [widget.imgId])
-        .then((existedTags) {
-      for (int i = 0; i < existedTags.length; i++) {
-        tagList.add(existedTags[i]["name"]);
-      }
-
+    DBHelper.db.rawQuery(
+        "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
+        [widget.imgId]).then((existedTags) {
       // Triggering setState in case tagList update completes after initial build
-      setState(() {});
+      try {
+        setState(() {
+          for (int i = 0; i < existedTags.length; i++) {
+            tagList.add(existedTags[i]["name"]);
+          }
+        });
+      } catch (e) {
+        log("Reference Image going out of viewport before tag is loaded");
+      }
     });
   }
 
@@ -78,11 +82,14 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
     }
 
     // Creates the relation record in image_tag when it does not exists
-    String imageTagQuery = "SELECT * FROM image_tag WHERE img_id=? AND tag_id=?;";
-    List<Map> imageTagExists = await DBHelper.db.rawQuery(imageTagQuery, [widget.imgId, newTagId]);
-    if (imageTagExists.isEmpty){
+    String imageTagQuery =
+        "SELECT * FROM image_tag WHERE img_id=? AND tag_id=?;";
+    List<Map> imageTagExists =
+        await DBHelper.db.rawQuery(imageTagQuery, [widget.imgId, newTagId]);
+    if (imageTagExists.isEmpty) {
       DBHelper.db.rawInsert(
-          "INSERT INTO image_tag (img_id, tag_id) VALUES (?,?);", [widget.imgId, newTagId]);
+          "INSERT INTO image_tag (img_id, tag_id) VALUES (?,?);",
+          [widget.imgId, newTagId]);
     }
   }
 
@@ -116,7 +123,8 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
             fit: StackFit.passthrough,
             children: [
               ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 350, maxHeight: 350),
+                constraints:
+                    const BoxConstraints(minHeight: 350, maxHeight: 350),
                 child: ColorFiltered(
                   colorFilter: ColorFilter.mode(
                       hovered ? Colors.black54 : Colors.transparent,

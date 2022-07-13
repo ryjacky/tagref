@@ -254,9 +254,9 @@ class _SetupScreenState extends State<SetupScreen> {
                       child: TextButton(
                         onPressed: () {
                           Navigator.pushReplacement(context,
-                              MaterialPageRoute(builder: (context) => Platform.isMacOS || Platform.isWindows ? HomeScreen(
+                              MaterialPageRoute(builder: (context) => Platform.isMacOS || Platform.isWindows ? HomeScreenDesktop(
                                         gApiHelper: widget.gApiHelper,
-                                      ) : HomeScreenDesktop(
+                                      ) : HomeScreen(
                                         gApiHelper: widget.gApiHelper,
                                       )));
                         },
