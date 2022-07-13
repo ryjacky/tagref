@@ -34,7 +34,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   /// Indicates if masonry grid view is updating
   bool isUpdating = true;
 
-  String filterTagString = "";
+  List<String> filterTags = [];
 
   Future<void> pickFile() async {
     FilePickerResult? result =
@@ -43,7 +43,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
     if (result != null) {
       for (var path in result.paths) {
         DBHelper.db.rawInsert(""
-            "INSERT INTO images (src_url, src_id) VALUES ('$path', 2)");
+            "INSERT INTO images (src_url, src_id) VALUES (?, 2)", [path]);
       }
       setStateAndResetEnv();
     } else {
@@ -51,31 +51,30 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
     }
   }
 
-  void filterImages(List<String> tags) {
-    filterTagString = "";
-
-    if (tags.isNotEmpty) {
-      for (var tag in tags) {
-        filterTagString += "\"$tag\",";
-      }
-
-      filterTagString =
-          filterTagString.substring(0, filterTagString.length - 1);
-    }
+  void setFilterTags(List<String> tags) {
+    filterTags = tags;
 
     setStateAndResetEnv();
   }
 
   Future<void> loadImages() async {
-    String queryImages = "SELECT * FROM images ORDER BY img_id DESC;";
-    if (filterTagString != "") {
-      queryImages =
-          "SELECT * FROM images WHERE img_id IN (SELECT DISTINCT img_id FROM image_tag INNER JOIN tags on image_tag.tag_id = tags.tag_id WHERE tags.name IN ($filterTagString)) ORDER BY img_id DESC;";
-      print(queryImages);
-    }
-
     late List<Map<String, Object?>> queryResult;
-    queryResult = await DBHelper.db.rawQuery(queryImages);
+
+    if (filterTags.isNotEmpty) {
+      String inString = "";
+      for (int i = 0; i < filterTags.length; i++) {
+        inString += i == filterTags.length - 1 ? "?" : "?,";
+      }
+
+      String queryImages =
+          "SELECT * FROM images WHERE img_id IN (SELECT DISTINCT img_id FROM image_tag INNER JOIN tags on image_tag.tag_id = tags.tag_id WHERE tags.name IN ($inString)) ORDER BY img_id DESC;";
+      queryResult = await DBHelper.db.rawQuery(queryImages, filterTags);
+
+    } else {
+      String queryImages = "SELECT * FROM images ORDER BY img_id DESC;";
+
+      queryResult = await DBHelper.db.rawQuery(queryImages);
+    }
 
     // Limit gridMaxCounts to prevent overflow
     // (gridMaxCounts > number of all images in the database)

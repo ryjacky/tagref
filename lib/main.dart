@@ -19,6 +19,7 @@ import 'assets/db_helper.dart';
 
 const secureStorage = FlutterSecureStorage();
 
+
 /// Should include all pre-start initializations here
 void main(List<String> args) async {
   sqfliteFfiInit();
@@ -33,11 +34,10 @@ void main(List<String> args) async {
   // Initializes DriveApi and update local DB file
   SharedPreferences pref = await SharedPreferences.getInstance();
   if (pref.getBool(gDriveConnected) != null) {
-    await initializeDriveApiAndPullDB(
-        (await getApplicationSupportDirectory()).path,
-        DBHelper.dbFileName,
-        secureStorage);
+    await initializeGoogleApi(secureStorage);
   }
+
+  syncDB((await getApplicationSupportDirectory()).path, DBHelper.dbFileName);
 
   runApp(EasyLocalization(
       child: const MyApp(),
@@ -74,10 +74,10 @@ class MyApp extends StatelessWidget {
           locale: context.locale,
           theme: ThemeData(
               textTheme: const TextTheme(
-                labelMedium: TextStyle(
-                    fontWeight: FontWeight.w300,
-                    fontSize: 18,
-                    color: Colors.white),
+                  labelMedium: TextStyle(
+                      fontWeight: FontWeight.w300,
+                      fontSize: 18,
+                      color: Colors.white),
                   labelSmall: TextStyle(
                       fontSize: 16,
                       color: Colors.white,

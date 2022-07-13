@@ -117,8 +117,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         tagFilterList.add(val);
                       }
 
-                      trmfKey.currentState?.filterImages(tagFilterList);
-
+                      trmfKey.currentState?.setFilterTags(tagFilterList);
                     });
                   }),
               IconButton(
@@ -181,7 +180,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 keywordList: tagFilterList,
                 onKeywordRemoved: (keywordRemoved) {
                   tagFilterList.remove(keywordRemoved);
-                  trmfKey.currentState?.filterImages(tagFilterList);
+                  trmfKey.currentState?.setFilterTags(tagFilterList);
                 }),
             twitterModeOn ? tmf : trmf,
           ],

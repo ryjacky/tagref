@@ -46,7 +46,7 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
 
     DBHelper.db
         .rawQuery(
-            "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=${widget.imgId});")
+            "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);", [widget.imgId])
         .then((existedTags) {
       for (int i = 0; i < existedTags.length; i++) {
         tagList.add(existedTags[i]["name"]);
@@ -64,25 +64,25 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
       }
     });
 
-    String tagQuery = "SELECT * FROM tags WHERE name=\"$tag\";";
-    List<Map> tagExists = await DBHelper.db.rawQuery(tagQuery);
+    String tagQuery = "SELECT * FROM tags WHERE name=?;";
+    List<Map> tagExists = await DBHelper.db.rawQuery(tagQuery, [tag]);
 
     // Create tag (if not existed in 'tags' table) and creates
     // new record in 'image_tag' table
     late int newTagId;
     if (tagExists.isEmpty) {
-      String newTagStatement = "INSERT INTO tags (name) VALUES (\"$tag\");";
-      newTagId = await DBHelper.db.rawInsert(newTagStatement);
+      String newTagStatement = "INSERT INTO tags (name) VALUES (?);";
+      newTagId = await DBHelper.db.rawInsert(newTagStatement, [tag]);
     } else {
       newTagId = tagExists.first["tag_id"];
     }
 
     // Creates the relation record in image_tag when it does not exists
-    String imageTagQuery = "SELECT * FROM image_tag WHERE img_id=${widget.imgId} AND tag_id=$newTagId;";
-    List<Map> imageTagExists = await DBHelper.db.rawQuery(imageTagQuery);
+    String imageTagQuery = "SELECT * FROM image_tag WHERE img_id=? AND tag_id=?;";
+    List<Map> imageTagExists = await DBHelper.db.rawQuery(imageTagQuery, [widget.imgId, newTagId]);
     if (imageTagExists.isEmpty){
       DBHelper.db.rawInsert(
-          "INSERT INTO image_tag (img_id, tag_id) VALUES (${widget.imgId},$newTagId);");
+          "INSERT INTO image_tag (img_id, tag_id) VALUES (?,?);", [widget.imgId, newTagId]);
     }
   }
 
@@ -94,8 +94,8 @@ class _ReferenceImageDisplayState extends State<ReferenceImageDisplay> {
     });
 
     String deleteTagStatement =
-        "DELETE FROM image_tag WHERE img_id=${widget.imgId} AND tag_id=(SELECT tag_id FROM tags WHERE name=\"$tagWd\");";
-    DBHelper.db.rawDelete(deleteTagStatement);
+        "DELETE FROM image_tag WHERE img_id=? AND tag_id=(SELECT tag_id FROM tags WHERE name=?);";
+    DBHelper.db.rawDelete(deleteTagStatement, [widget.imgId, tagWd]);
   }
 
   void _launchUrl(Uri url) async {
