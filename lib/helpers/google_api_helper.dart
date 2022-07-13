@@ -13,7 +13,6 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:tagref/assets/constant.dart';
-import 'package:tagref/assets/db_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class GoogleApiHelper {
@@ -30,9 +29,17 @@ class GoogleApiHelper {
   final FlutterSecureStorage secureStorage;
   late final AuthClient _authClient;
 
-  GoogleApiHelper({required this.secureStorage});
+  final String localDBPath;
+  final String dbFileName;
 
-  void authUser() async {
+  bool isInitialized = false;
+
+  GoogleApiHelper(
+      {required this.localDBPath,
+      required this.dbFileName,
+      required this.secureStorage});
+
+  Future<void> authUser() async {
     // Build the auth client with user consent
     if (Platform.isAndroid || Platform.isIOS) {
       try {
@@ -60,7 +67,7 @@ class GoogleApiHelper {
   }
 
   /// Initializes google api when user has logged in before (desktop/mobile flow)
-  Future<void> initializeGoogleApi(FlutterSecureStorage secureStorage) async {
+  Future<void> initializeGoogleApi() async {
     if (driveApi != null) {
       log("Google API have already been initialized!");
     }
@@ -69,8 +76,7 @@ class GoogleApiHelper {
     String? accessCredentialsJString =
         await secureStorage.read(key: gAccessCredential);
 
-    if (accessCredentialsJString == null) {
-    } else {
+    if (accessCredentialsJString != null) {
       // Build the auth client from secure secureStorage
       _authClient = autoRefreshingClient(
           _clientId,
@@ -82,14 +88,15 @@ class GoogleApiHelper {
 
     // Check for validity of locally stored access credentials
     try {
-      drive.FileList appDataFileList =
-          await driveApi!.files.list(spaces: "appDataFolder");
+      await driveApi!.files.list(spaces: "appDataFolder");
+      isInitialized = true;
     } catch (e) {
       // Erase locally stored access credentials when it is invalid and
       // try to obtain new credentials
       driveApi = null;
       await secureStorage.delete(key: gAccessCredential);
-      await initializeGoogleApi(secureStorage);
+      throw Exception(
+          "Google API initialization failed, cannot obtain access credentials.");
     }
   }
 
@@ -103,27 +110,24 @@ class GoogleApiHelper {
     launchUrl(Uri.parse(url));
   }
 
-  void syncDB(String dbParent, String dbFileName) async {
+  Future<int> compareDB() async {
+    // Check and compare the database version of remote and local
     drive.FileList appDataFileList = await driveApi!.files.list(
         spaces: "appDataFolder",
         q: "name='$dbFileName'",
         $fields: "files/modifiedTime");
 
-    var localDBFile = File(await DBHelper.getDBUrl());
-    print(localDBFile.lastModified());
+    var localDBFile = File(join(localDBPath, dbFileName));
 
     // Upload or update the local db file based on the search result
     if (appDataFileList.files!.isNotEmpty) {
       int versionDifference = appDataFileList.files!.first.modifiedTime!
           .compareTo(await localDBFile.lastModified());
 
-      if (versionDifference < 0) {
-        log("Local version of the database is newer, uploading");
-        pushDB(dbParent, dbFileName);
-      } else if (versionDifference > 0) {
-        log("Remote version of the database is newer, downloading...");
-        pullAndReplaceLocalDB(dbParent, dbFileName);
-      }
+      return versionDifference;
+    } else {
+      log("Remote database does not exist.");
+      return -1;
     }
   }
 
@@ -133,7 +137,7 @@ class GoogleApiHelper {
   /// itself if the remote copy is available.
   ///
   /// You SHOULD close all database connection before calling this method
-  Future<bool> pullAndReplaceLocalDB(String dbParent, String dbFileName) async {
+  Future<bool> pullAndReplaceLocalDB() async {
     if (driveApi == null) {
       throw Exception("Google API has not been initialized!");
     }
@@ -144,7 +148,7 @@ class GoogleApiHelper {
 
     // Upload or update the local db file based on the search result
     if (appDataFileList.files!.isNotEmpty) {
-      var localDBFile = File(await DBHelper.getDBUrl()).openWrite();
+      var localDBFile = File(join(localDBPath, dbFileName)).openWrite();
 
       Media remoteDBMedia = await driveApi!.files.get(
           appDataFileList.files!.first.id!,
@@ -161,12 +165,12 @@ class GoogleApiHelper {
     }
   }
 
-  Future<bool> pushDB(String dbParent, String dbFileName) async {
+  Future<bool> pushDB() async {
     if (driveApi == null) {
       throw Exception("Google API has not been initialized!");
     }
 
-    String url = join(dbParent, dbFileName);
+    String url = join(localDBPath, dbFileName);
 
     if (url.contains(".db") ||
         url.contains(".sqlite") ||

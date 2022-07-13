@@ -3,13 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:tagref/assets/constant.dart';
+import 'package:tagref/helpers/google_api_helper.dart';
+import 'package:tagref/main.dart';
 import 'package:tagref/screen/home_screen.dart';
 
 import '../assets/font_size.dart';
 import '../ui/toggle_switch.dart';
 
 class SetupScreen extends StatefulWidget {
-  const SetupScreen({Key? key}) : super(key: key);
+  final GoogleApiHelper gApiHelper;
+  const SetupScreen({Key? key, required this.gApiHelper}) : super(key: key);
 
   @override
   State<SetupScreen> createState() => _SetupScreenState();
@@ -163,7 +166,6 @@ class _SetupScreenState extends State<SetupScreen> {
                     padding: EdgeInsets.fromLTRB(0, 20.w, 0, 0),
                     child: Row(
                       children: [
-
                         Expanded(
                           child: SizedBox(
                             width: (width / 1.3).w,
@@ -185,7 +187,7 @@ class _SetupScreenState extends State<SetupScreen> {
                           ),
                         ),
                         Padding(
-                          padding: EdgeInsets.fromLTRB(40.w,0,0,0),
+                          padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
                           child: const ToggleSwitch(),
                         )
                       ],
@@ -194,7 +196,6 @@ class _SetupScreenState extends State<SetupScreen> {
                     padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                     child: Row(
                       children: [
-
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,7 +218,7 @@ class _SetupScreenState extends State<SetupScreen> {
                           ),
                         ),
                         Padding(
-                          padding: EdgeInsets.fromLTRB(40.w,0,0,0),
+                          padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
                           child: const ToggleSwitch(),
                         )
                       ],
@@ -226,7 +227,6 @@ class _SetupScreenState extends State<SetupScreen> {
                     padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                     child: Row(
                       children: [
-
                         Expanded(
                           child: SizedBox(
                             width: width / 1.3,
@@ -248,7 +248,7 @@ class _SetupScreenState extends State<SetupScreen> {
                           ),
                         ),
                         Padding(
-                          padding: EdgeInsets.fromLTRB(40.w,0,0,0),
+                          padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
                           child: const ToggleSwitch(),
                         )
                       ],
@@ -264,7 +264,9 @@ class _SetupScreenState extends State<SetupScreen> {
                       Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => const HomeScreen()));
+                              builder: (context) => HomeScreen(
+                                    gApiHelper: widget.gApiHelper,
+                                  )));
                     },
                     style: ButtonStyle(
                         padding: MaterialStateProperty.all(

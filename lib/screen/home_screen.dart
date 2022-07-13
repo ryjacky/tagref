@@ -17,7 +17,8 @@ import 'tagref_masonry_fragment.dart';
 import 'twitter_masonry_fragment.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final GoogleApiHelper gApiHelper;
+  const HomeScreen({Key? key, required this.gApiHelper}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -68,8 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? Colors.orangeAccent
                     : primaryColorDark,
             onPressed: () async {
-              pushDB((await getApplicationSupportDirectory()).path,
-                      DBHelper.dbFileName)
+              widget.gApiHelper.pushDB()
                   .then((success) => {
                         if (success)
                           {
@@ -167,7 +167,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
                           },
                           pageBuilder: (context, a1, a2) =>
-                              const SettingScreen())).then((remoteChanged) =>
+                              SettingScreen(gApiHelper: widget.gApiHelper,))).then((remoteChanged) =>
                       trmfKey.currentState?.setStateAndResetEnv());
                 },
               ),

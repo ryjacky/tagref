@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tagref/assets/db_helper.dart';
 import 'package:tagref/assets/font_size.dart';
+import 'package:tagref/main.dart';
 import 'package:tagref/ui/toggle_switch.dart';
 
 import '../assets/constant.dart';
@@ -15,7 +16,9 @@ import '../helpers/icloud_api_helper.dart';
 import '../ui/drive_status_display.dart';
 
 class SettingScreen extends StatefulWidget {
-  const SettingScreen({Key? key}) : super(key: key);
+  final GoogleApiHelper gApiHelper;
+
+  const SettingScreen({Key? key, required this.gApiHelper}) : super(key: key);
 
   @override
   State<SettingScreen> createState() => _SettingScreenState();
@@ -114,8 +117,9 @@ class _SettingScreenState extends State<SettingScreen> {
                           } else {
                             // The only case when driveApi will be null should be
                             // when GDrive has never been set up before
-                            if (driveApi == null) {
-                              await initializeGoogleApi(secureStorage);
+                            if (!widget.gApiHelper.isInitialized) {
+                              await widget.gApiHelper.authUser();
+                              await widget.gApiHelper.initializeGoogleApi();
                               await _applyRemoteDBChanges();
                             }
 
@@ -190,8 +194,7 @@ class _SettingScreenState extends State<SettingScreen> {
   /// remote version, and re-open the database connection
   Future<void> _applyRemoteDBChanges() async {
     await DBHelper.db.close();
-    await pullAndReplaceLocalDB(
-        (await getApplicationSupportDirectory()).path, DBHelper.dbFileName);
+    await widget.gApiHelper.pullAndReplaceLocalDB();
     await DBHelper.initializeDatabase();
   }
 
@@ -200,7 +203,7 @@ class _SettingScreenState extends State<SettingScreen> {
     SharedPreferences.getInstance().then((pref) => setState(() {
           pref.remove(gDriveConnected);
         }));
-    purgeAccessCredentials(secureStorage);
+    widget.gApiHelper.purgeAccessCredentials(secureStorage);
     Navigator.pop(context);
     setState(() {
       gDriveStatusOn = true;
@@ -209,7 +212,9 @@ class _SettingScreenState extends State<SettingScreen> {
 }
 
 class SettingFragment extends StatefulWidget {
-  const SettingFragment({Key? key}) : super(key: key);
+    final GoogleApiHelper gApiHelper;
+
+  const SettingFragment({Key? key, required this.gApiHelper}) : super(key: key);
 
   @override
   State<SettingFragment> createState() => _SettingScreenFragmentState();
@@ -279,8 +284,9 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
                         } else {
                           // The only case when driveApi will be null should be
                           // when GDrive has never been set up before
-                          if (driveApi == null) {
-                            await initializeGoogleApi(secureStorage);
+                          if (!widget.gApiHelper.isInitialized) {
+                            await widget.gApiHelper.authUser();
+                            await widget.gApiHelper.initializeGoogleApi();
                             await _applyRemoteDBChanges();
                           }
 
@@ -346,8 +352,7 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
   /// remote version, and re-open the database connection
   Future<void> _applyRemoteDBChanges() async {
     await DBHelper.db.close();
-    await pullAndReplaceLocalDB(
-        (await getApplicationSupportDirectory()).path, DBHelper.dbFileName);
+    await widget.gApiHelper.pullAndReplaceLocalDB();
     await DBHelper.initializeDatabase();
   }
 
@@ -356,7 +361,7 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
     SharedPreferences.getInstance().then((pref) => setState(() {
           pref.remove(gDriveConnected);
         }));
-    purgeAccessCredentials(secureStorage);
+    widget.gApiHelper.purgeAccessCredentials(secureStorage);
     Navigator.pop(context);
     setState(() {
       gDriveStatusOn = true;

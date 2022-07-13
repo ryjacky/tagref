@@ -20,7 +20,9 @@ import 'twitter_masonry_fragment.dart';
 enum Fragments { twitterMasonry, tagrefMasonry, preferences }
 
 class HomeScreenDesktop extends StatefulWidget {
-  const HomeScreenDesktop({Key? key}) : super(key: key);
+  final GoogleApiHelper gApiHelper;
+
+  const HomeScreenDesktop({Key? key, required this.gApiHelper}) : super(key: key);
 
   @override
   State<HomeScreenDesktop> createState() => _HomeScreenDesktopState();
@@ -98,9 +100,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
               },
               onSyncButtonClicked: () async {
                 syncing = true;
-                bool success = await pushDB(
-                    (await getApplicationSupportDirectory()).path,
-                    DBHelper.dbFileName);
+                bool success = await widget.gApiHelper.pushDB();
 
                 setState(() {
                   if (success) {
@@ -178,7 +178,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
       case Fragments.twitterMasonry:
         return tmf;
       case Fragments.preferences:
-        return const SettingFragment();
+        return SettingFragment(gApiHelper: widget.gApiHelper);
       default:
         return Container();
     }

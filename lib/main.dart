@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
@@ -17,11 +18,11 @@ import 'package:tagref/screen/setup_screen.dart';
 import 'assets/constant.dart';
 import 'assets/db_helper.dart';
 
-const secureStorage = FlutterSecureStorage();
-
-
 /// Should include all pre-start initializations here
 void main(List<String> args) async {
+  const secureStorage = FlutterSecureStorage();
+  final GoogleApiHelper gApiHelper;
+
   sqfliteFfiInit();
 
   if (runWebViewTitleBarWidget(args)) {
@@ -32,15 +33,24 @@ void main(List<String> args) async {
   await EasyLocalization.ensureInitialized();
 
   // Initializes DriveApi and update local DB file
+  gApiHelper = GoogleApiHelper(secureStorage: secureStorage, localDBPath: (await getApplicationSupportDirectory()).path, dbFileName: DBHelper.dbFileName);
   SharedPreferences pref = await SharedPreferences.getInstance();
   if (pref.getBool(gDriveConnected) != null) {
-    await initializeGoogleApi(secureStorage);
+    await gApiHelper.initializeGoogleApi();
+
+    // Sync database
+    int versionDifference = await gApiHelper.compareDB();
+      if (versionDifference < 0) {
+        log("Local version of the database is newer, uploading");
+        await gApiHelper.pushDB();
+      } else if (versionDifference > 0) {
+        log("Remote version of the database is newer, downloading...");
+        await gApiHelper.pullAndReplaceLocalDB();
+      }
   }
 
-  syncDB((await getApplicationSupportDirectory()).path, DBHelper.dbFileName);
-
   runApp(EasyLocalization(
-      child: const MyApp(),
+      child: MyApp(gApiHelper: gApiHelper, secureStorage: secureStorage,),
       fallbackLocale: const Locale('en'),
       supportedLocales: const [Locale('en'), Locale('ja')],
       path: 'assets/translations'));
@@ -55,7 +65,10 @@ void main(List<String> args) async {
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+  final FlutterSecureStorage secureStorage;
+  final GoogleApiHelper gApiHelper;
+
+  const MyApp({Key? key, required this.secureStorage, required this.gApiHelper}) : super(key: key);
 
   // This widget is the root of your application.
   @override
@@ -65,7 +78,7 @@ class MyApp extends StatelessWidget {
           Platform.isAndroid ? const Size(720, 1280) : const Size(1280, 720),
       minTextAdapt: true,
       splitScreenMode: true,
-      child: const TagRefHome(title: 'TagRef Home'),
+      child: ScreenRouter(title: 'TagRef Home', secureStorage: secureStorage, gApiHelper: gApiHelper,),
       builder: (context, child) {
         return MaterialApp(
           title: 'TagRef',
@@ -99,15 +112,18 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class TagRefHome extends StatefulWidget {
-  const TagRefHome({Key? key, required this.title}) : super(key: key);
+class ScreenRouter extends StatefulWidget {
+  final FlutterSecureStorage secureStorage;
+  final GoogleApiHelper gApiHelper;
+
+  const ScreenRouter({Key? key, required this.title, required this.secureStorage, required this.gApiHelper}) : super(key: key);
   final String title;
 
   @override
-  State<TagRefHome> createState() => _TagRefHomePageState();
+  State<ScreenRouter> createState() => _ScreenRouterState();
 }
 
-class _TagRefHomePageState extends State<TagRefHome> {
+class _ScreenRouterState extends State<ScreenRouter> {
   @override
   Widget build(BuildContext context) {
     initRoute().then((screen) => Navigator.pushReplacement(
@@ -124,11 +140,11 @@ class _TagRefHomePageState extends State<TagRefHome> {
 
     if (!dbExists) {
       await DBHelper.createDBWithTemplate();
-      return const SetupScreen();
+      return SetupScreen(gApiHelper: widget.gApiHelper);
     }
 
     return (Platform.isWindows || Platform.isMacOS)
-        ? const HomeScreenDesktop()
-        : const HomeScreen();
+        ? HomeScreenDesktop(gApiHelper: widget.gApiHelper,)
+        : HomeScreen(gApiHelper: widget.gApiHelper);
   }
 }
