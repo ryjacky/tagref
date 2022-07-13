@@ -26,7 +26,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   /// Environment variables
   int gridMaxCounts = 50;
   int currentGridCount = 0;
-  final List<Widget> masonryGrids = [];
+  final List<ReferenceImage> masonryGrids = [];
 
   /// Upload FAB is dynamically updated with this variable
   bool syncing = false;
@@ -95,6 +95,12 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
             setState(() {
               masonryGrids.remove(rid);
               currentGridCount -= 1;
+            });
+
+            setState(() {
+              for (var element in masonryGrids) {
+                element.forceUpdate = true;
+              }
             });
           },
           srcId: queryResult[currentGridCount]["src_id"] as int,

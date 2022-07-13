@@ -21,9 +21,11 @@ class ReferenceImage extends StatefulWidget {
   final int imgId;
   final int srcId;
 
+  bool forceUpdate = false;
+
   final VoidCallback onDeleted;
 
-  const ReferenceImage(
+  ReferenceImage(
       {Key? key,
       required this.srcUrl,
       required this.imgId,
@@ -42,23 +44,29 @@ class _ReferenceImageState extends State<ReferenceImage> {
   List<String> tagList = [];
 
   @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+  }
+
+  @override
   void initState() {
     super.initState();
-
-    DBHelper.db.rawQuery(
-        "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
-        [widget.imgId]).then((existedTags) {
-      // Triggering setState in case tagList update completes after initial build
-      try {
-        setState(() {
-          for (int i = 0; i < existedTags.length; i++) {
-            tagList.add(existedTags[i]["name"]);
-          }
-        });
-      } catch (e) {
-        log("Reference Image going out of viewport before tag is loaded");
-      }
-    });
+    updateTagList();
+    // DBHelper.db.rawQuery(
+    //     "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
+    //     [widget.imgId]).then((existedTags) {
+    //   // Triggering setState in case tagList update completes after initial build
+    //   try {
+    //     setState(() {
+    //       for (int i = 0; i < existedTags.length; i++) {
+    //         tagList.add(existedTags[i]["name"]);
+    //       }
+    //     });
+    //   } catch (e) {
+    //     log("Reference Image going out of viewport before tag is loaded");
+    //   }
+    // });
   }
 
   void addTagToImage(String tag) async {
@@ -114,8 +122,32 @@ class _ReferenceImageState extends State<ReferenceImage> {
     widget.onDeleted();
   }
 
+  void updateTagList() {
+    tagList = [];
+    DBHelper.db.rawQuery(
+        "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
+        [widget.imgId]).then((existedTags) {
+
+      widget.forceUpdate = false;
+      // Triggering setState in case tagList update completes after initial build
+      try {
+        setState(() {
+                  for (int i = 0; i < existedTags.length; i++) {
+          tagList.add(existedTags[i]["name"]);
+        }
+        });
+
+      } catch (e) {
+        log("Reference Image going out of viewport before tag is loaded");
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (widget.forceUpdate) {
+      updateTagList();
+    }
     return InkWell(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(cornerRadius),
