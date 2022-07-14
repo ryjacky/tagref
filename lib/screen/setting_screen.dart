@@ -13,6 +13,7 @@ import 'package:tagref/ui/toggle_switch.dart';
 import '../assets/constant.dart';
 import '../helpers/google_api_helper.dart';
 import '../helpers/icloud_api_helper.dart';
+import '../helpers/twitter_api_helper.dart';
 import '../ui/drive_status_display.dart';
 
 class SettingScreen extends StatefulWidget {
@@ -26,6 +27,10 @@ class SettingScreen extends StatefulWidget {
 
 class _SettingScreenState extends State<SettingScreen> {
   final secureStorage = FlutterSecureStorage();
+
+  /// Controls the displayed text for DriveStatusDisplay widget, shows "ON"
+  /// when value is true, otherwise "OFF"
+  bool twitterStatusOn = false;
 
   /// Controls the displayed text for DriveStatusDisplay widget, shows "ON"
   /// when value is true, otherwise "OFF"
@@ -81,7 +86,7 @@ class _SettingScreenState extends State<SettingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(tr("linked-drives"),
+              Text(tr("integrations"),
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: FontSize.l3.sp,
@@ -137,11 +142,21 @@ class _SettingScreenState extends State<SettingScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(8),
+                      padding: const EdgeInsets.all(30),
                       child: DriveStatusDisplay(
-                        driveLogoSrc: "assets/images/gdrive_logo.svg",
-                        driveName: tr("icloud"),
-                        onTap: () => iCloudSignIn(),
+                        driveLogoSrc: "assets/images/twitter_logo.svg",
+                        driveName: tr("twitter-link"),
+                        statusOn: twitterStatusOn,
+                        onTap: () async {
+                          if (!twitterStatusOn) {
+                            if (await TwitterApiHelper(
+                                    context: context,
+                                    secureStorage: const FlutterSecureStorage())
+                                .authTwitter()) {
+                              setState(() => twitterStatusOn = true);
+                            }
+                          }
+                        },
                       ),
                     ),
                   ],
@@ -212,9 +227,12 @@ class _SettingScreenState extends State<SettingScreen> {
 }
 
 class SettingFragment extends StatefulWidget {
-    final GoogleApiHelper gApiHelper;
+  final GoogleApiHelper gApiHelper;
+  final TwitterApiHelper twitterApiHelper;
 
-  const SettingFragment({Key? key, required this.gApiHelper}) : super(key: key);
+  const SettingFragment(
+      {Key? key, required this.gApiHelper, required this.twitterApiHelper})
+      : super(key: key);
 
   @override
   State<SettingFragment> createState() => _SettingScreenFragmentState();
@@ -222,6 +240,10 @@ class SettingFragment extends StatefulWidget {
 
 class _SettingScreenFragmentState extends State<SettingFragment> {
   final secureStorage = FlutterSecureStorage();
+
+  /// Controls the displayed text for TwitterStatusDisplay widget, shows "ON"
+  /// when value is true, otherwise "OFF"
+  bool twitterStatusOn = false;
 
   /// Controls the displayed text for DriveStatusDisplay widget, shows "ON"
   /// when value is true, otherwise "OFF"
@@ -237,6 +259,8 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
           gDriveStatusOn = pref.getBool(gDriveConnected) != null ? true : false;
         }));
 
+    twitterStatusOn = widget.twitterApiHelper.authorized;
+
     return Container(
       color: desktopColorDarker,
       child: Padding(
@@ -250,7 +274,7 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-              child: Text(tr("linked-drives"),
+              child: Text(tr("integrations"),
                   style: Theme.of(context).textTheme.titleMedium),
             ),
             Padding(
@@ -269,7 +293,8 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
                           showDialog(
                               context: context,
                               builder: (_) => AlertDialog(
-                                    title: Text(tr("disconnect-gdrive")),
+                                    backgroundColor: desktopColorDark,
+                                    title: Text(tr("disconnect-gdrive"), style: Theme.of(context).textTheme.bodySmall,),
                                     actions: [
                                       TextButton(
                                           onPressed: disconnectGDrive,
@@ -304,11 +329,16 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(30),
                     child: DriveStatusDisplay(
-                      driveLogoSrc: "assets/images/gdrive_logo.svg",
-                      driveName: tr("icloud"),
-                      onTap: () => iCloudSignIn(),
+                      driveLogoSrc: "assets/images/twitter_logo.svg",
+                      driveName: tr("twitter-link"),
+                      statusOn: twitterStatusOn,
+                      onTap: () async {
+                        if (await widget.twitterApiHelper.authTwitter()) {
+                          setState(() => twitterStatusOn = true);
+                        }
+                      },
                     ),
                   ),
                 ],
@@ -325,8 +355,7 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(tr("auto-tag"),
-                                style:
-                                    Theme.of(context).textTheme.titleMedium),
+                                style: Theme.of(context).textTheme.titleMedium),
                             Padding(
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               child: Text(tr("auto-tag-desc"),

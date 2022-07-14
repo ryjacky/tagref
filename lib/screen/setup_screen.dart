@@ -1,5 +1,3 @@
-
-
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -12,7 +10,7 @@ import 'package:tagref/assets/constant.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
 import 'package:tagref/main.dart';
-import 'package:tagref/screen/home_screen.dart';
+import 'package:tagref/archive/ui/home_screen.dart';
 import 'package:tagref/ui/drive_status_display.dart';
 
 import '../assets/db_helper.dart';
@@ -22,6 +20,7 @@ import 'home_screen_desktop.dart';
 
 class SetupScreen extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
+
   const SetupScreen({Key? key, required this.gApiHelper}) : super(key: key);
 
   @override
@@ -229,7 +228,7 @@ class _SetupScreenState extends State<SetupScreen> {
                         Padding(
                           padding: const EdgeInsets.all(30),
                           child: DriveStatusDisplay(
-                            driveLogoSrc: "assets/images/gdrive_logo.svg",
+                            driveLogoSrc: "assets/images/twitter_logo.svg",
                             driveName: tr("twitter-link"),
                             statusOn: twitterStatusOn,
                             onTap: () async {
@@ -253,12 +252,15 @@ class _SetupScreenState extends State<SetupScreen> {
                       padding: const EdgeInsets.all(30),
                       child: TextButton(
                         onPressed: () {
-                          Navigator.pushReplacement(context,
-                              MaterialPageRoute(builder: (context) => Platform.isMacOS || Platform.isWindows ? HomeScreenDesktop(
-                                        gApiHelper: widget.gApiHelper,
-                                      ) : HomeScreen(
-                                        gApiHelper: widget.gApiHelper,
-                                      )));
+                          Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) =>
+                                      Platform.isMacOS || Platform.isWindows
+                                          ? HomeScreenDesktop(
+                                              gApiHelper: widget.gApiHelper,
+                                            )
+                                          : Text("data")));
                         },
                         style: ButtonStyle(
                             padding: MaterialStateProperty.all(

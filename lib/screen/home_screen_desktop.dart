@@ -177,7 +177,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
       case Fragments.twitterMasonry:
         return tmf;
       case Fragments.preferences:
-        return SettingFragment(gApiHelper: widget.gApiHelper);
+        return SettingFragment(gApiHelper: widget.gApiHelper, twitterApiHelper: _twitterApiHelper,);
       default:
         return Container();
     }

@@ -17,7 +17,6 @@ class TagRefMasonryFragment extends StatefulWidget {
 }
 
 class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
-  final List<String> keywordList = [];
   List<String> filterTags = [];
 
   List<Map<String, Object?>> rawImageInfo = [];
@@ -28,7 +27,9 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   void initState() {
     super.initState();
 
-    timer = Timer.periodic(Duration(seconds: 3), (timer) {       refreshImageList();
+    refreshImageList();
+    timer = Timer.periodic(const Duration(seconds: 3), (timer) {
+      refreshImageList();
     });
   }
 
@@ -49,7 +50,6 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
             "INSERT INTO images (src_url, src_id) VALUES (?, 2)",
             [path]);
       }
-      setStateAndResetEnv();
     } else {
       // Do nothing when user closed the dialog
     }
@@ -57,8 +57,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
 
   void setFilterTags(List<String> tags) {
     filterTags = tags;
-
-    setStateAndResetEnv();
+    refreshImageList();
   }
 
   Future<bool> refreshImageList() async {
@@ -79,12 +78,12 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
       queryResult = await DBHelper.db.rawQuery(queryImages);
     }
 
-    if (queryResult.length != rawImageInfo.length){
+    if (queryResult.length != rawImageInfo.length) {
       setState(() => rawImageInfo = queryResult);
       return true;
     } else {
-      for (int i = 0; i < rawImageInfo.length; i++){
-        if (rawImageInfo[i]["img_id"] != queryResult[i]["img_id"]){
+      for (int i = 0; i < rawImageInfo.length; i++) {
+        if (rawImageInfo[i]["img_id"] != queryResult[i]["img_id"]) {
           setState(() => rawImageInfo = queryResult);
 
           return true;
@@ -107,7 +106,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
       child: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification.metrics.pixels >=
-                  scrollNotification.metrics.maxScrollExtent - 500) {
+              scrollNotification.metrics.maxScrollExtent - 500) {
             // set isUpdating to false to prevent calling setState
             // more than once
             // isUpdating = false;
@@ -132,20 +131,13 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
             return ReferenceImage(
                 srcUrl: rawImageInfo[index]["src_url"] as String,
                 imgId: rawImageInfo[index]["img_id"] as int,
-                onDeleted: (){refreshImageList();},
+                onDeleted: () {
+                  refreshImageList();
+                },
                 srcId: rawImageInfo[index]["src_id"] as int);
           },
         ),
       ),
     );
-  }
-
-  /// Reset masonry view environment variables
-  void setStateAndResetEnv() {
-    setState(() {
-      // currentGridCount = 0;
-      // gridMaxCounts = 50;
-      // masonryGrids.clear();
-    });
   }
 }

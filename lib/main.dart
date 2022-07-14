@@ -11,7 +11,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
-import 'package:tagref/screen/home_screen.dart';
 import 'package:tagref/screen/home_screen_desktop.dart';
 import 'package:tagref/screen/setup_screen.dart';
 
@@ -160,6 +159,7 @@ class _ScreenRouterState extends State<ScreenRouter> {
 
   @override
   void initState() {
+    super.initState();
     Timer.periodic(const Duration(seconds: 5), (timer) { 
       if (!syncing){
         // Detects remote changes
@@ -185,6 +185,6 @@ class _ScreenRouterState extends State<ScreenRouter> {
         ? HomeScreenDesktop(
             gApiHelper: widget.gApiHelper,
           )
-        : HomeScreen(gApiHelper: widget.gApiHelper);
+        : Text("data");
   }
 }

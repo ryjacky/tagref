@@ -95,6 +95,7 @@ flutter:
     - assets/images/jp.svg
     - assets/images/us.svg
     - assets/translations/
+    - assets/images/twitter_logo.svg
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.

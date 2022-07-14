@@ -40,6 +40,7 @@ class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
 
   Future<void> removeImageFromDB(int imgId) async {
     await DBHelper.db.rawDelete('DELETE FROM images WHERE img_id = ?', [imgId]);
+    await DBHelper.db.rawDelete('DELETE FROM image_tag WHERE img_id = ?', [imgId]);
     widget.onDeleted();
   }
 
