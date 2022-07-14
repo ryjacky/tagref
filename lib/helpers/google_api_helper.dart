@@ -5,7 +5,6 @@ import 'dart:io' show File, Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:googleapis/authorizedbuyersmarketplace/v1.dart';
 import 'package:googleapis/datastream/v1.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
 import 'package:googleapis/youtube/v3.dart';
@@ -38,6 +37,18 @@ class GoogleApiHelper {
       {required this.localDBPath,
       required this.dbFileName,
       required this.secureStorage});
+
+  Future<bool> syncDB() async {
+    int versionDifference = await compareDB();
+    if (versionDifference < 0) {
+      log("Local version of the database is newer, uploading");
+      return await pushDB();
+    } else if (versionDifference > 0) {
+      log("Remote version of the database is newer, downloading...");
+      return await pullAndReplaceLocalDB();
+    }
+    return false;
+  }
 
   Future<void> authUser() async {
     // Build the auth client with user consent
@@ -121,10 +132,16 @@ class GoogleApiHelper {
 
     // Upload or update the local db file based on the search result
     if (appDataFileList.files!.isNotEmpty) {
-      int versionDifference = appDataFileList.files!.first.modifiedTime!
-          .compareTo(await localDBFile.lastModified());
+      Duration versionDifference = appDataFileList.files!.first.modifiedTime!
+          .difference(await localDBFile.lastModified());
 
-      return versionDifference;
+      if ((versionDifference.inSeconds).abs() < 10){
+        return 0;
+      } else if (versionDifference.isNegative) {
+        return -1;
+      } else {
+        return 1;
+      }
     } else {
       log("Remote database does not exist.");
       return -1;

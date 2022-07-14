@@ -1,4 +1,4 @@
-import 'dart:developer';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
@@ -42,14 +42,7 @@ void main(List<String> args) async {
     await gApiHelper.initializeGoogleApi();
 
     // Sync database
-    int versionDifference = await gApiHelper.compareDB();
-    if (versionDifference < 0) {
-      log("Local version of the database is newer, uploading");
-      await gApiHelper.pushDB();
-    } else if (versionDifference > 0) {
-      log("Remote version of the database is newer, downloading...");
-      await gApiHelper.pullAndReplaceLocalDB();
-    }
+    await gApiHelper.syncDB();
   }
 
   runApp(EasyLocalization(
@@ -157,11 +150,23 @@ class ScreenRouter extends StatefulWidget {
 }
 
 class _ScreenRouterState extends State<ScreenRouter> {
+  bool syncing = false;
   @override
   Widget build(BuildContext context) {
     initRoute().then((screen) => Navigator.pushReplacement(
         context, MaterialPageRoute(builder: (context) => screen)));
     return const Scaffold();
+  }
+
+  @override
+  void initState() {
+    Timer.periodic(const Duration(seconds: 5), (timer) { 
+      if (!syncing){
+        // Detects remote changes
+        syncing = true;
+        widget.gApiHelper.syncDB().then((value) => syncing = false);
+      }
+    });
   }
 
   Future<Widget> initRoute() async {

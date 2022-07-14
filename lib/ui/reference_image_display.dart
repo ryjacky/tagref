@@ -1,4 +1,3 @@
-import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
 
@@ -20,8 +19,6 @@ class ReferenceImage extends StatefulWidget {
   final String srcUrl;
   final int imgId;
   final int srcId;
-
-  bool forceUpdate = false;
 
   final VoidCallback onDeleted;
 
@@ -52,7 +49,6 @@ class _ReferenceImageState extends State<ReferenceImage> {
   @override
   void initState() {
     super.initState();
-    updateTagList();
     // DBHelper.db.rawQuery(
     //     "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
     //     [widget.imgId]).then((existedTags) {
@@ -123,31 +119,37 @@ class _ReferenceImageState extends State<ReferenceImage> {
   }
 
   void updateTagList() {
-    tagList = [];
     DBHelper.db.rawQuery(
         "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
-        [widget.imgId]).then((existedTags) {
-
-      widget.forceUpdate = false;
+        [widget.imgId]).then((databaseTags) {
       // Triggering setState in case tagList update completes after initial build
-      try {
-        setState(() {
-                  for (int i = 0; i < existedTags.length; i++) {
-          tagList.add(existedTags[i]["name"]);
-        }
-        });
 
-      } catch (e) {
-        log("Reference Image going out of viewport before tag is loaded");
+      if (tagList.length != databaseTags.length){
+        setState(() {
+          tagList = [];
+          for (int i = 0; i < databaseTags.length; i++) {
+            tagList.add(databaseTags[i]["name"]);
+          }
+        });
+      } else {
+        for (int x = 0; x < tagList.length; x++){
+          if (tagList[x] != databaseTags[x]["name"]){
+            tagList = [];
+
+            setState(() {
+              for (int i = 0; i < databaseTags.length; i++) {
+                tagList.add(databaseTags[i]["name"]);
+              }
+            });
+          }
+        }
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.forceUpdate) {
-      updateTagList();
-    }
+    updateTagList();
     return InkWell(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(cornerRadius),
@@ -241,6 +243,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
           setState(() {
             // Controls overlay visibility
             hovered = val;
+            updateTagList();
           });
         });
   }

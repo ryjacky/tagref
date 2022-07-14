@@ -1,14 +1,12 @@
+import 'dart:async';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import '../assets/constant.dart';
 import '../assets/db_helper.dart';
-import '../ui/add_button.dart';
 import '../ui/reference_image_display.dart';
 
 class TagRefMasonryFragment extends StatefulWidget {
@@ -20,21 +18,25 @@ class TagRefMasonryFragment extends StatefulWidget {
 
 class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   final List<String> keywordList = [];
-
-  final masonryUpdateStep = 50;
-
-  /// Environment variables
-  int gridMaxCounts = 50;
-  int currentGridCount = 0;
-  final List<ReferenceImage> masonryGrids = [];
-
-  /// Upload FAB is dynamically updated with this variable
-  bool syncing = false;
-
-  /// Indicates if masonry grid view is updating
-  bool isUpdating = true;
-
   List<String> filterTags = [];
+
+  List<Map<String, Object?>> rawImageInfo = [];
+
+  late Timer timer;
+
+  @override
+  void initState() {
+    super.initState();
+
+    timer = Timer.periodic(Duration(seconds: 3), (timer) {       refreshImageList();
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    timer.cancel();
+  }
 
   Future<void> pickFile() async {
     FilePickerResult? result =
@@ -59,7 +61,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
     setStateAndResetEnv();
   }
 
-  Future<void> loadImages() async {
+  Future<bool> refreshImageList() async {
     late List<Map<String, Object?>> queryResult;
 
     if (filterTags.isNotEmpty) {
@@ -77,70 +79,43 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
       queryResult = await DBHelper.db.rawQuery(queryImages);
     }
 
-    // Limit gridMaxCounts to prevent overflow
-    // (gridMaxCounts > number of all images in the database)
-    gridMaxCounts = min(gridMaxCounts, queryResult.length);
+    if (queryResult.length != rawImageInfo.length){
+      setState(() => rawImageInfo = queryResult);
+      return true;
+    } else {
+      for (int i = 0; i < rawImageInfo.length; i++){
+        if (rawImageInfo[i]["img_id"] != queryResult[i]["img_id"]){
+          setState(() => rawImageInfo = queryResult);
 
-    // Go through each record from the query result and creates an
-    // ReferenceImageDisplay widget which delegates the image for the record
-
-    // Only creates 50 widgets per setState()
-    setState(() {
-      for (currentGridCount;
-          currentGridCount < gridMaxCounts;
-          currentGridCount++) {
-        late ReferenceImage rid;
-        masonryGrids.add(rid = ReferenceImage(
-          onDeleted: () {
-            setState(() {
-              masonryGrids.remove(rid);
-              currentGridCount -= 1;
-            });
-
-            setState(() {
-              for (var element in masonryGrids) {
-                element.forceUpdate = true;
-              }
-            });
-          },
-          srcId: queryResult[currentGridCount]["src_id"] as int,
-          imgId: queryResult[currentGridCount]["img_id"] as int,
-          srcUrl: queryResult[currentGridCount]["src_url"].toString(),
-        ));
+          return true;
+        }
       }
+    }
 
-      // Re-enable update when loading is done
-      if (masonryGrids.length == gridMaxCounts) {
-        isUpdating = true;
-      }
-    });
+    return false;
   }
 
   @override
   Widget build(BuildContext context) {
     // Only update when masonryGrids does not contain all images
-    if (masonryGrids.length < gridMaxCounts) {
-      loadImages();
-    }
-
-    // Calculates the padding from the application window width
-    double paddingH = MediaQuery.of(context).size.width / 10;
+    // if (masonryGrids.length < gridMaxCounts) {
+    //   loadImages();
+    // }
 
     return Container(
       color: desktopColorDarker,
       child: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification.metrics.pixels >=
-                  scrollNotification.metrics.maxScrollExtent - 500 &&
-              isUpdating) {
+                  scrollNotification.metrics.maxScrollExtent - 500) {
             // set isUpdating to false to prevent calling setState
             // more than once
-            isUpdating = false;
+            // isUpdating = false;
 
             // Loading cool-down
             Future.delayed(const Duration(seconds: 1), () {
               setState(() {
-                gridMaxCounts += masonryUpdateStep;
+                // gridMaxCounts += masonryUpdateStep;
               });
             });
           }
@@ -152,17 +127,13 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
           mainAxisSpacing: 15,
           crossAxisSpacing: 15,
           // Reserve one seat for the AddButton
-          itemCount: currentGridCount + 1,
+          itemCount: rawImageInfo.length,
           itemBuilder: (context, index) {
-            if (index == 0) {
-              return AddButton(
-                  onPressed: () {
-                    pickFile();
-                  },
-                  imgUrl:
-                      "https://picsum.photos/seed/${DateTime.now().day}/1000/1000");
-            }
-            return masonryGrids[index - 1];
+            return ReferenceImage(
+                srcUrl: rawImageInfo[index]["src_url"] as String,
+                imgId: rawImageInfo[index]["img_id"] as int,
+                onDeleted: (){refreshImageList();},
+                srcId: rawImageInfo[index]["src_id"] as int);
           },
         ),
       ),
@@ -172,9 +143,9 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   /// Reset masonry view environment variables
   void setStateAndResetEnv() {
     setState(() {
-      currentGridCount = 0;
-      gridMaxCounts = 50;
-      masonryGrids.clear();
+      // currentGridCount = 0;
+      // gridMaxCounts = 50;
+      // masonryGrids.clear();
     });
   }
 }

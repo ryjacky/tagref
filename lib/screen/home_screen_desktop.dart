@@ -1,18 +1,13 @@
-import 'dart:developer';
-import 'dart:io';
-
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
 import 'package:tagref/screen/setting_screen.dart';
 
-import '../assets/db_helper.dart';
 import '../assets/constant.dart';
 import '../ui/tag_search_bar.dart';
 import 'tagref_masonry_fragment.dart';
@@ -104,15 +99,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
                 syncing = true;
                 // Sync database
 
-                bool success = false;
-                int versionDifference = await widget.gApiHelper.compareDB();
-                if (versionDifference < 0) {
-                  log("Local version of the database is newer, uploading");
-                  success = await widget.gApiHelper.pushDB();
-                } else if (versionDifference > 0) {
-                  log("Remote version of the database is newer, downloading...");
-                  success = await widget.gApiHelper.pullAndReplaceLocalDB();
-                }
+                bool success = await widget.gApiHelper.syncDB();
 
                 setState(() {
                   if (success) {
