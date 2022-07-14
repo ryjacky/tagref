@@ -39,6 +39,7 @@ class GoogleApiHelper {
       required this.secureStorage});
 
   Future<bool> syncDB() async {
+
     int versionDifference = await compareDB();
     if (versionDifference < 0) {
       log("Local version of the database is newer, uploading");

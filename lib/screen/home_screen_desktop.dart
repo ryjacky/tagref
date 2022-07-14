@@ -63,6 +63,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
         TwitterApiHelper(context: context, secureStorage: secureStorage);
     trmf = TagRefMasonryFragment(
       key: trmfKey,
+      gApiHelper: widget.gApiHelper,
     );
 
     tmf = TwitterMasonryFragment(
@@ -278,6 +279,30 @@ class _NavigationPanelState extends State<NavigationPanel> {
                   child: TagSearchBarKeywordsViewDesktop(
                       tagList: _tagFilterList,
                       onKeywordRemoved: (val) {
+                        if (_tagFilterList.contains(val)) {
+                          setState(() => _tagFilterList.remove(val));
+                        }
+                        widget.onSearchChanged(_tagFilterList);
+                      }),
+                ),
+
+                // "All Tags" label
+                Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 10, 5),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        tr("all-tags"),
+                        textAlign: TextAlign.left,
+                        style: Theme.of(context).textTheme.labelSmall,
+                      ),
+                    )),
+
+                // Box storing all tags that are searched by user
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+                  child: AllTagsView(
+                      onTagRemoved: (val) {
                         if (_tagFilterList.contains(val)) {
                           setState(() => _tagFilterList.remove(val));
                         }

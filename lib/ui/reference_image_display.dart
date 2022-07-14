@@ -95,6 +95,9 @@ class _ReferenceImageState extends State<ReferenceImage> {
           "INSERT INTO image_tag (img_id, tag_id) VALUES (?,?);",
           [widget.imgId, newTagId]);
     }
+
+    updateTagList();
+
   }
 
   void removeTag(String tagWd) {

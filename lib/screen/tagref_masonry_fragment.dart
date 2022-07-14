@@ -4,13 +4,16 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:tagref/helpers/google_api_helper.dart';
 
 import '../assets/constant.dart';
 import '../assets/db_helper.dart';
 import '../ui/reference_image_display.dart';
 
 class TagRefMasonryFragment extends StatefulWidget {
-  const TagRefMasonryFragment({Key? key}) : super(key: key);
+  final GoogleApiHelper gApiHelper;
+
+  const TagRefMasonryFragment({Key? key, required this.gApiHelper}) : super(key: key);
 
   @override
   State<TagRefMasonryFragment> createState() => TagRefMasonryFragmentState();
@@ -27,7 +30,6 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   void initState() {
     super.initState();
 
-    refreshImageList();
     timer = Timer.periodic(const Duration(seconds: 3), (timer) {
       refreshImageList();
     });
@@ -35,8 +37,9 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
 
   @override
   void dispose() {
-    super.dispose();
     timer.cancel();
+
+    super.dispose();
   }
 
   Future<void> pickFile() async {
@@ -46,9 +49,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
     if (result != null) {
       for (var path in result.paths) {
         DBHelper.db.rawInsert(
-            ""
-            "INSERT INTO images (src_url, src_id) VALUES (?, 2)",
-            [path]);
+            "INSERT INTO images (src_url, src_id) VALUES (?, 2)", [path]);
       }
     } else {
       // Do nothing when user closed the dialog
@@ -133,6 +134,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
                 imgId: rawImageInfo[index]["img_id"] as int,
                 onDeleted: () {
                   refreshImageList();
+                  widget.gApiHelper.pushDB();
                 },
                 srcId: rawImageInfo[index]["src_id"] as int);
           },
