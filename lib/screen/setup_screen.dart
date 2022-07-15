@@ -9,7 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tagref/assets/constant.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
-import 'package:tagref/ui/drive_status_display.dart';
 
 import '../assets/db_helper.dart';
 import '../assets/font_size.dart';

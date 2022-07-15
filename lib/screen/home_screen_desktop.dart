@@ -9,10 +9,10 @@ import 'package:tagref/helpers/twitter_api_helper.dart';
 import 'package:tagref/screen/setting_screen.dart';
 
 import '../assets/constant.dart';
-import '../fragments/twitter_masonry_fragment.dart';
-import '../ui/tag_search_bar.dart';
+import '../assets/db_helper.dart';
 import '../ui/tag_widgets.dart';
 import '../fragments/masonry_fragments.dart';
+import 'package:async/async.dart';
 
 enum Fragments { twitterMasonry, tagrefMasonry, preferences }
 
@@ -231,6 +231,48 @@ class NavigationPanel extends StatefulWidget {
 class _NavigationPanelState extends State<NavigationPanel> {
   final List<String> _tagFilterList = [];
 
+  final List<String> fullTagList = [];
+  late final CancelableOperation cancellableDBQuery;
+
+  @override
+  void initState() {
+    super.initState();
+
+    String queryTag = "SELECT name FROM tags";
+    cancellableDBQuery = CancelableOperation.fromFuture(
+      DBHelper.db.rawQuery(queryTag),
+    );
+
+    cancellableDBQuery.then((results) {
+      bool tagListChanged = false;
+      List<String> newTagList = [];
+      for (var row in results) {
+        newTagList.add(row["name"] as String);
+      }
+
+      if (newTagList.length != fullTagList.length) {
+        tagListChanged = true;
+      } else {
+        for (int i = 0; i < newTagList.length; i++) {
+          if (newTagList[i] != fullTagList[i]) tagListChanged = true;
+        }
+      }
+
+      if (tagListChanged) {
+        fullTagList.clear();
+        setState(() {
+          fullTagList.addAll(newTagList);
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    cancellableDBQuery.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -256,7 +298,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                 // Search bar
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                  child: TagSearchBarDesktop(
+                  child: SearchBarDesktop(
                       hintText: tr("search-hint"),
                       onSubmitted: (val) {
                         if (val.isNotEmpty && !_tagFilterList.contains(val)) {
@@ -281,9 +323,11 @@ class _NavigationPanelState extends State<NavigationPanel> {
                 // Box storing all tags that are searched by user
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-                  child: TagSearchBarKeywordsViewDesktop(
+                  child: TagListBox(
+                      height: 130,
+                      color: desktopColorDarker,
                       tagList: _tagFilterList,
-                      onKeywordRemoved: (val) {
+                      onTagDeleted: (val) {
                         if (_tagFilterList.contains(val)) {
                           setState(() => _tagFilterList.remove(val));
                         }
@@ -303,15 +347,14 @@ class _NavigationPanelState extends State<NavigationPanel> {
                       ),
                     )),
 
-                // Box storing all tags that are searched by user
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-                  child: AllTagsView(onTagRemoved: (val) {
-                    if (_tagFilterList.contains(val)) {
-                      setState(() => _tagFilterList.remove(val));
-                    }
-                    widget.onSearchChanged(_tagFilterList);
-                  }),
+                  child: TagListBox(
+                    color: desktopColorDarker,
+                    height: 230,
+                    onTagDeleted: (val) {},
+                    tagList: fullTagList,
+                  ),
                 ),
 
                 // Spacer
@@ -393,6 +436,7 @@ class _NavigationPanelBottomNavigationState
 
 class ScaledImageViewer extends StatefulWidget {
   final String imageUrl;
+
   const ScaledImageViewer({Key? key, required this.imageUrl}) : super(key: key);
 
   @override

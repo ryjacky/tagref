@@ -7,7 +7,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tagref/assets/db_helper.dart';
 import 'package:tagref/ui/tag_widgets.dart';
-import 'package:tagref/ui/tag_input_field.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../assets/constant.dart';
@@ -224,7 +223,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
                       ),
                       Padding(
                         padding: const EdgeInsets.all(padding),
-                        child: TagDisplay(
+                        child: TagListBox(
                           height: 185,
                           tagList: tagList,
                           onTagDeleted: removeTag,

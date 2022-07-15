@@ -12,7 +12,6 @@ import 'package:tagref/ui/toggle_switch.dart';
 import '../assets/constant.dart';
 import '../helpers/google_api_helper.dart';
 import '../helpers/twitter_api_helper.dart';
-import '../ui/drive_status_display.dart';
 
 class SettingScreen extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
