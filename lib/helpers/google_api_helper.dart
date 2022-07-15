@@ -38,7 +38,7 @@ class GoogleApiHelper {
       required this.dbFileName,
       required this.secureStorage});
 
-  Future<bool> syncDB() async {
+  Future<bool> syncDB(bool pullOnly) async {
 
     int versionDifference = await compareDB();
     if (versionDifference < 0) {
@@ -136,7 +136,7 @@ class GoogleApiHelper {
       Duration versionDifference = appDataFileList.files!.first.modifiedTime!
           .difference(await localDBFile.lastModified());
 
-      if ((versionDifference.inSeconds).abs() < 10){
+      if ((versionDifference.inSeconds).abs() <= 5){
         return 0;
       } else if (versionDifference.isNegative) {
         return -1;

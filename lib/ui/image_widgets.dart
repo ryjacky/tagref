@@ -14,6 +14,7 @@ import 'buttons.dart';
 
 typedef VoidCallback = Function();
 typedef OnTapCallback = Function(String url);
+typedef OnTagAdded = Function(String tag);
 
 class ReferenceImage extends StatefulWidget {
   final String srcUrl;
@@ -21,6 +22,7 @@ class ReferenceImage extends StatefulWidget {
   final int srcId;
 
   final VoidCallback onDeleted;
+  final VoidCallback onTagAdded;
   final OnTapCallback onTap;
 
   const ReferenceImage(
@@ -28,7 +30,9 @@ class ReferenceImage extends StatefulWidget {
       required this.srcUrl,
       required this.imgId,
       required this.onDeleted,
-      required this.srcId, required this.onTap})
+      required this.srcId,
+      required this.onTap,
+      required this.onTagAdded})
       : super(key: key);
 
   @override
@@ -91,8 +95,8 @@ class _ReferenceImageState extends State<ReferenceImage> {
           [widget.imgId, newTagId]);
     }
 
+    widget.onTagAdded();
     updateTagList();
-
   }
 
   void removeTag(String tagWd) {
@@ -122,7 +126,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
         [widget.imgId]).then((databaseTags) {
       // Triggering setState in case tagList update completes after initial build
 
-      if (tagList.length != databaseTags.length){
+      if (tagList.length != databaseTags.length) {
         setState(() {
           tagList = [];
           for (int i = 0; i < databaseTags.length; i++) {
@@ -130,8 +134,8 @@ class _ReferenceImageState extends State<ReferenceImage> {
           }
         });
       } else {
-        for (int x = 0; x < tagList.length; x++){
-          if (tagList[x] != databaseTags[x]["name"]){
+        for (int x = 0; x < tagList.length; x++) {
+          if (tagList[x] != databaseTags[x]["name"]) {
             tagList = [];
 
             setState(() {
@@ -247,8 +251,6 @@ class _ReferenceImageState extends State<ReferenceImage> {
   }
 }
 
-
-
 class TwitterImageDisplay extends StatefulWidget {
   final String srcUrl;
   final int imgId;
@@ -259,10 +261,11 @@ class TwitterImageDisplay extends StatefulWidget {
 
   const TwitterImageDisplay(
       {Key? key,
-        required this.srcUrl,
-        required this.imgId,
-        required this.onDeleted,
-        required this.srcId, required this.onTap})
+      required this.srcUrl,
+      required this.imgId,
+      required this.onDeleted,
+      required this.srcId,
+      required this.onTap})
       : super(key: key);
 
   @override
@@ -279,7 +282,8 @@ class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
 
   Future<void> removeImageFromDB(int imgId) async {
     await DBHelper.db.rawDelete('DELETE FROM images WHERE img_id = ?', [imgId]);
-    await DBHelper.db.rawDelete('DELETE FROM image_tag WHERE img_id = ?', [imgId]);
+    await DBHelper.db
+        .rawDelete('DELETE FROM image_tag WHERE img_id = ?', [imgId]);
     widget.onDeleted();
   }
 
@@ -292,9 +296,9 @@ class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
             fit: StackFit.passthrough,
             children: [
               ColorFiltered(
-                  colorFilter:
-                  ColorFilter.mode(
-                      hovered ? Colors.black12 : Colors.transparent, BlendMode.darken),
+                  colorFilter: ColorFilter.mode(
+                      hovered ? Colors.black12 : Colors.transparent,
+                      BlendMode.darken),
                   child: SizedBox(
                     height: 300,
                     child: ImageFiltered(
@@ -304,15 +308,14 @@ class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
                             sigmaY: hovered ? 2 : 0),
                         child: widget.srcId == 1
                             ? Image.network(
-                          widget.srcUrl,
-                          fit: BoxFit.cover,
-                        )
+                                widget.srcUrl,
+                                fit: BoxFit.cover,
+                              )
                             : Image.file(
-                          File(widget.srcUrl),
-                          fit: BoxFit.cover,
-                        )),
-                  )
-              ),
+                                File(widget.srcUrl),
+                                fit: BoxFit.cover,
+                              )),
+                  )),
               Visibility(
                 visible: hovered,
                 child: Padding(
@@ -355,4 +358,3 @@ class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
         });
   }
 }
-

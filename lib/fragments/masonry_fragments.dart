@@ -142,6 +142,9 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
                   refreshImageList();
                   widget.gApiHelper.pushDB();
                 },
+                onTagAdded: () {
+                  widget.gApiHelper.pushDB();
+                },
                 onTap: (imgUrl) {
                   Navigator.push(
                       context,

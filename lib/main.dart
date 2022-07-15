@@ -41,7 +41,7 @@ void main(List<String> args) async {
     await gApiHelper.initializeGoogleApi();
 
     // Sync database
-    await gApiHelper.syncDB();
+    await gApiHelper.syncDB(true);
   }
 
   runApp(EasyLocalization(
@@ -164,7 +164,7 @@ class _ScreenRouterState extends State<ScreenRouter> {
       if (!syncing){
         // Detects remote changes
         syncing = true;
-        widget.gApiHelper.syncDB().then((value) => syncing = false);
+        widget.gApiHelper.syncDB(true).then((value) => syncing = false);
       }
     });
   }

@@ -102,7 +102,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
                 syncing = true;
                 // Sync database
 
-                bool success = await widget.gApiHelper.syncDB();
+                bool success = await widget.gApiHelper.syncDB(true);
 
                 setState(() {
                   if (success) {
