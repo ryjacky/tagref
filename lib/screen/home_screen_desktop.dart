@@ -61,6 +61,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
 
     _twitterApiHelper =
         TwitterApiHelper(context: context, secureStorage: secureStorage);
+    _twitterApiHelper.purgeLocalInfo();
     trmf = TagRefMasonryFragment(
       key: trmfKey,
       gApiHelper: widget.gApiHelper,
@@ -178,7 +179,10 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
       case Fragments.twitterMasonry:
         return tmf;
       case Fragments.preferences:
-        return SettingFragment(gApiHelper: widget.gApiHelper, twitterApiHelper: _twitterApiHelper,);
+        return SettingFragment(
+          gApiHelper: widget.gApiHelper,
+          twitterApiHelper: _twitterApiHelper,
+        );
       default:
         return Container();
     }
@@ -301,13 +305,12 @@ class _NavigationPanelState extends State<NavigationPanel> {
                 // Box storing all tags that are searched by user
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-                  child: AllTagsView(
-                      onTagRemoved: (val) {
-                        if (_tagFilterList.contains(val)) {
-                          setState(() => _tagFilterList.remove(val));
-                        }
-                        widget.onSearchChanged(_tagFilterList);
-                      }),
+                  child: AllTagsView(onTagRemoved: (val) {
+                    if (_tagFilterList.contains(val)) {
+                      setState(() => _tagFilterList.remove(val));
+                    }
+                    widget.onSearchChanged(_tagFilterList);
+                  }),
                 ),
 
                 // Spacer
@@ -384,5 +387,40 @@ class _NavigationPanelBottomNavigationState
         ],
       ),
     );
+  }
+}
+
+class ScaledImageViewer extends StatefulWidget {
+  final String imageUrl;
+  const ScaledImageViewer({Key? key, required this.imageUrl}) : super(key: key);
+
+  @override
+  State<ScaledImageViewer> createState() => _ScaledImageViewerState();
+}
+
+class _ScaledImageViewerState extends State<ScaledImageViewer> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+        backgroundColor: const Color.fromRGBO(1, 1, 1, 0.5),
+        body: Stack(
+          children: [
+            SizedBox.expand(
+              child: InteractiveViewer(
+                maxScale: 10,
+                child: Image.network(widget.imageUrl),
+              ),
+            ),
+            Align(
+              alignment: Alignment.topRight,
+              child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const FaIcon(
+                    FontAwesomeIcons.xmark,
+                    color: Colors.white,
+                  )),
+            )
+          ],
+        ));
   }
 }

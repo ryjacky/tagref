@@ -2,7 +2,6 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:tagref/main.dart';
 import 'package:tagref/screen/twitter_oauth_exchange.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
 
@@ -18,6 +17,8 @@ class TwitterApiHelper {
   final refreshTokenSSKey = "com.tagref.twitterRefreshToken";
 
   final BuildContext context;
+
+  String untilId = "";
 
   TwitterApiHelper({required this.context, required this.secureStorage});
 
@@ -55,7 +56,6 @@ class TwitterApiHelper {
 
         return false;
       }
-
     } else {
       log("Twitter client is not authorized");
       log("Twitter OAuth credentials not found locally");
@@ -92,7 +92,8 @@ class TwitterApiHelper {
 
           userId = value.data.id;
           secureStorage.write(key: tTokenSSKey, value: token["access_token"]);
-          secureStorage.write(key: refreshTokenSSKey, value: token["refresh_token"]);
+          secureStorage.write(
+              key: refreshTokenSSKey, value: token["refresh_token"]);
           secureStorage.write(key: uidSSKey, value: userId);
           authorized = true;
         });
@@ -111,16 +112,39 @@ class TwitterApiHelper {
 
     // Query for home timeline
     log("Fetching home timeline images for the users, extracting from tweets");
-    TwitterResponse<List<TweetData>, TweetMeta> response = await twitterClient
-        .tweetsService
-        .lookupHomeTimeline(userId: userId, maxResults: 50, excludes: [
-      ExcludeTweetType.replies
-    ], expansions: [
-      TweetExpansion.attachmentsMediaKeys,
-      TweetExpansion.referencedTweetsId
-    ], mediaFields: [
-      MediaField.url
-    ]);
+    TwitterResponse<List<TweetData>, TweetMeta> response;
+    if (untilId == "") {
+      response = await twitterClient.tweetsService.lookupHomeTimeline(
+          userId: userId,
+          maxResults: 50,
+          excludes: [
+            ExcludeTweetType.replies
+          ],
+          expansions: [
+            TweetExpansion.attachmentsMediaKeys,
+            TweetExpansion.referencedTweetsId
+          ],
+          mediaFields: [
+            MediaField.url
+          ]);
+    } else {
+      response = await twitterClient.tweetsService.lookupHomeTimeline(
+          untilTweetId: untilId,
+          userId: userId,
+          maxResults: 50,
+          excludes: [
+            ExcludeTweetType.replies
+          ],
+          expansions: [
+            TweetExpansion.attachmentsMediaKeys,
+            TweetExpansion.referencedTweetsId
+          ],
+          mediaFields: [
+            MediaField.url
+          ]);
+    }
+
+    untilId = response.data.last.id;
 
     imageUrls.addAll(_extractImageUrlFromResponse(response));
 
@@ -168,5 +192,11 @@ class TwitterApiHelper {
     }
 
     return imageUrls;
+  }
+
+  void purgeLocalInfo() {
+    secureStorage.delete(key: tTokenSSKey);
+    secureStorage.delete(key: uidSSKey);
+    secureStorage.delete(key: refreshTokenSSKey);
   }
 }

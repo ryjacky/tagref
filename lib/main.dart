@@ -185,6 +185,6 @@ class _ScreenRouterState extends State<ScreenRouter> {
         ? HomeScreenDesktop(
             gApiHelper: widget.gApiHelper,
           )
-        : Text("data");
+        : const Text("data");
   }
 }

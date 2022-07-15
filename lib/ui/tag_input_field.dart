@@ -17,7 +17,7 @@ class TagInputField extends StatefulWidget {
 }
 
 class _TagInputFieldState extends State<TagInputField> {
-  TextEditingController _controller = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
 
   @override
   Widget build(BuildContext context) {

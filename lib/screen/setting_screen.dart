@@ -3,16 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tagref/assets/db_helper.dart';
 import 'package:tagref/assets/font_size.dart';
-import 'package:tagref/main.dart';
 import 'package:tagref/ui/toggle_switch.dart';
 
 import '../assets/constant.dart';
 import '../helpers/google_api_helper.dart';
-import '../helpers/icloud_api_helper.dart';
 import '../helpers/twitter_api_helper.dart';
 import '../ui/drive_status_display.dart';
 
@@ -26,7 +23,7 @@ class SettingScreen extends StatefulWidget {
 }
 
 class _SettingScreenState extends State<SettingScreen> {
-  final secureStorage = FlutterSecureStorage();
+  final secureStorage = const FlutterSecureStorage();
 
   /// Controls the displayed text for DriveStatusDisplay widget, shows "ON"
   /// when value is true, otherwise "OFF"
@@ -155,6 +152,8 @@ class _SettingScreenState extends State<SettingScreen> {
                                 .authTwitter()) {
                               setState(() => twitterStatusOn = true);
                             }
+                          } else {
+                            
                           }
                         },
                       ),
@@ -235,11 +234,11 @@ class SettingFragment extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<SettingFragment> createState() => _SettingScreenFragmentState();
+  State<SettingFragment> createState() => _SettingFragmentState();
 }
 
-class _SettingScreenFragmentState extends State<SettingFragment> {
-  final secureStorage = FlutterSecureStorage();
+class _SettingFragmentState extends State<SettingFragment> {
+  final secureStorage = const FlutterSecureStorage();
 
   /// Controls the displayed text for TwitterStatusDisplay widget, shows "ON"
   /// when value is true, otherwise "OFF"
@@ -294,7 +293,11 @@ class _SettingScreenFragmentState extends State<SettingFragment> {
                               context: context,
                               builder: (_) => AlertDialog(
                                     backgroundColor: desktopColorDark,
-                                    title: Text(tr("disconnect-gdrive"), style: Theme.of(context).textTheme.bodySmall,),
+                                    title: Text(
+                                      tr("disconnect-gdrive"),
+                                      style:
+                                          Theme.of(context).textTheme.bodySmall,
+                                    ),
                                     actions: [
                                       TextButton(
                                           onPressed: disconnectGDrive,

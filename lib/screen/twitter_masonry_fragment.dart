@@ -1,3 +1,4 @@
+import 'dart:developer' as dev;
 import 'dart:io';
 import 'dart:math';
 
@@ -6,13 +7,16 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:tagref/assets/constant.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
+import 'package:twitter_api_v2/twitter_api_v2.dart';
 
 import '../ui/twitter_image_display.dart';
+import 'home_screen_desktop.dart';
 
 class TwitterMasonryFragment extends StatefulWidget {
   final TwitterApiHelper twitterHelper;
 
-  const TwitterMasonryFragment({Key? key, required this.twitterHelper}) : super(key: key);
+  const TwitterMasonryFragment({Key? key, required this.twitterHelper})
+      : super(key: key);
 
   @override
   State<TwitterMasonryFragment> createState() => _TwitterMasonryFragmentState();
@@ -21,7 +25,7 @@ class TwitterMasonryFragment extends StatefulWidget {
 class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
   final List<String> keywordList = [];
 
-  final masonryUpdateStep = 50;
+  final masonryUpdateStep = 100;
 
   /// Environment variables
   int gridMaxCounts = 50;
@@ -32,7 +36,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
   bool syncing = false;
 
   /// Indicates if masonry grid view is updating
-  bool isUpdating = true;
+  bool canUpdate = true;
 
   List<Map<String, Object?>> queryResult = [];
   late List<String> imageUrls = [];
@@ -42,7 +46,8 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
 
     for (int i = 0; i <= 3; i++) {
       if (i == 3) {
-        print("something went wrong, please try again");
+        dev.log("something went wrong, please try again");
+        canUpdate = true;
         return;
       }
 
@@ -50,6 +55,11 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
         tempImageUrls = await widget.twitterHelper.lookupHomeTimelineImages();
         break;
       } catch (e) {
+        if (e is TwitterException) {
+          if (e.body?[0][0] == "0") {
+            dev.log("End has reached, no new tweets at the moment");
+          }
+        }
         await Future.delayed(const Duration(milliseconds: 1000));
       }
     }
@@ -76,6 +86,32 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
           currentGridCount++) {
         late TwitterImageDisplay rid;
         masonryGrids.add(rid = TwitterImageDisplay(
+          onTap: (srcUrl) {
+            Navigator.push(
+                context,
+                PageRouteBuilder(
+                    opaque: false,
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) {
+                      const begin = Offset(0, -1.0);
+                      const end = Offset.zero;
+                      const curve = Curves.ease;
+
+                      final tween = Tween(begin: begin, end: end);
+                      final curvedAnimation = CurvedAnimation(
+                        parent: animation,
+                        curve: curve,
+                      );
+
+                      return SlideTransition(
+                        position: tween.animate(curvedAnimation),
+                        child: child,
+                      );
+                    },
+                    pageBuilder: (context, a1, a2) => ScaledImageViewer(
+                          imageUrl: srcUrl,
+                        )));
+          },
           onDeleted: () {
             setState(() {
               masonryGrids.remove(rid);
@@ -90,7 +126,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
 
       // Re-enable update when loading is done
       if (masonryGrids.length == gridMaxCounts) {
-        isUpdating = true;
+        canUpdate = true;
       }
     });
   }
@@ -111,10 +147,10 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
         onNotification: (scrollNotification) {
           if (scrollNotification.metrics.pixels >=
                   scrollNotification.metrics.maxScrollExtent - 500 &&
-              isUpdating) {
+              canUpdate) {
             // set isUpdating to false to prevent calling setState
             // more than once
-            isUpdating = false;
+            canUpdate = false;
 
             // Loading cool-down
             Future.delayed(const Duration(seconds: 1), () {

@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 import 'dart:ui';
 
@@ -14,6 +15,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../assets/constant.dart';
 
 typedef VoidCallback = Function();
+typedef OnTapCallback = Function(String url);
 
 class ReferenceImage extends StatefulWidget {
   final String srcUrl;
@@ -21,13 +23,14 @@ class ReferenceImage extends StatefulWidget {
   final int srcId;
 
   final VoidCallback onDeleted;
+  final OnTapCallback onTap;
 
-  ReferenceImage(
+  const ReferenceImage(
       {Key? key,
       required this.srcUrl,
       required this.imgId,
       required this.onDeleted,
-      required this.srcId})
+      required this.srcId, required this.onTap})
       : super(key: key);
 
   @override
@@ -39,12 +42,6 @@ class _ReferenceImageState extends State<ReferenceImage> {
   static const double padding = 4;
 
   List<String> tagList = [];
-
-  @override
-  void dispose() {
-    // TODO: implement dispose
-    super.dispose();
-  }
 
   @override
   void initState() {
@@ -113,7 +110,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
   }
 
   void _launchUrl(Uri url) async {
-    if (!await launchUrl(url)) print('Could not launch $url');
+    if (!await launchUrl(url)) log('Could not launch $url');
   }
 
   Future<void> removeImageFromDB(int imgId) async {
@@ -241,7 +238,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
             ],
           ),
         ),
-        onTap: () {},
+        onTap: () => widget.onTap(widget.srcUrl),
         onHover: (val) {
           setState(() {
             // Controls overlay visibility
