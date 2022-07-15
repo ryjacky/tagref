@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tagref/assets/db_helper.dart';
 import 'package:tagref/assets/font_size.dart';
+import 'package:tagref/ui/buttons.dart';
 import 'package:tagref/ui/toggle_switch.dart';
 
 import '../assets/constant.dart';
@@ -94,7 +95,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-                      child: DriveStatusDisplay(
+                      child: IntegrationDisplayButton(
                         driveLogoSrc: "assets/images/gdrive_logo.svg",
                         driveName: tr("gdrive"),
                         statusOn: gDriveStatusOn,
@@ -140,7 +141,7 @@ class _SettingScreenState extends State<SettingScreen> {
                     ),
                     Padding(
                       padding: const EdgeInsets.all(30),
-                      child: DriveStatusDisplay(
+                      child: IntegrationDisplayButton(
                         driveLogoSrc: "assets/images/twitter_logo.svg",
                         driveName: tr("twitter-link"),
                         statusOn: twitterStatusOn,
@@ -282,7 +283,7 @@ class _SettingFragmentState extends State<SettingFragment> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-                    child: DriveStatusDisplay(
+                    child: IntegrationDisplayButton(
                       driveLogoSrc: "assets/images/gdrive_logo.svg",
                       driveName: tr("gdrive"),
                       statusOn: gDriveStatusOn,
@@ -333,7 +334,7 @@ class _SettingFragmentState extends State<SettingFragment> {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(30),
-                    child: DriveStatusDisplay(
+                    child: IntegrationDisplayButton(
                       driveLogoSrc: "assets/images/twitter_logo.svg",
                       driveName: tr("twitter-link"),
                       statusOn: twitterStatusOn,

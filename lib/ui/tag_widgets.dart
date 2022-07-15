@@ -1,8 +1,155 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tagref/assets/constant.dart';
-import 'package:tagref/assets/db_helper.dart';
-import 'package:tagref/ui/tag_label.dart';
+
+import '../assets/constant.dart';
+import '../assets/db_helper.dart';
+
+double _cornerRadius = 4;
+
+typedef OnTagDeleted = Function(String tagWd);
+
+class TagDisplay extends StatefulWidget {
+  final double height;
+  final List<String> tagList;
+
+  final OnTagDeleted onTagDeleted;
+
+  const TagDisplay(
+      {Key? key,
+      required this.height,
+      required this.tagList,
+      required this.onTagDeleted})
+      : super(key: key);
+
+  @override
+  State<TagDisplay> createState() => _TagDisplayState();
+}
+
+class _TagDisplayState extends State<TagDisplay> {
+  @override
+  Widget build(BuildContext context) {
+    List<TagLabel> tagLabelList = widget.tagList
+        .map((tagWd) => TagLabel(onPressed: widget.onTagDeleted, tagWd: tagWd))
+        .toList();
+
+    return Row(
+      children: [
+        Expanded(
+            child: Container(
+                height: widget.height,
+                decoration: const BoxDecoration(
+                    color: Color.fromARGB(87, 255, 255, 255),
+                    borderRadius: BorderRadius.all(Radius.circular(4))),
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    children: tagLabelList,
+                  ),
+                )))
+      ],
+    );
+  }
+}
+
+typedef OnSubmitted = Function(String val);
+
+class TagInputField extends StatefulWidget {
+  final String hintText;
+  final OnSubmitted onSubmitted;
+  const TagInputField(
+      {Key? key, required this.hintText, required this.onSubmitted})
+      : super(key: key);
+
+  @override
+  State<TagInputField> createState() => _TagInputFieldState();
+}
+
+class _TagInputFieldState extends State<TagInputField> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      onSubmitted: (val) {
+        widget.onSubmitted(val);
+        _controller.clear();
+      },
+      controller: _controller,
+      inputFormatters: [
+        FilteringTextInputFormatter(RegExp("[\"'~!@#\$%^&*()_+{}\\[\\]:;,.<>/?-]"), allow: false)
+      ],
+      decoration: InputDecoration(
+          fillColor: Colors.grey.shade400.withOpacity(0.5),
+          filled: true,
+          hintText: widget.hintText,
+          hintStyle: Theme.of(context).textTheme.bodySmall,
+          contentPadding: const EdgeInsets.all(12),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(_cornerRadius),
+            borderSide: BorderSide.none,
+          ),
+          constraints: const BoxConstraints(maxHeight: 42)),
+      style: Theme.of(context).textTheme.bodySmall,
+    );
+  }
+}
+
+typedef GestureTapCallback = Function(String tagWd);
+
+class TagLabel extends StatefulWidget {
+  final String tagWd;
+
+  const TagLabel(
+      {Key? key,
+        required this.onPressed,
+        required this.tagWd})
+      : super(key: key);
+  final GestureTapCallback onPressed;
+
+  @override
+  State<TagLabel> createState() => _TagLabelState();
+}
+
+class _TagLabelState extends State<TagLabel> {
+  bool onHover = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: InkWell(
+          onTap: () {},
+          onHover: (val) {
+            setState(() {
+              onHover = val;
+            });
+          },
+          child: RawMaterialButton(
+              onPressed: () => widget.onPressed(widget.tagWd),
+              //TODO : CHANGE TO USE THE CONTEXT ONE
+              fillColor: desktopColorLight,
+              constraints: const BoxConstraints.tightFor(height: 28),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(_cornerRadius)),
+              elevation: 0.1,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              child: Padding(
+                padding:
+                const EdgeInsets.symmetric(horizontal: 6, vertical: 0),
+                child: Text(
+                  widget.tagWd,
+                  style: TextStyle(
+                      fontSize: 16,
+                      decoration: onHover
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                      color: Colors.white,
+                      fontWeight: FontWeight.w500),
+                ),
+              )),
+        ));
+  }
+}
 
 typedef VoidCallback = Function(String val);
 
@@ -30,7 +177,7 @@ class _TagSearchBarDesktopState extends State<TagSearchBarDesktop> {
             color: desktopColorLight,
             border: Border.all(color: desktopColorLight),
             borderRadius:
-                const BorderRadius.all(Radius.circular(cornerRadius))),
+            const BorderRadius.all(Radius.circular(cornerRadius))),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 10),
           child: TextField(
@@ -84,7 +231,7 @@ class _TagSearchBarState extends State<TagSearchBar> {
             color: accentColor,
             border: Border.all(color: accentColor),
             borderRadius:
-                const BorderRadius.all(Radius.circular(cornerRadius))),
+            const BorderRadius.all(Radius.circular(cornerRadius))),
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 20),
           child: TextField(
@@ -135,8 +282,8 @@ class _TagSearchBarKeywordsViewState extends State<TagSearchBarKeywordsView> {
       late TagLabel iLabel;
       iLabel = TagLabel(
           onPressed: (tagId) => setState(() {
-                widget.onKeywordRemoved(widget.keywordList[i]);
-              }),
+            widget.onKeywordRemoved(widget.keywordList[i]);
+          }),
           tagWd: widget.keywordList[i]);
       tagLabels.add(iLabel);
     }
@@ -177,8 +324,8 @@ class _TagSearchBarKeywordsViewDesktopState
       late TagLabel iLabel;
       iLabel = TagLabel(
           onPressed: (tagId) => setState(() {
-                widget.onKeywordRemoved(widget.tagList[i]);
-              }),
+            widget.onKeywordRemoved(widget.tagList[i]);
+          }),
           tagWd: widget.tagList[i]);
       tagLabels.add(iLabel);
     }
@@ -273,3 +420,4 @@ class _AllTagsViewState extends State<AllTagsView> {
         ));
   }
 }
+

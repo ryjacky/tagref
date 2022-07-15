@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:tagref/screen/twitter_oauth_exchange.dart';
+import 'package:tagref/helpers/twitter_oauth_exchange.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
 
 class TwitterApiHelper {

@@ -9,9 +9,10 @@ import 'package:tagref/helpers/twitter_api_helper.dart';
 import 'package:tagref/screen/setting_screen.dart';
 
 import '../assets/constant.dart';
+import '../fragments/twitter_masonry_fragment.dart';
 import '../ui/tag_search_bar.dart';
-import 'tagref_masonry_fragment.dart';
-import 'twitter_masonry_fragment.dart';
+import '../ui/tag_widgets.dart';
+import '../fragments/masonry_fragments.dart';
 
 enum Fragments { twitterMasonry, tagrefMasonry, preferences }
 

@@ -13,6 +13,7 @@ import 'package:tagref/ui/drive_status_display.dart';
 
 import '../assets/db_helper.dart';
 import '../assets/font_size.dart';
+import '../ui/buttons.dart';
 import '../ui/toggle_switch.dart';
 import 'home_screen_desktop.dart';
 
@@ -202,7 +203,7 @@ class _SetupScreenState extends State<SetupScreen> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(30),
-                          child: DriveStatusDisplay(
+                          child: IntegrationDisplayButton(
                             driveLogoSrc: "assets/images/gdrive_logo.svg",
                             driveName: tr("gdrive"),
                             statusOn: gDriveStatusOn,
@@ -225,7 +226,7 @@ class _SetupScreenState extends State<SetupScreen> {
                         ),
                         Padding(
                           padding: const EdgeInsets.all(30),
-                          child: DriveStatusDisplay(
+                          child: IntegrationDisplayButton(
                             driveLogoSrc: "assets/images/twitter_logo.svg",
                             driveName: tr("twitter-link"),
                             statusOn: twitterStatusOn,
