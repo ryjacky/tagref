@@ -197,7 +197,7 @@ class WindowButtons extends StatelessWidget {
       children: [
         MinimizeWindowButton(),
         MaximizeWindowButton(),
-        CloseWindowButton(),
+        CloseWindowButton(onPressed: () => appWindow.hide(),),
       ],
     );
   }

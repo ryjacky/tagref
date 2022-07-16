@@ -8,10 +8,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:system_tray/system_tray.dart' as tray;
 import 'package:tagref/helpers/google_api_helper.dart';
+import 'package:tagref/screen/error_screens.dart';
 import 'package:tagref/screen/home_screen_desktop.dart';
 import 'package:tagref/screen/setup_screen.dart';
 
@@ -45,7 +48,21 @@ void main(List<String> args) async {
     await gApiHelper.syncDB(true);
   }
 
-  startBrowserExtensionServer(gApiHelper);
+  // Add app lock to only allow one instance of tagref
+  bool lockSuccess = await lockInstance();
+  for (int port in [33728, 33729]){
+    try {
+      await startBrowserExtensionServer(gApiHelper, port: port);
+      break;
+    } catch (e){
+      if (!lockSuccess) {
+        (await Socket.connect("localhost", port)).write("T3BlbiBTZXNhbWU");
+
+        appWindow.close();
+      }
+    }
+  }
+
 
   runApp(EasyLocalization(
       child: MyApp(
@@ -65,13 +82,17 @@ void main(List<String> args) async {
   });
 }
 
-void startBrowserExtensionServer(GoogleApiHelper googleApiHelper) async {
-  final server = await ServerSocket.bind("localhost", 33728);
+Future<void> startBrowserExtensionServer(GoogleApiHelper googleApiHelper, {int port = 33728}) async {
+  final server = await ServerSocket.bind("localhost", port);
 
   server.listen((event) {
     log("Connection from ${event.address}");
     event.listen((data) {
       String plain = String.fromCharCodes(data);
+      if (plain == "T3BlbiBTZXNhbWU") {
+        appWindow.show();
+      }
+
       String url = plain.substring(plain.indexOf("aWxvdmV0YWdyZWY")).replaceAll("aWxvdmV0YWdyZWY", "");
       log(url);
 
@@ -79,6 +100,17 @@ void startBrowserExtensionServer(GoogleApiHelper googleApiHelper) async {
     });
   });
 
+}
+
+Future<bool> lockInstance() async {
+  File lockFile = File(join((await getApplicationSupportDirectory()).path, "tagref.lock"));
+
+  if (lockFile.existsSync()) {
+    return false;
+  } else {
+    lockFile.createSync();
+    return true;
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -179,6 +211,8 @@ class _ScreenRouterState extends State<ScreenRouter> {
   @override
   void initState() {
     super.initState();
+    initSystemTray();
+
     Timer.periodic(const Duration(seconds: 5), (timer) { 
       if (!syncing){
         // Detects remote changes
@@ -187,6 +221,47 @@ class _ScreenRouterState extends State<ScreenRouter> {
       }
     });
   }
+
+  Future<void> initSystemTray() async {
+    String path =
+    Platform.isWindows ? 'assets/images/logo.ico' : 'assets/images/logo.png';
+
+    final tray.AppWindow _appWindow = tray.AppWindow();
+    final tray.SystemTray systemTray = tray.SystemTray();
+
+    // We first init the systray menu
+    await systemTray.initSystemTray(
+      title: "system tray",
+      iconPath: path,
+    );
+
+    // create context menu
+    final tray.Menu menu = tray.Menu();
+    await menu.buildFrom([
+      tray.MenuItemLable(label: 'Exit', onClicked: (menuItem) => exitApplication(_appWindow)),
+    ]);
+
+    // set context menu
+    await systemTray.setContextMenu(menu);
+
+    // handle system tray event
+    systemTray.registerSystemTrayEventHandler((eventName) {
+      debugPrint("eventName: $eventName");
+      if (eventName == tray.kSystemTrayEventClick) {
+        Platform.isWindows ? _appWindow.show() : systemTray.popUpContextMenu();
+      } else if (eventName == tray.kSystemTrayEventRightClick) {
+        Platform.isWindows ? systemTray.popUpContextMenu() : _appWindow.show();
+      }
+    });
+  }
+
+  void exitApplication(tray.AppWindow appWindow) async {
+    File lockFile = File(join((await getApplicationSupportDirectory()).path, "tagref.lock"));
+
+    await lockFile.delete();
+    appWindow.close();
+  }
+
 
   Future<Widget> initRoute() async {
     String dbUrl = await DBHelper.getDBUrl();
