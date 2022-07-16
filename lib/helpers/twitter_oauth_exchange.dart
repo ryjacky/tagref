@@ -70,6 +70,8 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
     if (!winWebViewShown) {
       winWebViewShown = true;
 
+      await WebviewWindow.clearAll();
+
       final webview = await WebviewWindow.create(
         configuration: CreateConfiguration(
             windowHeight: 700,
@@ -80,7 +82,6 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
             // userDataFolderWindows: await _getWebViewPath(),
             ),
       );
-      await WebviewWindow.clearAll();
 
       webview.launch(authURI);
       webview.addOnUrlRequestCallback((url) {

@@ -13,7 +13,9 @@ class DBHelper {
     var insertResult = await DBHelper.db.rawInsert(
         "INSERT INTO images (src_url, src_id) VALUES (?, ?)", [path, fromNetwork ? 1 : 2]);
 
-    if (googleApiHelper != null) googleApiHelper.pushDB();
+    if (googleApiHelper != null) {
+      googleApiHelper.pushDB();
+    }
 
     return insertResult;
   }

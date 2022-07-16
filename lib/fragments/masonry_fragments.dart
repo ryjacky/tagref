@@ -181,8 +181,10 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
 
 class TwitterMasonryFragment extends StatefulWidget {
   final TwitterApiHelper twitterHelper;
+  final GoogleApiHelper? googleApiHelper;
 
-  const TwitterMasonryFragment({Key? key, required this.twitterHelper})
+  const TwitterMasonryFragment(
+      {Key? key, required this.twitterHelper, this.googleApiHelper})
       : super(key: key);
 
   @override
@@ -195,7 +197,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
   final masonryUpdateStep = 100;
 
   /// Environment variables
-  int gridMaxCounts = 50;
+  int gridMaxCounts = 100;
   int currentGridCount = 0;
   final List<Widget> masonryGrids = [];
 
@@ -205,12 +207,16 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
   /// Indicates if masonry grid view is updating
   bool canUpdate = true;
 
-  List<Map<String, Object?>> queryResult = [];
-  late List<String> imageUrls = [];
+  Map<String, String> queryResult = {};
+
+  @override
+  void initState() {
+    super.initState();
+    widget.twitterHelper.untilId = "";
+    queryResult = {};
+  }
 
   Future<void> loadImages() async {
-    late List<String> tempImageUrls;
-
     for (int i = 0; i <= 3; i++) {
       if (i == 3) {
         dev.log("something went wrong, please try again");
@@ -219,7 +225,8 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
       }
 
       try {
-        tempImageUrls = await widget.twitterHelper.lookupHomeTimelineImages();
+        queryResult
+            .addAll(await widget.twitterHelper.lookupHomeTimelineImages());
         break;
       } catch (e) {
         if (e is TwitterException) {
@@ -231,17 +238,9 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
       }
     }
 
-    for (int i = 0; i < tempImageUrls.length; i++) {
-      var gridElement = {"src_id": 1, "img_id": 0, "src_url": tempImageUrls[i]};
-      if (!imageUrls.contains(tempImageUrls[i])) {
-        imageUrls.add(tempImageUrls[i]);
-        queryResult.add(gridElement);
-      }
-    }
-
     // Limit gridMaxCounts to prevent overflow
     // (gridMaxCounts > number of all images in the database)
-    gridMaxCounts = min(gridMaxCounts, queryResult.length);
+    gridMaxCounts = min(gridMaxCounts, queryResult.entries.length);
 
     // Go through each record from the query result and creates an
     // TwitterImageDisplay widget which delegates the image for the record
@@ -249,10 +248,14 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
     // Only creates 50 widgets per setState()
     setState(() {
       for (currentGridCount;
-      currentGridCount < gridMaxCounts;
-      currentGridCount++) {
-        late TwitterImageDisplay rid;
-        masonryGrids.add(rid = TwitterImageDisplay(
+          currentGridCount < gridMaxCounts;
+          currentGridCount++) {
+        late TwitterImage rid;
+        masonryGrids.add(rid = TwitterImage(
+          onAdd: (srcUrl) {
+            DBHelper.insertImage(srcUrl, true,
+                googleApiHelper: widget.googleApiHelper);
+          },
           onTap: (srcUrl) {
             Navigator.push(
                 context,
@@ -276,8 +279,8 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
                       );
                     },
                     pageBuilder: (context, a1, a2) => ScaledImageViewer(
-                      imageUrl: srcUrl,
-                    )));
+                          imageUrl: srcUrl,
+                        )));
           },
           onDeleted: () {
             setState(() {
@@ -285,9 +288,8 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
               currentGridCount -= 1;
             });
           },
-          srcId: queryResult[currentGridCount]["src_id"] as int,
-          imgId: queryResult[currentGridCount]["img_id"] as int,
-          srcUrl: queryResult[currentGridCount]["src_url"].toString(),
+          tweetSrcId: queryResult.entries.elementAt(currentGridCount).key,
+          srcImgUrl: queryResult.entries.elementAt(currentGridCount).value,
         ));
       }
 
@@ -313,7 +315,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
       child: NotificationListener<ScrollNotification>(
         onNotification: (scrollNotification) {
           if (scrollNotification.metrics.pixels >=
-              scrollNotification.metrics.maxScrollExtent - 500 &&
+                  scrollNotification.metrics.maxScrollExtent - 500 &&
               canUpdate) {
             // set isUpdating to false to prevent calling setState
             // more than once

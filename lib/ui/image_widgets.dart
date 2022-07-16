@@ -9,12 +9,15 @@ import 'package:tagref/assets/db_helper.dart';
 import 'package:tagref/ui/tag_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:async/async.dart';
+
 import '../assets/constant.dart';
 import 'buttons.dart';
 
 typedef VoidCallback = Function();
 typedef OnTapCallback = Function(String url);
 typedef OnTagAdded = Function(String tag);
+typedef OnTwitterAddCallback = Function(String imgUrl);
 
 class ReferenceImage extends StatefulWidget {
   final String srcUrl;
@@ -45,9 +48,12 @@ class _ReferenceImageState extends State<ReferenceImage> {
 
   List<String> tagList = [];
 
+  late CancelableOperation _cancelableUpdateTagList;
+
   @override
   void initState() {
     super.initState();
+
     // DBHelper.db.rawQuery(
     //     "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
     //     [widget.imgId]).then((existedTags) {
@@ -121,14 +127,16 @@ class _ReferenceImageState extends State<ReferenceImage> {
   }
 
   void updateTagList() {
-    DBHelper.db.rawQuery(
+    _cancelableUpdateTagList = CancelableOperation.fromFuture(DBHelper.db.rawQuery(
         "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
-        [widget.imgId]).then((databaseTags) {
+        [widget.imgId]));
+
+    _cancelableUpdateTagList.then((databaseTags) {
       // Triggering setState in case tagList update completes after initial build
 
       if (tagList.length != databaseTags.length) {
+        tagList.clear();
         setState(() {
-          tagList = [];
           for (int i = 0; i < databaseTags.length; i++) {
             tagList.add(databaseTags[i]["name"]);
           }
@@ -136,8 +144,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
       } else {
         for (int x = 0; x < tagList.length; x++) {
           if (tagList[x] != databaseTags[x]["name"]) {
-            tagList = [];
-
+            tagList.clear();
             setState(() {
               for (int i = 0; i < databaseTags.length; i++) {
                 tagList.add(databaseTags[i]["name"]);
@@ -147,6 +154,12 @@ class _ReferenceImageState extends State<ReferenceImage> {
         }
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _cancelableUpdateTagList.cancel();
+    super.dispose();
   }
 
   @override
@@ -251,28 +264,28 @@ class _ReferenceImageState extends State<ReferenceImage> {
   }
 }
 
-class TwitterImageDisplay extends StatefulWidget {
-  final String srcUrl;
-  final int imgId;
-  final int srcId;
+class TwitterImage extends StatefulWidget {
+  final String srcImgUrl;
+  final String tweetSrcId;
 
   final VoidCallback onDeleted;
   final OnTapCallback onTap;
+  final OnTwitterAddCallback onAdd;
 
-  const TwitterImageDisplay(
+  const TwitterImage(
       {Key? key,
-      required this.srcUrl,
-      required this.imgId,
+      required this.srcImgUrl,
       required this.onDeleted,
-      required this.srcId,
-      required this.onTap})
+      required this.tweetSrcId,
+      required this.onTap,
+      required this.onAdd})
       : super(key: key);
 
   @override
-  State<TwitterImageDisplay> createState() => _TwitterImageDisplayState();
+  State<TwitterImage> createState() => _TwitterImageState();
 }
 
-class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
+class _TwitterImageState extends State<TwitterImage> {
   bool hovered = false;
   static const double padding = 4;
 
@@ -306,13 +319,8 @@ class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
                             tileMode: TileMode.decal,
                             sigmaX: hovered ? 2 : 0,
                             sigmaY: hovered ? 2 : 0),
-                        child: widget.srcId == 1
-                            ? Image.network(
-                                widget.srcUrl,
-                                fit: BoxFit.cover,
-                              )
-                            : Image.file(
-                                File(widget.srcUrl),
+                        child: Image.network(
+                                widget.srcImgUrl,
                                 fit: BoxFit.cover,
                               )),
                   )),
@@ -331,14 +339,14 @@ class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
                             child: FaIconButton(
                                 faIcon: FontAwesomeIcons.link,
                                 onPressed: () {
-                                  _launchUrl(Uri.parse(widget.srcUrl));
+                                  _launchUrl(Uri.parse("https://twitter.com/i/web/status/${widget.tweetSrcId}"));
                                 }),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(padding),
                             child: FaIconButton(
                                 faIcon: FontAwesomeIcons.plus,
-                                onPressed: () {}),
+                                onPressed: () => widget.onAdd(widget.srcImgUrl)),
                           ),
                         ],
                       ),
@@ -349,7 +357,7 @@ class _TwitterImageDisplayState extends State<TwitterImageDisplay> {
             ],
           ),
         ),
-        onTap: () => widget.onTap(widget.srcUrl),
+        onTap: () => widget.onTap(widget.srcImgUrl),
         onHover: (val) {
           setState(() {
             // Controls overlay visibility

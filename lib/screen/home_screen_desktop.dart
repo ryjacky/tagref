@@ -34,7 +34,6 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
 
   Fragments currentFragment = Fragments.tagrefMasonry;
 
-  late final TwitterMasonryFragment tmf;
   late final TwitterApiHelper _twitterApiHelper;
 
   GlobalKey<TagRefMasonryFragmentState> trmfKey = GlobalKey();
@@ -62,14 +61,10 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
 
     _twitterApiHelper =
         TwitterApiHelper(context: context, secureStorage: secureStorage);
-    _twitterApiHelper.purgeLocalInfo();
+    // _twitterApiHelper.purgeLocalInfo();
     trmf = TagRefMasonryFragment(
       key: trmfKey,
       gApiHelper: widget.gApiHelper,
-    );
-
-    tmf = TwitterMasonryFragment(
-      twitterHelper: _twitterApiHelper,
     );
   }
 
@@ -178,7 +173,10 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
   Widget getFragment() {
     switch (currentFragment) {
       case Fragments.twitterMasonry:
-        return tmf;
+        return TwitterMasonryFragment(
+          twitterHelper: _twitterApiHelper,
+          googleApiHelper: widget.gApiHelper,
+        );
       case Fragments.preferences:
         return SettingFragment(
           gApiHelper: widget.gApiHelper,

@@ -107,37 +107,34 @@ class TwitterApiHelper {
   /// retrieve all images in its url form, includes retweets, excludes replies
   ///
   /// Returns a list of string containing image urls
-  Future<List<String>> lookupHomeTimelineImages() async {
-    List<String> imageUrls = [];
-
-    // Query for home timeline
+  Future<Map<String, String>> lookupHomeTimelineImages() async {
+    // Query for home timeline tweets
     log("Fetching home timeline images for the users, extracting from tweets");
     TwitterResponse<List<TweetData>, TweetMeta> response;
     if (untilId == "") {
-      response = await twitterClient.tweetsService.lookupHomeTimeline(
-          userId: userId,
-          maxResults: 50,
-          excludes: [
-            ExcludeTweetType.replies
-          ],
-          expansions: [
-            TweetExpansion.attachmentsMediaKeys,
-            TweetExpansion.referencedTweetsId
-          ],
-          mediaFields: [
-            MediaField.url
-          ]);
+      response = await twitterClient.tweetsService
+          .lookupHomeTimeline(userId: userId, maxResults: 100, excludes: [
+        ExcludeTweetType.replies
+      ], tweetFields: [
+        TweetField.referencedTweets
+      ], expansions: [
+        TweetExpansion.attachmentsMediaKeys,
+      ], mediaFields: [
+        MediaField.url
+      ]);
     } else {
       response = await twitterClient.tweetsService.lookupHomeTimeline(
           untilTweetId: untilId,
           userId: userId,
-          maxResults: 50,
+          maxResults: 100,
           excludes: [
             ExcludeTweetType.replies
           ],
+          tweetFields: [
+            TweetField.referencedTweets
+          ],
           expansions: [
             TweetExpansion.attachmentsMediaKeys,
-            TweetExpansion.referencedTweetsId
           ],
           mediaFields: [
             MediaField.url
@@ -146,52 +143,71 @@ class TwitterApiHelper {
 
     untilId = response.data.last.id;
 
-    imageUrls.addAll(_extractImageUrlFromResponse(response));
+    Map<String, String> tweetIdToImgURL = {};
 
-    // Search for all retweets in home timeline, add image urls from the
-    // original tweets to imageUrls when available
-    log("Fetching home timeline images for the users, extracting from retweets");
+    // Separate original tweets (with attachment) and retweets (with/without attachment)
+    List<TweetData> originalTweetData = [];
     List<String> retweetIds = [];
-    for (TweetData tweetData in response.data) {
-      // Gather retweets
-      if (tweetData.referencedTweets != null &&
-          tweetData.referencedTweets!.isNotEmpty) {
-        retweetIds.add(tweetData.referencedTweets!.first.id);
+
+    for (int i = 0; i < response.data.length; i++) {
+      if (response.data[i].referencedTweets != null) {
+        retweetIds.addAll(response.data[i].referencedTweets!
+            .map((retweet) => retweet.id)
+            .toList());
+      } else {
+        originalTweetData.add(response.data[i]);
       }
     }
 
-    // Query for retweets
+    tweetIdToImgURL.addAll(
+        _extractImageUrlFromResponse(originalTweetData, response.includes!));
+
+    // Retrieve retweets with attachment
+    List<TweetData> retweetData = [];
+
     TwitterResponse<List<TweetData>, void> retweetResponse = await twitterClient
         .tweetsService
         .lookupByIds(tweetIds: retweetIds, expansions: [
       TweetExpansion.attachmentsMediaKeys,
-      TweetExpansion.referencedTweetsId
     ], mediaFields: [
       MediaField.url
     ]);
 
-    imageUrls.addAll(_extractImageUrlFromResponse(retweetResponse));
+    retweetData.addAll(retweetResponse.data);
 
-    return imageUrls;
+    tweetIdToImgURL.addAll(
+        _extractImageUrlFromResponse(retweetData, retweetResponse.includes!));
+
+    return tweetIdToImgURL;
   }
 
   /// Takes in a TwitterResponse, extract the image url when an image is included
   /// in the tweet.
   ///
   /// Returns a list of string containing the image urls extracted.
-  List<String> _extractImageUrlFromResponse(TwitterResponse response) {
-    List<String> imageUrls = [];
-    if (response.hasIncludes && response.includes?.media != null) {
-      // Add all image urls for response tweets to imageUrls when available
-      // excludes retweets
-      for (MediaData mediaData in response.includes!.media!) {
-        if (mediaData.type == MediaType.photo && mediaData.url != null) {
-          imageUrls.add(mediaData.url!);
+  Map<String, String> _extractImageUrlFromResponse(
+      List<TweetData> tweetData, Includes includes) {
+    Map<String, String> mediaKeyToTweetId = {};
+    for (int i = 0; i < tweetData.length; i++) {
+      if (tweetData[i].attachments != null &&
+          tweetData[i].attachments!.mediaKeys != null) {
+        for (int j = 0; j < tweetData[i].attachments!.mediaKeys!.length; j++) {
+          mediaKeyToTweetId.putIfAbsent(
+              tweetData[i].attachments!.mediaKeys![j], () => tweetData[i].id);
         }
       }
     }
 
-    return imageUrls;
+    Map<String, String> tweetIdToImgURL = {};
+    for (int i = 0; i < includes.media!.length; i++) {
+      if (mediaKeyToTweetId.containsKey(includes.media![i].key) &&
+          includes.media![i].url != null) {
+        tweetIdToImgURL.putIfAbsent(mediaKeyToTweetId[includes.media![i].key]!,
+            () => includes.media![i].url!);
+      }
+    }
+
+    return tweetIdToImgURL;
   }
 
   void purgeLocalInfo() {

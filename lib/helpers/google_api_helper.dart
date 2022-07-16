@@ -188,6 +188,7 @@ class GoogleApiHelper {
       throw Exception("Google API has not been initialized!");
     }
 
+    log("Start pushing database to remote");
     String url = join(localDBPath, dbFileName);
 
     if (url.contains(".db") ||
