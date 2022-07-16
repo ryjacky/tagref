@@ -184,7 +184,7 @@ class GoogleApiHelper {
   }
 
   Future<bool> pushDB() async {
-    if (driveApi == null) {
+    if (!isInitialized) {
       throw Exception("Google API has not been initialized!");
     }
 

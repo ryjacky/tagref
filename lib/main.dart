@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
@@ -44,6 +45,8 @@ void main(List<String> args) async {
     await gApiHelper.syncDB(true);
   }
 
+  startBrowserExtensionServer(gApiHelper);
+
   runApp(EasyLocalization(
       child: MyApp(
         gApiHelper: gApiHelper,
@@ -60,6 +63,22 @@ void main(List<String> args) async {
     appWindow.alignment = Alignment.center;
     appWindow.show();
   });
+}
+
+void startBrowserExtensionServer(GoogleApiHelper googleApiHelper) async {
+  final server = await ServerSocket.bind("localhost", 33728);
+
+  server.listen((event) {
+    log("Connection from ${event.address}");
+    event.listen((data) {
+      String plain = String.fromCharCodes(data);
+      String url = plain.substring(plain.indexOf("aWxvdmV0YWdyZWY")).replaceAll("aWxvdmV0YWdyZWY", "");
+      log(url);
+
+      DBHelper.insertImage(url, true, googleApiHelper: googleApiHelper);
+    });
+  });
+
 }
 
 class MyApp extends StatelessWidget {

@@ -1,27 +1,17 @@
-// chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-//     if (request.action == "show") {
-//         let port = null;
-//         port = chrome.runtime.connectNative('com.tagref.tagref');
-
-//         console.log(request.url);
-//         port.postMessage(request.url);
-//     }
-
-// });
-
-// port.onMessage.addListener((response) => {
-//     alert("Received: " + response);
-//   });
-
+try{
 chrome.contextMenus.create({
     id: "1",
     title: "Add to TagRef",
     contexts: ["image"],
 })
+} catch (error) {
+}
+
 
 let port = null;
 chrome.contextMenus.onClicked.addListener(function(info, tab) {
-    port = chrome.runtime.connectNative('com.tagref.tagref');
-
-    port.postMessage(info.srcUrl);
+fetch("http://localhost:33728", {
+  method: 'POST',
+  body: "aWxvdmV0YWdyZWY" + info.srcUrl
+})
 })

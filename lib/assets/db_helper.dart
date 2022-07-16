@@ -3,10 +3,20 @@ import 'dart:io';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:tagref/helpers/google_api_helper.dart';
 
 class DBHelper {
   static var db;
   static const String dbFileName = "tagref_db.db";
+
+  static Future insertImage(String path, bool fromNetwork, {GoogleApiHelper? googleApiHelper}) async {
+    var insertResult = await DBHelper.db.rawInsert(
+        "INSERT INTO images (src_url, src_id) VALUES (?, ?)", [path, fromNetwork ? 1 : 2]);
+
+    if (googleApiHelper != null) googleApiHelper.pushDB();
+
+    return insertResult;
+  }
 
   static initializeDatabase() async {
     var databaseFactory = databaseFactoryFfi;
