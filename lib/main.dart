@@ -231,7 +231,7 @@ class _ScreenRouterState extends State<ScreenRouter> {
 
     // We first init the systray menu
     await systemTray.initSystemTray(
-      title: "system tray",
+      title: "",
       iconPath: path,
     );
 
