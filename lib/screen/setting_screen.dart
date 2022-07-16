@@ -3,26 +3,31 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tagref/assets/db_helper.dart';
 import 'package:tagref/assets/font_size.dart';
+import 'package:tagref/ui/buttons.dart';
 import 'package:tagref/ui/toggle_switch.dart';
 
 import '../assets/constant.dart';
 import '../helpers/google_api_helper.dart';
-import '../helpers/icloud_api_helper.dart';
-import '../ui/drive_status_display.dart';
+import '../helpers/twitter_api_helper.dart';
 
 class SettingScreen extends StatefulWidget {
-  const SettingScreen({Key? key}) : super(key: key);
+  final GoogleApiHelper gApiHelper;
+
+  const SettingScreen({Key? key, required this.gApiHelper}) : super(key: key);
 
   @override
   State<SettingScreen> createState() => _SettingScreenState();
 }
 
 class _SettingScreenState extends State<SettingScreen> {
-  final secureStorage = FlutterSecureStorage();
+  final secureStorage = const FlutterSecureStorage();
+
+  /// Controls the displayed text for DriveStatusDisplay widget, shows "ON"
+  /// when value is true, otherwise "OFF"
+  bool twitterStatusOn = false;
 
   /// Controls the displayed text for DriveStatusDisplay widget, shows "ON"
   /// when value is true, otherwise "OFF"
@@ -78,7 +83,7 @@ class _SettingScreenState extends State<SettingScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(tr("linked-drives"),
+              Text(tr("integrations"),
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: FontSize.l3.sp,
@@ -89,7 +94,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-                      child: DriveStatusDisplay(
+                      child: IntegrationDisplayButton(
                         driveLogoSrc: "assets/images/gdrive_logo.svg",
                         driveName: tr("gdrive"),
                         statusOn: gDriveStatusOn,
@@ -114,14 +119,15 @@ class _SettingScreenState extends State<SettingScreen> {
                           } else {
                             // The only case when driveApi will be null should be
                             // when GDrive has never been set up before
-                            if (driveApi == null) {
-                              await initializeGoogleApi(secureStorage);
+                            if (!widget.gApiHelper.isInitialized) {
+                              await widget.gApiHelper.authUser();
+                              await widget.gApiHelper.initializeGoogleApi();
                               await _applyRemoteDBChanges();
                             }
 
                             // Update shared preferences
                             SharedPreferences.getInstance().then(
-                                    (pref) => pref.setBool(gDriveConnected, true));
+                                (pref) => pref.setBool(gDriveConnected, true));
 
                             remoteChanged = true;
 
@@ -133,11 +139,23 @@ class _SettingScreenState extends State<SettingScreen> {
                       ),
                     ),
                     Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: DriveStatusDisplay(
-                        driveLogoSrc: "assets/images/gdrive_logo.svg",
-                        driveName: tr("icloud"),
-                        onTap: () => iCloudSignIn(),
+                      padding: const EdgeInsets.all(30),
+                      child: IntegrationDisplayButton(
+                        driveLogoSrc: "assets/images/twitter_logo.svg",
+                        driveName: tr("twitter-link"),
+                        statusOn: twitterStatusOn,
+                        onTap: () async {
+                          if (!twitterStatusOn) {
+                            if (await TwitterApiHelper(
+                                    context: context,
+                                    secureStorage: const FlutterSecureStorage())
+                                .authTwitter()) {
+                              setState(() => twitterStatusOn = true);
+                            }
+                          } else {
+                            
+                          }
+                        },
                       ),
                     ),
                   ],
@@ -176,7 +194,7 @@ class _SettingScreenState extends State<SettingScreen> {
                         ),
                       ),
                       Padding(
-                        padding: EdgeInsets.fromLTRB(40.w,0,0,0),
+                        padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
                         child: const ToggleSwitch(),
                       )
                     ],
@@ -190,18 +208,192 @@ class _SettingScreenState extends State<SettingScreen> {
   /// remote version, and re-open the database connection
   Future<void> _applyRemoteDBChanges() async {
     await DBHelper.db.close();
-    await pullAndReplaceLocalDB(
-        (await getApplicationSupportDirectory()).path,
-        DBHelper.dbFileName);
+    await widget.gApiHelper.pullAndReplaceLocalDB();
     await DBHelper.initializeDatabase();
   }
 
   /// Removes all local configurations about google drive
   void disconnectGDrive() {
     SharedPreferences.getInstance().then((pref) => setState(() {
-      pref.remove(gDriveConnected);
-    }));
-    purgeAccessCredentials(secureStorage);
+          pref.remove(gDriveConnected);
+        }));
+    widget.gApiHelper.purgeAccessCredentials(secureStorage);
+    Navigator.pop(context);
+    setState(() {
+      gDriveStatusOn = true;
+    });
+  }
+}
+
+class SettingFragment extends StatefulWidget {
+  final GoogleApiHelper gApiHelper;
+  final TwitterApiHelper twitterApiHelper;
+
+  const SettingFragment(
+      {Key? key, required this.gApiHelper, required this.twitterApiHelper})
+      : super(key: key);
+
+  @override
+  State<SettingFragment> createState() => _SettingFragmentState();
+}
+
+class _SettingFragmentState extends State<SettingFragment> {
+  final secureStorage = const FlutterSecureStorage();
+
+  /// Controls the displayed text for TwitterStatusDisplay widget, shows "ON"
+  /// when value is true, otherwise "OFF"
+  bool twitterStatusOn = false;
+
+  /// Controls the displayed text for DriveStatusDisplay widget, shows "ON"
+  /// when value is true, otherwise "OFF"
+  bool gDriveStatusOn = false;
+
+  /// Passed when closing the preferences screen, should be set to true whenever
+  /// settings regarding to any cloud drives are changed
+  bool remoteChanged = false;
+
+  @override
+  Widget build(BuildContext context) {
+    SharedPreferences.getInstance().then((pref) => setState(() {
+          gDriveStatusOn = pref.getBool(gDriveConnected) != null ? true : false;
+        }));
+
+    twitterStatusOn = widget.twitterApiHelper.authorized;
+
+    return Container(
+      color: desktopColorDarker,
+      child: Padding(
+        padding: const EdgeInsets.all(30),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              tr("pref"),
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+              child: Text(tr("integrations"),
+                  style: Theme.of(context).textTheme.titleMedium),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
+                    child: IntegrationDisplayButton(
+                      driveLogoSrc: "assets/images/gdrive_logo.svg",
+                      driveName: tr("gdrive"),
+                      statusOn: gDriveStatusOn,
+                      onTap: () async {
+                        if (gDriveStatusOn) {
+                          // Confirm google drive disconnection
+                          showDialog(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                    backgroundColor: desktopColorDark,
+                                    title: Text(
+                                      tr("disconnect-gdrive"),
+                                      style:
+                                          Theme.of(context).textTheme.bodySmall,
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                          onPressed: disconnectGDrive,
+                                          child: Text(tr("yes"))),
+                                      TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context),
+                                          child: Text(tr("no"))),
+                                    ],
+                                  ),
+                              barrierDismissible: false);
+                        } else {
+                          // The only case when driveApi will be null should be
+                          // when GDrive has never been set up before
+                          if (!widget.gApiHelper.isInitialized) {
+                            await widget.gApiHelper.authUser();
+                            await widget.gApiHelper.initializeGoogleApi();
+                            await _applyRemoteDBChanges();
+                          }
+
+                          // Update shared preferences
+                          SharedPreferences.getInstance().then(
+                              (pref) => pref.setBool(gDriveConnected, true));
+
+                          remoteChanged = true;
+
+                          setState(() {
+                            gDriveStatusOn = true;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(30),
+                    child: IntegrationDisplayButton(
+                      driveLogoSrc: "assets/images/twitter_logo.svg",
+                      driveName: tr("twitter-link"),
+                      statusOn: twitterStatusOn,
+                      onTap: () async {
+                        if (await widget.twitterApiHelper.authTwitter()) {
+                          setState(() => twitterStatusOn = true);
+                        }
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+                padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        width: (1.sw / 1.3).w,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(tr("auto-tag"),
+                                style: Theme.of(context).textTheme.titleMedium),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              child: Text(tr("auto-tag-desc"),
+                                  style: Theme.of(context).textTheme.bodySmall),
+                            )
+                          ],
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
+                      child: const ToggleSwitch(),
+                    )
+                  ],
+                ))
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Closes the current database connection, update the source db file to match
+  /// remote version, and re-open the database connection
+  Future<void> _applyRemoteDBChanges() async {
+    await DBHelper.db.close();
+    await widget.gApiHelper.pullAndReplaceLocalDB();
+    await DBHelper.initializeDatabase();
+  }
+
+  /// Removes all local configurations about google drive
+  void disconnectGDrive() {
+    SharedPreferences.getInstance().then((pref) => setState(() {
+          pref.remove(gDriveConnected);
+        }));
+    widget.gApiHelper.purgeAccessCredentials(secureStorage);
     Navigator.pop(context);
     setState(() {
       gDriveStatusOn = true;

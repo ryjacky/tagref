@@ -5,6 +5,8 @@ import 'package:flutter_switch/flutter_switch.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tagref/assets/constant.dart';
 
+/// A stylized toggle switch that has only two state (on, off)
+/// TODO: MODIFIED THIS TO FIT EITHER DESKTOP OR MOBILE ONLY
 class ToggleSwitch extends StatefulWidget {
   const ToggleSwitch({Key? key}) : super(key: key);
 

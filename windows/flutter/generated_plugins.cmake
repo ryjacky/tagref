@@ -3,9 +3,11 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
+  bitsdojo_window_windows
   desktop_webview_window
   flutter_secure_storage_windows
   sqlite3_flutter_libs
+  system_tray
   url_launcher_windows
 )
 

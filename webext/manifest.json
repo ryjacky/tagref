@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "My Extension",
+  "name": "TagRef",
   "version": "1.0",
   "permissions": [
     "nativeMessaging",
@@ -13,11 +13,12 @@
   "background": {
     "service_worker": "background.js"
   },
+  "host_permissions": ["http://localhost:33728/*"],
   "icons": { 
     "16": "16.png",
     "48": "48.png",
    "128": "128.png" 
   },
-  "description": "A plain text description"
+  "description": "TagRef Browser Extension"
 
 }

@@ -1,4 +1,6 @@
 PODS:
+  - bitsdojo_window_macos (0.0.1):
+    - FlutterMacOS
   - desktop_webview_window (0.0.1):
     - FlutterMacOS
   - Firebase/Auth (8.15.0):
@@ -79,10 +81,13 @@ PODS:
     - sqlite3/json1
     - sqlite3/perf-threadsafe
     - sqlite3/rtree
+  - system_tray (0.0.1):
+    - FlutterMacOS
   - url_launcher_macos (0.0.1):
     - FlutterMacOS
 
 DEPENDENCIES:
+  - bitsdojo_window_macos (from `Flutter/ephemeral/.symlinks/plugins/bitsdojo_window_macos/macos`)
   - desktop_webview_window (from `Flutter/ephemeral/.symlinks/plugins/desktop_webview_window/macos`)
   - firebase_auth (from `Flutter/ephemeral/.symlinks/plugins/firebase_auth/macos`)
   - firebase_core (from `Flutter/ephemeral/.symlinks/plugins/firebase_core/macos`)
@@ -91,6 +96,7 @@ DEPENDENCIES:
   - path_provider_macos (from `Flutter/ephemeral/.symlinks/plugins/path_provider_macos/macos`)
   - shared_preferences_macos (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_macos/macos`)
   - sqlite3_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/macos`)
+  - system_tray (from `Flutter/ephemeral/.symlinks/plugins/system_tray/macos`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
 
 SPEC REPOS:
@@ -107,6 +113,8 @@ SPEC REPOS:
     - sqlite3
 
 EXTERNAL SOURCES:
+  bitsdojo_window_macos:
+    :path: Flutter/ephemeral/.symlinks/plugins/bitsdojo_window_macos/macos
   desktop_webview_window:
     :path: Flutter/ephemeral/.symlinks/plugins/desktop_webview_window/macos
   firebase_auth:
@@ -123,10 +131,13 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/shared_preferences_macos/macos
   sqlite3_flutter_libs:
     :path: Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/macos
+  system_tray:
+    :path: Flutter/ephemeral/.symlinks/plugins/system_tray/macos
   url_launcher_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
 
 SPEC CHECKSUMS:
+  bitsdojo_window_macos: 44e3b8fe3dd463820e0321f6256c5b1c16bb6a00
   desktop_webview_window: d4365e71bcd4e1aa0c14cf0377aa24db0c16a7e2
   Firebase: 5f8193dff4b5b7c5d5ef72ae54bb76c08e2b841d
   firebase_auth: d2ed21427d1d00f08c82c876916895ecb98cc1f1
@@ -145,6 +156,7 @@ SPEC CHECKSUMS:
   shared_preferences_macos: a64dc611287ed6cbe28fd1297898db1336975727
   sqlite3: 93442daab2ab1825bc9c05faa85814a1996f5b65
   sqlite3_flutter_libs: d287f671098024f9cde4dc211319335a6a379042
+  system_tray: e53c972838c69589ff2e77d6d3abfd71332f9e5d
   url_launcher_macos: 597e05b8e514239626bcf4a850fcf9ef5c856ec3
 
 PODFILE CHECKSUM: 6fdb9d81903b459721e9b46c3a326c64ed2e24b8

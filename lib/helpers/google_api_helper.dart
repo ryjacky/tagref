@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io' show File, Platform;
 
 import 'package:flutter/foundation.dart';
@@ -11,45 +12,47 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:tagref/assets/constant.dart';
-import 'package:tagref/assets/db_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-drive.DriveApi? driveApi;
+class GoogleApiHelper {
+  drive.DriveApi? driveApi;
 
-/// Base client used by the Google Drive API
-final http.Client _baseClient = http.Client();
+  /// Base client used by the Google Drive API
+  final http.Client _baseClient = http.Client();
 
-/// Client ID and secret obtained from Google Cloud Console
-ClientId _clientId = ClientId(
-    '252111377436-r8hlo5t1l81rjv0ov4nhfojrktrjnih2.apps.googleusercontent.com',
-    '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');
+  /// Client ID and secret obtained from Google Cloud Console
+  final ClientId _clientId = ClientId(
+      '252111377436-r8hlo5t1l81rjv0ov4nhfojrktrjnih2.apps.googleusercontent.com',
+      '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');
 
-/// Initialize Google API, connect to GDrive, download remote db file
-/// All database connections should be closed before calling this function
-///
-/// You SHOULD close all database connection before calling this function
-Future<void> initializeDriveApiAndPullDB(
-    String localDBPath, String dbFileName, FlutterSecureStorage secureStorage) async {
-  await initializeGoogleApi(secureStorage);
-  await pullAndReplaceLocalDB(localDBPath, dbFileName);
-}
+  final FlutterSecureStorage secureStorage;
+  late AuthClient _authClient;
 
-/// Controls Google Sign In flow (desktop/mobile flow)
-Future<void> initializeGoogleApi(FlutterSecureStorage secureStorage) async {
-  if (driveApi != null) {
-    throw Exception(
-        "Google API have already been initialized, you should not initialize it twice!");
+  final String localDBPath;
+  final String dbFileName;
+
+  bool isInitialized = false;
+
+  GoogleApiHelper(
+      {required this.localDBPath,
+      required this.dbFileName,
+      required this.secureStorage});
+
+  Future<bool> syncDB(bool pullOnly) async {
+
+    int versionDifference = await compareDB();
+    if (versionDifference < 0) {
+      log("Local version of the database is newer, uploading");
+      return await pushDB();
+    } else if (versionDifference > 0) {
+      log("Remote version of the database is newer, downloading...");
+      return await pullAndReplaceLocalDB();
+    }
+    return false;
   }
 
-  // check if accessCredential is already available
-  String? accessCredentialsJString =
-      await secureStorage.read(key: gAccessCredential);
-
-  late AuthClient client;
-
-  if (accessCredentialsJString == null) {
+  Future<void> authUser() async {
     // Build the auth client with user consent
-
     if (Platform.isAndroid || Platform.isIOS) {
       try {
         // Using GoogleSignIn library
@@ -63,136 +66,170 @@ Future<void> initializeGoogleApi(FlutterSecureStorage secureStorage) async {
         }
       }
     } else {
-      // Login for desktop
-      // GoogleSignIn library is not available for desktop
-      // Using googleapis_auth library
-      client = await obtainCredentials();
+      // // Login for desktop
+      // // GoogleSignIn library is not available for desktop
+      // // Using googleapis_auth library
+      _authClient = await obtainCredentials();
 
       // Write to the secure secureStorage
       secureStorage.write(
           key: gAccessCredential,
-          value: jsonEncode(client.credentials.toJson()));
+          value: jsonEncode(_authClient.credentials.toJson()));
     }
-  } else {
-    // Build the auth client from secure secureStorage
-    client = autoRefreshingClient(
-        _clientId,
-        AccessCredentials.fromJson(jsonDecode(accessCredentialsJString)),
-        _baseClient);
   }
 
-  driveApi = drive.DriveApi(client);
+  /// Initializes google api when user has logged in before (desktop/mobile flow)
+  Future<void> initializeGoogleApi() async {
+    if (driveApi != null) {
+      log("Google API have already been initialized!");
+    }
 
-  // Check for validity of locally stored access credentials
-  try {
-    drive.FileList appDataFileList =
-        await driveApi!.files.list(spaces: "appDataFolder");
-  } catch (e) {
-    // Erase locally stored access credentials when it is invalid and
-    // try to obtain new credentials
-    driveApi = null;
-    await secureStorage.delete(key: gAccessCredential);
-    await initializeGoogleApi(secureStorage);
-  }
-}
+    // check if accessCredential is already available
+    String? accessCredentialsJString =
+        await secureStorage.read(key: gAccessCredential);
 
-/// Google Sign in function for desktop (mac, windows, linux?)
-Future<AuthClient> obtainCredentials() async => await clientViaUserConsent(
-    _clientId, [drive.DriveApi.driveAppdataScope], _prompt,
-    baseClient: _baseClient);
+    if (accessCredentialsJString != null) {
+      // Build the auth client from secure secureStorage
+      _authClient = autoRefreshingClient(
+          _clientId,
+          AccessCredentials.fromJson(jsonDecode(accessCredentialsJString)),
+          _baseClient);
+    }
 
-/// prompt for user consent (Opens authentication link with browser)
-void _prompt(String url) {
-  launchUrl(Uri.parse(url));
-}
+    driveApi = drive.DriveApi(_authClient);
 
-/// Downloads the remote version of the database that is named [dbFileName]
-/// and updates the local copy located at [dbParent].
-/// Returns null if there is no remote copy of the file and returns the file
-/// itself if the remote copy is available.
-///
-/// You SHOULD close all database connection before calling this method
-Future<bool> pullAndReplaceLocalDB(String dbParent, String dbFileName) async {
-  if (driveApi == null) {
-    throw GoogleAPINotInitializedException(
-        "Google API has not been initialized!");
+    // Check for validity of locally stored access credentials
+    try {
+      await driveApi!.files.list(spaces: "appDataFolder");
+      isInitialized = true;
+    } catch (e) {
+      // Erase locally stored access credentials when it is invalid and
+      // try to obtain new credentials
+      driveApi = null;
+      await secureStorage.delete(key: gAccessCredential);
+      throw Exception(
+          "Google API initialization failed, cannot obtain access credentials.");
+    }
   }
 
-  // Search for tagref_db.db
-  drive.FileList appDataFileList = await driveApi!.files
-      .list(spaces: "appDataFolder", q: "name='$dbFileName'");
+  /// Google Sign in function for desktop (mac, windows, linux?)
+  Future<AuthClient> obtainCredentials() async => await clientViaUserConsent(
+      _clientId, [drive.DriveApi.driveAppdataScope], _prompt,
+      baseClient: _baseClient);
 
-  // Upload or update the local db file based on the search result
-  if (appDataFileList.files!.isNotEmpty) {
-    var localDBFile = File(await DBHelper.getDBUrl()).openWrite();
-
-    Media remoteDBMedia = await driveApi!.files.get(
-        appDataFileList.files!.first.id!,
-        downloadOptions: DownloadOptions.fullMedia) as Media;
-
-    localDBFile.addStream(remoteDBMedia.stream).whenComplete(() {
-      localDBFile.flush();
-      localDBFile.close();
-    });
-
-    return true;
-  } else {
-    return false;
-  }
-}
-
-Future<bool> pushDB(String dbParent, String dbFileName) async {
-  if (driveApi == null) {
-    throw GoogleAPINotInitializedException(
-        "Google API has not been initialized!");
+  /// prompt for user consent (Opens authentication link with browser)
+  void _prompt(String url) {
+    launchUrl(Uri.parse(url));
   }
 
-  String url = join(dbParent, dbFileName);
+  Future<int> compareDB() async {
+    // Check and compare the database version of remote and local
+    drive.FileList appDataFileList = await driveApi!.files.list(
+        spaces: "appDataFolder",
+        q: "name='$dbFileName'",
+        $fields: "files/modifiedTime");
 
-  if (url.contains(".db") ||
-      url.contains(".sqlite") ||
-      url.contains(".sqlite3")) {
-    // Prepare the file for drive upload
-    // Create "Google Drive File" (meta data)
-    drive.File dbFileUpload = drive.File();
-    dbFileUpload.name = "tagref_db.db";
+    var localDBFile = File(join(localDBPath, dbFileName));
 
-    // Read db file and create Media for drive api to upload
-    File dbFile = File(url);
-    var dbFileStream = dbFile.openRead().asBroadcastStream();
-    var dbFileStreamLength = dbFile.lengthSync();
-    drive.Media uploadMedia = drive.Media(dbFileStream, dbFileStreamLength);
+    // Upload or update the local db file based on the search result
+    if (appDataFileList.files!.isNotEmpty) {
+      Duration versionDifference = appDataFileList.files!.first.modifiedTime!
+          .difference(await localDBFile.lastModified());
+
+      if ((versionDifference.inSeconds).abs() <= 5){
+        return 0;
+      } else if (versionDifference.isNegative) {
+        return -1;
+      } else {
+        return 1;
+      }
+    } else {
+      log("Remote database does not exist.");
+      return -1;
+    }
+  }
+
+  /// Downloads the remote version of the database that is named [dbFileName]
+  /// and updates the local copy located at [dbParent].
+  /// Returns null if there is no remote copy of the file and returns the file
+  /// itself if the remote copy is available.
+  ///
+  /// You SHOULD close all database connection before calling this method
+  Future<bool> pullAndReplaceLocalDB() async {
+    if (driveApi == null) {
+      throw Exception("Google API has not been initialized!");
+    }
 
     // Search for tagref_db.db
     drive.FileList appDataFileList = await driveApi!.files
         .list(spaces: "appDataFolder", q: "name='$dbFileName'");
 
-    // Upload or update db file based on the search result
+    // Upload or update the local db file based on the search result
     if (appDataFileList.files!.isNotEmpty) {
-      driveApi!.files.update(dbFileUpload, appDataFileList.files!.first.id!,
-          uploadMedia: uploadMedia);
+      var localDBFile = File(join(localDBPath, dbFileName)).openWrite();
+
+      Media remoteDBMedia = await driveApi!.files.get(
+          appDataFileList.files!.first.id!,
+          downloadOptions: DownloadOptions.fullMedia) as Media;
+
+      localDBFile.addStream(remoteDBMedia.stream).whenComplete(() {
+        localDBFile.flush();
+        localDBFile.close();
+      });
+
+      return true;
     } else {
-      dbFileUpload.parents = ["appDataFolder"];
-      driveApi!.files.create(dbFileUpload, uploadMedia: uploadMedia);
+      return false;
     }
-  } else {
-    throw Error(
-        message: "Unknown file type!",
-        reason:
-            "Either the url is wrong or the database file type is not supported.");
   }
 
-  return true;
-}
+  Future<bool> pushDB() async {
+    if (!isInitialized) {
+      throw Exception("Google API has not been initialized!");
+    }
 
-/// Remove all locally stored credentials, clear active driveApi instances
-void purgeAccessCredentials(FlutterSecureStorage secureStorage) {
-  secureStorage.delete(key: gAccessCredential);
-  driveApi = null;
-}
+    log("Start pushing database to remote");
+    String url = join(localDBPath, dbFileName);
 
-class GoogleAPINotInitializedException implements Exception {
-  String cause;
+    if (url.contains(".db") ||
+        url.contains(".sqlite") ||
+        url.contains(".sqlite3")) {
+      // Prepare the file for drive upload
+      // Create "Google Drive File" (meta data)
+      drive.File dbFileUpload = drive.File();
+      dbFileUpload.name = "tagref_db.db";
 
-  GoogleAPINotInitializedException(this.cause);
+      // Read db file and create Media for drive api to upload
+      File dbFile = File(url);
+      var dbFileStream = dbFile.openRead().asBroadcastStream();
+      var dbFileStreamLength = dbFile.lengthSync();
+      drive.Media uploadMedia = drive.Media(dbFileStream, dbFileStreamLength);
+
+      // Search for tagref_db.db
+      drive.FileList appDataFileList = await driveApi!.files
+          .list(spaces: "appDataFolder", q: "name='$dbFileName'");
+
+      // Upload or update db file based on the search result
+      if (appDataFileList.files!.isNotEmpty) {
+        driveApi!.files.update(dbFileUpload, appDataFileList.files!.first.id!,
+            uploadMedia: uploadMedia);
+      } else {
+        dbFileUpload.parents = ["appDataFolder"];
+        driveApi!.files.create(dbFileUpload, uploadMedia: uploadMedia);
+      }
+    } else {
+      throw Error(
+          message: "Unknown file type!",
+          reason:
+              "Either the url is wrong or the database file type is not supported.");
+    }
+
+    return true;
+  }
+
+  /// Remove all locally stored credentials, clear active driveApi instances
+  void purgeAccessCredentials(FlutterSecureStorage secureStorage) {
+    secureStorage.delete(key: gAccessCredential);
+    driveApi = null;
+  }
 }
