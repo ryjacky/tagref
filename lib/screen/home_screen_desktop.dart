@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -16,17 +18,19 @@ import 'package:async/async.dart';
 
 enum Fragments { twitterMasonry, tagrefMasonry, preferences }
 
-class HomeScreenDesktop extends StatefulWidget {
+typedef OnButtonClicked = Function();
+typedef OnSearchChanged = Function(List<String> tags);
+
+class HomeScreen extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
 
-  const HomeScreenDesktop({Key? key, required this.gApiHelper})
-      : super(key: key);
+  const HomeScreen({Key? key, required this.gApiHelper}) : super(key: key);
 
   @override
-  State<HomeScreenDesktop> createState() => _HomeScreenDesktopState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenDesktopState extends State<HomeScreenDesktop>
+class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
   /// Upload FAB is dynamically updated with this variable
   bool syncing = false;
@@ -41,9 +45,8 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
 
   final secureStorage = const FlutterSecureStorage();
 
-  // Setting Fragment transition related animation
+  // Setting/TwitterMasonry Fragment transition related animation
   late final AnimationController _slideController;
-
   late final Animation<Offset> _bodyOffset;
 
   @override
@@ -53,7 +56,6 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
 
     _slideController = AnimationController(
         duration: const Duration(milliseconds: 250), vsync: this);
-
     _bodyOffset = Tween<Offset>(
             begin: const Offset(1, 0), end: const Offset(0, 0))
         .animate(
@@ -61,7 +63,7 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
 
     _twitterApiHelper =
         TwitterApiHelper(context: context, secureStorage: secureStorage);
-    // _twitterApiHelper.purgeLocalInfo();
+
     trmf = TagRefMasonryFragment(
       key: trmfKey,
       gApiHelper: widget.gApiHelper,
@@ -72,104 +74,141 @@ class _HomeScreenDesktopState extends State<HomeScreenDesktop>
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: desktopColorDarker,
-        body: Row(
-          children: [
-            NavigationPanel(
-              onSearchChanged: (List<String> tags) =>
-                  trmfKey.currentState?.setFilterTags(tags),
-              onSettingClicked: () {
-                setState(() {
-                  if (currentFragment != Fragments.preferences) {
-                    _slideController.reverse().whenComplete(() {
-                      setState(() => currentFragment = Fragments.preferences);
-
-                      _slideController.reset();
-                      _slideController.forward();
-                    });
-                  } else {
-                    _slideController.reverse().whenComplete(() {
-                      setState(() => currentFragment = Fragments.tagrefMasonry);
-                    });
-                  }
-                });
-              },
-              onSyncButtonClicked: () async {
-                syncing = true;
-                // Sync database
-
-                bool success = await widget.gApiHelper.syncDB(true);
-
-                setState(() {
-                  if (success) {
-                    syncing = false;
-                  } else {
-                    syncing = false;
-                    syncingFailed = true;
-                    Future.delayed(const Duration(seconds: 3))
-                        .then((value) => syncingFailed = false);
-                  }
-                });
-              },
-              onTwitterClicked: () async {
-                if (currentFragment != Fragments.twitterMasonry) {
-                  if (!_twitterApiHelper.authorized) {
-                    bool success = await _twitterApiHelper.authTwitter();
-
-                    // try again
-                    if (!success) await _twitterApiHelper.authTwitter();
-                  }
-                }
-
-                if (currentFragment != Fragments.twitterMasonry) {
-                  _slideController.reverse().whenComplete(() {
-                    setState(() => currentFragment = Fragments.twitterMasonry);
-
-                    _slideController.reset();
-                    _slideController.forward();
-                  });
-                } else {
-                  _slideController.reverse().whenComplete(() {
-                    setState(() => currentFragment = Fragments.tagrefMasonry);
-                  });
-                }
-              },
-              syncButtonVisibility: true,
-            ),
-
-            // Body
-            Expanded(
-              child: Column(
-                children: [
-                  WindowTitleBarBox(
-                    child: Row(
-                      children: [
-                        Expanded(child: MoveWindow()),
-                        const WindowButtons()
-                      ],
-                    ),
-                  ),
-                  Stack(
-                    children: [
-                      SizedBox(
-                        height: 1.sh * 0.95,
-                        child: trmf,
-                      ),
-                      SlideTransition(
-                        position: _bodyOffset,
-                        child: SizedBox(
-                          height: 1.sh * 0.95,
-                          child: getFragment(),
-                        ),
-                      )
-                    ],
-                  )
-                ],
-              ),
-            ),
-          ],
-        ));
+        body: (Platform.isMacOS || Platform.isWindows)
+            ? homeScreenDesktopBody()
+            : homeScreenMobileBody());
   }
 
+  Widget homeScreenMobileBody() {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            children: [
+              Stack(
+                children: [
+                  SizedBox(
+                    height: 1.sh * 0.95,
+                    child: trmf,
+                  ),
+                  SlideTransition(
+                    position: _bodyOffset,
+                    child: SizedBox(
+                      height: 1.sh * 0.95,
+                      child: getFragment(),
+                    ),
+                  )
+                ],
+              )
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
+  Widget homeScreenDesktopBody() {
+    return Row(
+      children: [
+        NavigationPanel(
+          onSearchChanged: (List<String> tags) =>
+              trmfKey.currentState?.setFilterTags(tags),
+          onSettingClicked: () {
+            setState(() {
+              if (currentFragment != Fragments.preferences) {
+                _slideController.reverse().whenComplete(() {
+                  setState(() => currentFragment = Fragments.preferences);
+
+                  _slideController.reset();
+                  _slideController.forward();
+                });
+              } else {
+                _slideController.reverse().whenComplete(() {
+                  setState(() => currentFragment = Fragments.tagrefMasonry);
+                });
+              }
+            });
+          },
+          onSyncButtonClicked: () async {
+            syncing = true;
+            // Sync database
+
+            bool success = await widget.gApiHelper.syncDB(true);
+
+            setState(() {
+              if (success) {
+                syncing = false;
+              } else {
+                syncing = false;
+                syncingFailed = true;
+                Future.delayed(const Duration(seconds: 3))
+                    .then((value) => syncingFailed = false);
+              }
+            });
+          },
+          onTwitterClicked: () async {
+            if (currentFragment != Fragments.twitterMasonry) {
+              if (!_twitterApiHelper.authorized) {
+                bool success = await _twitterApiHelper.authTwitter();
+
+                // try again
+                if (!success) await _twitterApiHelper.authTwitter();
+              }
+            }
+
+            if (currentFragment != Fragments.twitterMasonry) {
+              _slideController.reverse().whenComplete(() {
+                setState(() => currentFragment = Fragments.twitterMasonry);
+
+                _slideController.reset();
+                _slideController.forward();
+              });
+            } else {
+              _slideController.reverse().whenComplete(() {
+                setState(() => currentFragment = Fragments.tagrefMasonry);
+              });
+            }
+          },
+          syncButtonVisibility: true,
+        ),
+
+        // TagRef/twitter/setting fragment
+        Expanded(
+          child: Column(
+            children: [
+              WindowTitleBarBox(
+                child: Row(
+                  children: [
+                    Expanded(child: MoveWindow()),
+                    const WindowButtons()
+                  ],
+                ),
+              ),
+              Stack(
+                children: [
+                  SizedBox(
+                    height: 1.sh * 0.95,
+                    child: trmf,
+                  ),
+                  SlideTransition(
+                    position: _bodyOffset,
+                    child: SizedBox(
+                      height: 1.sh * 0.95,
+                      child: getFragment(),
+                    ),
+                  )
+                ],
+              )
+            ],
+          ),
+        )
+      ],
+    );
+  }
+
+  /// Determines which fragment (setting/twitter) the user
+  /// is switching to, when the user is switching back to
+  /// tagref (main) fragment, returns an empty Container
   Widget getFragment() {
     switch (currentFragment) {
       case Fragments.twitterMasonry:
@@ -197,13 +236,13 @@ class WindowButtons extends StatelessWidget {
       children: [
         MinimizeWindowButton(),
         MaximizeWindowButton(),
-        CloseWindowButton(onPressed: () => appWindow.hide(),),
+        CloseWindowButton(
+          onPressed: () => appWindow.hide(),
+        ),
       ],
     );
   }
 }
-
-typedef OnSearchChanged = Function(List<String> tags);
 
 class NavigationPanel extends StatefulWidget {
   final OnSearchChanged onSearchChanged;
@@ -368,8 +407,6 @@ class _NavigationPanelState extends State<NavigationPanel> {
             )));
   }
 }
-
-typedef OnButtonClicked = Function();
 
 class NavigationPanelBottomNavigation extends StatefulWidget {
   final OnButtonClicked onSettingClicked;

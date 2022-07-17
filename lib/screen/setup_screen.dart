@@ -255,7 +255,7 @@ class _SetupScreenState extends State<SetupScreen> {
                               MaterialPageRoute(
                                   builder: (context) =>
                                       Platform.isMacOS || Platform.isWindows
-                                          ? HomeScreenDesktop(
+                                          ? HomeScreen(
                                               gApiHelper: widget.gApiHelper,
                                             )
                                           : const Text("data")));
