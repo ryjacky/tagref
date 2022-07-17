@@ -14,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:system_tray/system_tray.dart' as tray;
 import 'package:tagref/helpers/google_api_helper.dart';
-import 'package:tagref/screen/error_screens.dart';
 import 'package:tagref/screen/home_screen_desktop.dart';
 import 'package:tagref/screen/setup_screen.dart';
 
@@ -23,66 +22,62 @@ import 'assets/db_helper.dart';
 
 /// Should include all pre-start initializations here
 void main(List<String> args) async {
-  const secureStorage = FlutterSecureStorage();
-  final GoogleApiHelper gApiHelper;
-
+  // Initialize libraries
   sqfliteFfiInit();
 
-  if (runWebViewTitleBarWidget(args)) {
-    return;
-  }
+  if (runWebViewTitleBarWidget(args)) return;
 
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
-  // Initializes DriveApi and update local DB file
+  // Initialize environment variables
+  const secureStorage = FlutterSecureStorage();
+  final GoogleApiHelper gApiHelper;
+  SharedPreferences pref = await SharedPreferences.getInstance();
   gApiHelper = GoogleApiHelper(
       secureStorage: secureStorage,
       localDBPath: (await getApplicationSupportDirectory()).path,
       dbFileName: DBHelper.dbFileName);
-  SharedPreferences pref = await SharedPreferences.getInstance();
+
   if (pref.getBool(gDriveConnected) != null) {
     await gApiHelper.initializeGoogleApi();
-
-    // Sync database
     await gApiHelper.syncDB(true);
   }
 
-  // Add app lock to only allow one instance of tagref
-  bool lockSuccess = await lockInstance();
-  for (int port in [33728, 33729]){
-    try {
-      await startBrowserExtensionServer(gApiHelper, port: port);
-      break;
-    } catch (e){
-      if (!lockSuccess) {
-        (await Socket.connect("localhost", port)).write("T3BlbiBTZXNhbWU");
-
-        appWindow.close();
-      }
-    }
+  // Platform checks
+  if (Platform.isWindows || Platform.isMacOS) {
+    connectTagRefInstance(gApiHelper);
   }
 
-
   runApp(EasyLocalization(
-      child: MyApp(
+      child: TagRefUIRoot(
         gApiHelper: gApiHelper,
         secureStorage: secureStorage,
       ),
       fallbackLocale: const Locale('en'),
       supportedLocales: const [Locale('en'), Locale('ja')],
       path: 'assets/translations'));
-
-  doWhenWindowReady(() {
-    const initialSize = Size(1280, 720);
-    appWindow.minSize = initialSize;
-    appWindow.size = initialSize;
-    appWindow.alignment = Alignment.center;
-    appWindow.show();
-  });
 }
 
-Future<void> startBrowserExtensionServer(GoogleApiHelper googleApiHelper, {int port = 33728}) async {
+/// Open the current instance if it exists, if not, start a new instance
+/// and bind to tagref ServerSocket port (33728/33729)
+Future<void> connectTagRefInstance(GoogleApiHelper gApiHelper) async {
+  bool lockSuccess = await lockInstance();
+  for (int port in [33728, 33729]) {
+    try {
+      await startTagRefServer(gApiHelper, port: port);
+    } catch (e) {
+      if (!lockSuccess) {
+        log(e.toString());
+        (await Socket.connect("localhost", port)).write("T3BlbiBTZXNhbWU");
+        appWindow.close();
+      }
+    }
+  }
+}
+
+Future<void> startTagRefServer(GoogleApiHelper googleApiHelper,
+    {int port = 33728}) async {
   final server = await ServerSocket.bind("localhost", port);
 
   server.listen((event) {
@@ -93,17 +88,19 @@ Future<void> startBrowserExtensionServer(GoogleApiHelper googleApiHelper, {int p
         appWindow.show();
       }
 
-      String url = plain.substring(plain.indexOf("aWxvdmV0YWdyZWY")).replaceAll("aWxvdmV0YWdyZWY", "");
+      String url = plain
+          .substring(plain.indexOf("aWxvdmV0YWdyZWY"))
+          .replaceAll("aWxvdmV0YWdyZWY", "");
       log(url);
 
       DBHelper.insertImage(url, true, googleApiHelper: googleApiHelper);
     });
   });
-
 }
 
 Future<bool> lockInstance() async {
-  File lockFile = File(join((await getApplicationSupportDirectory()).path, "tagref.lock"));
+  File lockFile =
+      File(join((await getApplicationSupportDirectory()).path, "tagref.lock"));
 
   if (lockFile.existsSync()) {
     return false;
@@ -113,11 +110,12 @@ Future<bool> lockInstance() async {
   }
 }
 
-class MyApp extends StatelessWidget {
+class TagRefUIRoot extends StatelessWidget {
   final FlutterSecureStorage secureStorage;
   final GoogleApiHelper gApiHelper;
 
-  const MyApp({Key? key, required this.secureStorage, required this.gApiHelper})
+  const TagRefUIRoot(
+      {Key? key, required this.secureStorage, required this.gApiHelper})
       : super(key: key);
 
   // This widget is the root of your application.
@@ -142,7 +140,7 @@ class MyApp extends StatelessWidget {
           theme: ThemeData(
               textTheme: const TextTheme(
                   titleLarge: TextStyle(
-                    fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.bold,
                       color: Colors.white,
                       fontSize: 46),
                   titleSmall: TextStyle(
@@ -201,6 +199,7 @@ class ScreenRouter extends StatefulWidget {
 
 class _ScreenRouterState extends State<ScreenRouter> {
   bool syncing = false;
+
   @override
   Widget build(BuildContext context) {
     initRoute().then((screen) => Navigator.pushReplacement(
@@ -211,20 +210,35 @@ class _ScreenRouterState extends State<ScreenRouter> {
   @override
   void initState() {
     super.initState();
-    initSystemTray();
 
-    Timer.periodic(const Duration(seconds: 5), (timer) { 
-      if (!syncing){
+    // Initialize or override system UI components
+    if (Platform.isWindows || Platform.isMacOS) {
+      initSystemTray();
+
+      doWhenWindowReady(() {
+        const initialSize = Size(1280, 720);
+        appWindow.minSize = initialSize;
+        appWindow.size = initialSize;
+        appWindow.alignment = Alignment.center;
+        appWindow.show();
+      });
+    }
+
+    Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (!syncing) {
         // Detects remote changes
         syncing = true;
-        widget.gApiHelper.syncDB(true).then((value) => syncing = false);
+        if (widget.gApiHelper.isInitialized) {
+          widget.gApiHelper.syncDB(true).then((value) => syncing = false);
+        }
       }
     });
   }
 
   Future<void> initSystemTray() async {
-    String path =
-    Platform.isWindows ? 'assets/images/logo.ico' : 'assets/images/logo.png';
+    String path = Platform.isWindows
+        ? 'assets/images/logo.ico'
+        : 'assets/images/logo.png';
 
     final tray.AppWindow _appWindow = tray.AppWindow();
     final tray.SystemTray systemTray = tray.SystemTray();
@@ -238,7 +252,8 @@ class _ScreenRouterState extends State<ScreenRouter> {
     // create context menu
     final tray.Menu menu = tray.Menu();
     await menu.buildFrom([
-      tray.MenuItemLable(label: 'Exit', onClicked: (menuItem) => exitApplication(_appWindow)),
+      tray.MenuItemLable(
+          label: 'Exit', onClicked: (menuItem) => exitApplication(_appWindow)),
     ]);
 
     // set context menu
@@ -256,12 +271,12 @@ class _ScreenRouterState extends State<ScreenRouter> {
   }
 
   void exitApplication(tray.AppWindow appWindow) async {
-    File lockFile = File(join((await getApplicationSupportDirectory()).path, "tagref.lock"));
+    File lockFile = File(
+        join((await getApplicationSupportDirectory()).path, "tagref.lock"));
 
     await lockFile.delete();
     appWindow.close();
   }
-
 
   Future<Widget> initRoute() async {
     String dbUrl = await DBHelper.getDBUrl();
@@ -275,10 +290,8 @@ class _ScreenRouterState extends State<ScreenRouter> {
       return SetupScreen(gApiHelper: widget.gApiHelper);
     }
 
-    return (Platform.isWindows || Platform.isMacOS)
-        ? HomeScreenDesktop(
-            gApiHelper: widget.gApiHelper,
-          )
-        : const Text("data");
+    return HomeScreen(
+      gApiHelper: widget.gApiHelper,
+    );
   }
 }
