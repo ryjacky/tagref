@@ -234,7 +234,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
             dev.log("End has reached, no new tweets at the moment");
           }
         }
-        await widget.twitterHelper.authTwitter();
+
         await Future.delayed(const Duration(milliseconds: 1000));
       }
     }

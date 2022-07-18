@@ -9,12 +9,14 @@ class TwitterApiHelper {
   late final TwitterApi twitterClient;
   bool authorized = false;
 
-  late final String userId;
+  late String userId;
   final FlutterSecureStorage secureStorage;
 
   final tTokenSSKey = "com.tagref.twitterUserToken";
   final uidSSKey = "com.tagref.twitterUserId";
   final refreshTokenSSKey = "com.tagref.twitterRefreshToken";
+
+  DateTime expires = DateTime.now();
 
   final BuildContext context;
 
@@ -23,10 +25,7 @@ class TwitterApiHelper {
   TwitterApiHelper({required this.context, required this.secureStorage});
 
   Future<bool> authTwitter() async {
-    if (authorized) {
-      log("Twitter client is already authorized, skipping...");
-      return true;
-    }
+    expires = DateTime.now().add(const Duration(seconds: 7000));
 
     String? uid = await secureStorage.read(key: uidSSKey);
     String? accessToken = await secureStorage.read(key: tTokenSSKey);

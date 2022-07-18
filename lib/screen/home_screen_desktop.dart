@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:googleapis/admob/v1.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
 import 'package:tagref/screen/setting_screen.dart';
@@ -148,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen>
           },
           onTwitterClicked: () async {
             if (currentFragment != Fragments.twitterMasonry) {
-              if (!_twitterApiHelper.authorized) {
+              if (!_twitterApiHelper.authorized || _twitterApiHelper.expires.compareTo(DateTime.now()).isNegative) {
                 bool success = await _twitterApiHelper.authTwitter();
 
                 // try again
