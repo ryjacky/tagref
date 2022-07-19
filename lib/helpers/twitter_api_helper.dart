@@ -6,7 +6,7 @@ import 'package:tagref/helpers/twitter_oauth_exchange.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
 
 class TwitterApiHelper {
-  late final TwitterApi twitterClient;
+  late TwitterApi twitterClient;
   bool authorized = false;
 
   late String userId;
@@ -48,6 +48,7 @@ class TwitterApiHelper {
         twitterClient = TwitterApi(bearerToken: token["access_token"]!);
         authorized = true;
       } catch (e) {
+        // print(e);
         secureStorage.delete(key: uidSSKey);
         secureStorage.delete(key: tTokenSSKey);
         secureStorage.delete(key: refreshTokenSSKey);
