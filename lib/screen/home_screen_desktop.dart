@@ -7,6 +7,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:googleapis/admob/v1.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
 import 'package:tagref/screen/setting_screen.dart';
@@ -149,7 +150,10 @@ class _HomeScreenState extends State<HomeScreen>
           },
           onTwitterClicked: () async {
             if (currentFragment != Fragments.twitterMasonry) {
-              if (!_twitterApiHelper.authorized || _twitterApiHelper.expires.compareTo(DateTime.now()).isNegative) {
+              if (!_twitterApiHelper.authorized ||
+                  _twitterApiHelper.expires
+                      .compareTo(DateTime.now())
+                      .isNegative) {
                 bool success = await _twitterApiHelper.authTwitter();
 
                 // try again
@@ -390,7 +394,52 @@ class _NavigationPanelState extends State<NavigationPanel> {
                   child: TagListBox(
                     color: desktopColorDarker,
                     height: 230,
-                    onTagDeleted: (val) {},
+                    onTagDeleted: (val) async {
+                      int tagId = (await DBHelper.db.rawQuery(
+                          'SELECT tag_id FROM tags WHERE name=?;', [val]))[0]["tag_id"];
+                      int count = (await DBHelper.db.rawQuery(
+                          'SELECT COUNT(*) FROM image_tag WHERE tag_id=?',
+                          [tagId]))[0]["COUNT(*)"];
+
+                      // Confirm delete tag when it is used
+                      if (count > 0) {
+                        showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                                  title: Text(tr("confirm-delete-tag")),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () async {
+                                          await DBHelper.db.rawDelete(
+                                              'DELETE FROM image_tag WHERE tag_id = ?',
+                                              [tagId]);
+                                          await DBHelper.db.rawDelete(
+                                              'DELETE FROM tags WHERE tag_id = ?',
+                                              [tagId]);
+                                          setState(() {
+
+                                          });
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text(tr("yes"))),
+                                    TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text(tr("no"))),
+                                  ],
+                                ),
+                            barrierDismissible: false);
+                      } else {
+                        await DBHelper.db.rawDelete(
+                            'DELETE FROM image_tag WHERE tag_id = ?',
+                            [tagId]);
+                        await DBHelper.db.rawDelete(
+                            'DELETE FROM tags WHERE tag_id = ?',
+                            [tagId]);
+                        setState(() {
+
+                        });
+                      }
+                    },
                     tagList: fullTagList,
                   ),
                 ),
