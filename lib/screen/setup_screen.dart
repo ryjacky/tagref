@@ -202,7 +202,7 @@ class _SetupScreenState extends State<SetupScreen> {
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(30),
-                          child: IntegrationDisplayButton(
+                          child: IntegrationStatusButton(
                             driveLogoSrc: "assets/images/gdrive_logo.svg",
                             driveName: tr("gdrive"),
                             statusOn: gDriveStatusOn,
@@ -225,7 +225,7 @@ class _SetupScreenState extends State<SetupScreen> {
                         ),
                         Padding(
                           padding: const EdgeInsets.all(30),
-                          child: IntegrationDisplayButton(
+                          child: IntegrationStatusButton(
                             driveLogoSrc: "assets/images/twitter_logo.svg",
                             driveName: tr("twitter-link"),
                             statusOn: twitterStatusOn,
@@ -282,7 +282,7 @@ class _SetupScreenState extends State<SetupScreen> {
   /// remote version, and re-open the database connection
   Future<void> _applyRemoteDBChanges() async {
     await DBHelper.db.close();
-    await widget.gApiHelper.pullAndReplaceLocalDB();
+    await widget.gApiHelper.pullRemoteDB();
     await DBHelper.initializeDatabase();
   }
 }

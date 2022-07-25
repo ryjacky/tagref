@@ -22,8 +22,9 @@ Future<Map<String, String>> refreshAccessToken(String refreshToken) async {
 
   var url = Uri.parse('https://api.twitter.com/2/oauth2/token');
   var res = await http.post(url, headers: headers, body: data);
-  if (res.statusCode != 200)
+  if (res.statusCode != 200) {
     throw Exception('http.post error: statusCode= ${res.statusCode}');
+  }
 
   return {
     "access_token": jsonDecode(res.body)["access_token"],

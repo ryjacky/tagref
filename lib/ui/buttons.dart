@@ -185,13 +185,13 @@ class _PinButtonState extends State<PinButton> {
   }
 }
 
-class IntegrationDisplayButton extends StatefulWidget {
+class IntegrationStatusButton extends StatefulWidget {
   final String driveLogoSrc;
   final String driveName;
   final VoidCallback onTap;
   final bool statusOn;
 
-  const IntegrationDisplayButton(
+  const IntegrationStatusButton(
       {Key? key,
         required this.driveLogoSrc,
         required this.driveName,
@@ -200,10 +200,10 @@ class IntegrationDisplayButton extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<IntegrationDisplayButton> createState() => _IntegrationDisplayButtonState();
+  State<IntegrationStatusButton> createState() => _IntegrationStatusButtonState();
 }
 
-class _IntegrationDisplayButtonState extends State<IntegrationDisplayButton> {
+class _IntegrationStatusButtonState extends State<IntegrationStatusButton> {
 
   @override
   Widget build(BuildContext context) {

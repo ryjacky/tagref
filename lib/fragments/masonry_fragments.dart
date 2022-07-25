@@ -79,12 +79,13 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
       }
 
       String queryImages =
-          "SELECT * FROM images WHERE img_id IN (SELECT DISTINCT img_id FROM image_tag INNER JOIN tags on image_tag.tag_id = tags.tag_id WHERE tags.name IN ($inString)) ORDER BY img_id DESC;";
-      queryResult = await DBHelper.db.rawQuery(queryImages, filterTags);
-    } else {
-      String queryImages = "SELECT * FROM images ORDER BY img_id DESC;";
+          "SELECT * FROM images WHERE deleted <> ? AND img_id IN (SELECT DISTINCT img_id FROM image_tag INNER JOIN tags on image_tag.tag_id = tags.tag_id WHERE tags.name IN ($inString)) ORDER BY img_id DESC;";
+      queryResult = await DBHelper.db.rawQuery(queryImages, ["1"].addAll(filterTags));
 
-      queryResult = await DBHelper.db.rawQuery(queryImages);
+    } else {
+      String queryImages = "SELECT * FROM images WHERE deleted <> ? ORDER BY img_id DESC;";
+
+      queryResult = await DBHelper.db.rawQuery(queryImages, ["1"]);
     }
 
     if (queryResult.length != rawImageInfo.length) {
@@ -348,12 +349,5 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
         ),
       ),
     );
-  }
-
-  /// Reset masonry view environment variables
-  void _resetEnv() {
-    currentGridCount = 0;
-    gridMaxCounts = 50;
-    masonryGrids.clear();
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:async/async.dart';
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -12,9 +13,8 @@ import 'package:tagref/screen/setting_screen.dart';
 
 import '../assets/constant.dart';
 import '../assets/db_helper.dart';
-import '../ui/tag_widgets.dart';
 import '../fragments/masonry_fragments.dart';
-import 'package:async/async.dart';
+import '../ui/tag_widgets.dart';
 
 enum Fragments { twitterMasonry, tagrefMasonry, preferences }
 
@@ -32,7 +32,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
-  /// Upload FAB is dynamically updated with this variable
+
   bool syncing = false;
   bool syncingFailed = false;
 
@@ -55,6 +55,8 @@ class _HomeScreenState extends State<HomeScreen>
   void initState() {
     // secureStorage.deleteAll();
     super.initState();
+
+    DBHelper.selectUndeleted("tags", "*", {"name":"asd"}).then((value) => print(value));
 
     _slideController = AnimationController(
         duration: const Duration(milliseconds: 250), vsync: this);
@@ -281,9 +283,9 @@ class _NavigationPanelState extends State<NavigationPanel> {
   late CancelableOperation cancellableDBQuery;
 
   void updateFullTagList() {
-    String queryTag = "SELECT name FROM tags";
+    String queryTag = "SELECT name FROM tags WHERE deleted <> ?";
     cancellableDBQuery = CancelableOperation.fromFuture(
-      DBHelper.db.rawQuery(queryTag),
+      DBHelper.db.rawQuery(queryTag, ["1"]),
     );
 
     cancellableDBQuery.then((results) {
@@ -409,8 +411,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
                     height: 230,
                     onTagDeleted: (val) async {
                       int tagId = (await DBHelper.db.rawQuery(
-                          'SELECT tag_id FROM tags WHERE name=?;',
-                          [val]))[0]["tag_id"];
+                          'SELECT tag_id FROM tags WHERE name=? AND deleted <> ?;',
+                          [val, "1"]))[0]["tag_id"];
 
                       // Confirm delete tag
                       showDialog(
@@ -421,11 +423,11 @@ class _NavigationPanelState extends State<NavigationPanel> {
                                   TextButton(
                                       onPressed: () async {
                                         await DBHelper.db.rawDelete(
-                                            'DELETE FROM image_tag WHERE tag_id = ?',
-                                            [tagId]);
+                                            'UPDATE image_tag SET deleted = ? WHERE tag_id = ?',
+                                            [1, tagId]);
                                         await DBHelper.db.rawDelete(
-                                            'DELETE FROM tags WHERE tag_id = ?',
-                                            [tagId]);
+                                            'UPDATE tags SET deleted = ? WHERE tag_id = ?',
+                                            [1, tagId]);
                                         updateFullTagList();
 
                                         Navigator.pop(context);

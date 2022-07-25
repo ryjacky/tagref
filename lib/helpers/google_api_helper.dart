@@ -38,6 +38,10 @@ class GoogleApiHelper {
       required this.dbFileName,
       required this.secureStorage});
 
+  Future<void> syncTableAcrossDB(String tableName) async {
+
+  }
+
   Future<bool> syncDB(bool pullOnly) async {
 
     int versionDifference = await compareDB();
@@ -46,7 +50,7 @@ class GoogleApiHelper {
       return await pushDB();
     } else if (versionDifference > 0) {
       log("Remote version of the database is newer, downloading...");
-      return await pullAndReplaceLocalDB();
+      return await pullRemoteDB();
     }
     return false;
   }
@@ -155,6 +159,40 @@ class GoogleApiHelper {
   /// itself if the remote copy is available.
   ///
   /// You SHOULD close all database connection before calling this method
+  Future<bool> pullRemoteDB() async {
+    if (driveApi == null) {
+      throw Exception("Google API has not been initialized!");
+    }
+
+    // Search for tagref_db.db
+    drive.FileList appDataFileList = await driveApi!.files
+        .list(spaces: "appDataFolder", q: "name='$dbFileName'");
+
+    if (appDataFileList.files!.isNotEmpty) {
+      var localDBFile = File(join(localDBPath, "tagref_db_remote.db")).openWrite();
+
+      Media remoteDBMedia = await driveApi!.files.get(
+          appDataFileList.files!.first.id!,
+          downloadOptions: DownloadOptions.fullMedia) as Media;
+
+      localDBFile.addStream(remoteDBMedia.stream).whenComplete(() {
+        localDBFile.flush();
+        localDBFile.close();
+      });
+
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+
+  /// Downloads the remote version of the database that is named [dbFileName]
+  /// and updates the local copy located at [dbParent].
+  /// Returns null if there is no remote copy of the file and returns the file
+  /// itself if the remote copy is available.
+  ///
+  /// You SHOULD close all database connection before calling this method
   Future<bool> pullAndReplaceLocalDB() async {
     if (driveApi == null) {
       throw Exception("Google API has not been initialized!");
@@ -164,7 +202,6 @@ class GoogleApiHelper {
     drive.FileList appDataFileList = await driveApi!.files
         .list(spaces: "appDataFolder", q: "name='$dbFileName'");
 
-    // Upload or update the local db file based on the search result
     if (appDataFileList.files!.isNotEmpty) {
       var localDBFile = File(join(localDBPath, dbFileName)).openWrite();
 

@@ -94,7 +94,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   children: [
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-                      child: IntegrationDisplayButton(
+                      child: IntegrationStatusButton(
                         driveLogoSrc: "assets/images/gdrive_logo.svg",
                         driveName: tr("gdrive"),
                         statusOn: gDriveStatusOn,
@@ -140,7 +140,7 @@ class _SettingScreenState extends State<SettingScreen> {
                     ),
                     Padding(
                       padding: const EdgeInsets.all(30),
-                      child: IntegrationDisplayButton(
+                      child: IntegrationStatusButton(
                         driveLogoSrc: "assets/images/twitter_logo.svg",
                         driveName: tr("twitter-link"),
                         statusOn: twitterStatusOn,
@@ -208,7 +208,7 @@ class _SettingScreenState extends State<SettingScreen> {
   /// remote version, and re-open the database connection
   Future<void> _applyRemoteDBChanges() async {
     await DBHelper.db.close();
-    await widget.gApiHelper.pullAndReplaceLocalDB();
+    await widget.gApiHelper.pullRemoteDB();
     await DBHelper.initializeDatabase();
   }
 
@@ -282,7 +282,7 @@ class _SettingFragmentState extends State<SettingFragment> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-                    child: IntegrationDisplayButton(
+                    child: IntegrationStatusButton(
                       driveLogoSrc: "assets/images/gdrive_logo.svg",
                       driveName: tr("gdrive"),
                       statusOn: gDriveStatusOn,
@@ -333,7 +333,7 @@ class _SettingFragmentState extends State<SettingFragment> {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(30),
-                    child: IntegrationDisplayButton(
+                    child: IntegrationStatusButton(
                       driveLogoSrc: "assets/images/twitter_logo.svg",
                       driveName: tr("twitter-link"),
                       statusOn: twitterStatusOn,
@@ -384,7 +384,7 @@ class _SettingFragmentState extends State<SettingFragment> {
   /// remote version, and re-open the database connection
   Future<void> _applyRemoteDBChanges() async {
     await DBHelper.db.close();
-    await widget.gApiHelper.pullAndReplaceLocalDB();
+    await widget.gApiHelper.pullRemoteDB();
     await DBHelper.initializeDatabase();
   }
 
