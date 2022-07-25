@@ -15,10 +15,12 @@ import '../assets/db_helper.dart';
 import '../helpers/twitter_api_helper.dart';
 import '../ui/image_widgets.dart';
 
+typedef OnTagListChanged = Function();
 class TagRefMasonryFragment extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
+  final OnTagListChanged onTagListChanged;
 
-  const TagRefMasonryFragment({Key? key, required this.gApiHelper})
+  const TagRefMasonryFragment({Key? key, required this.gApiHelper, required this.onTagListChanged})
       : super(key: key);
 
   @override
@@ -143,6 +145,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
                   widget.gApiHelper.pushDB();
                 },
                 onTagAdded: () {
+                  widget.onTagListChanged();
                   widget.gApiHelper.pushDB();
                 },
                 onTap: (imgUrl) {

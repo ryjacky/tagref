@@ -53,21 +53,6 @@ class _ReferenceImageState extends State<ReferenceImage> {
   @override
   void initState() {
     super.initState();
-
-    // DBHelper.db.rawQuery(
-    //     "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
-    //     [widget.imgId]).then((existedTags) {
-    //   // Triggering setState in case tagList update completes after initial build
-    //   try {
-    //     setState(() {
-    //       for (int i = 0; i < existedTags.length; i++) {
-    //         tagList.add(existedTags[i]["name"]);
-    //       }
-    //     });
-    //   } catch (e) {
-    //     log("Reference Image going out of viewport before tag is loaded");
-    //   }
-    // });
   }
 
   void addTagToImage(String tag) async {

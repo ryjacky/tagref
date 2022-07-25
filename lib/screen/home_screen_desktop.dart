@@ -6,8 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:googleapis/admob/v1.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
 import 'package:tagref/screen/setting_screen.dart';
@@ -51,6 +49,8 @@ class _HomeScreenState extends State<HomeScreen>
   late final AnimationController _slideController;
   late final Animation<Offset> _bodyOffset;
 
+  bool tagListChanged = false;
+
   @override
   void initState() {
     // secureStorage.deleteAll();
@@ -69,6 +69,7 @@ class _HomeScreenState extends State<HomeScreen>
     trmf = TagRefMasonryFragment(
       key: trmfKey,
       gApiHelper: widget.gApiHelper,
+      onTagListChanged: () => setState(()=>tagListChanged = true),
     );
   }
 
@@ -113,6 +114,7 @@ class _HomeScreenState extends State<HomeScreen>
     return Row(
       children: [
         NavigationPanel(
+          tagListChanged: tagListChanged,
           onSearchChanged: (List<String> tags) =>
               trmfKey.currentState?.setFilterTags(tags),
           onSettingClicked: () {
@@ -257,13 +259,15 @@ class NavigationPanel extends StatefulWidget {
   final OnButtonClicked onTwitterClicked;
   final bool syncButtonVisibility;
 
-  const NavigationPanel(
+  bool tagListChanged;
+
+  NavigationPanel(
       {Key? key,
       required this.onSearchChanged,
       required this.onSettingClicked,
       required this.onSyncButtonClicked,
       required this.onTwitterClicked,
-      required this.syncButtonVisibility})
+      required this.syncButtonVisibility, required this.tagListChanged})
       : super(key: key);
 
   @override
@@ -276,10 +280,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
   final List<String> fullTagList = [];
   late CancelableOperation cancellableDBQuery;
 
-  @override
-  void initState() {
-    super.initState();
-
+  void updateFullTagList() {
     String queryTag = "SELECT name FROM tags";
     cancellableDBQuery = CancelableOperation.fromFuture(
       DBHelper.db.rawQuery(queryTag),
@@ -311,6 +312,13 @@ class _NavigationPanelState extends State<NavigationPanel> {
   }
 
   @override
+  void initState() {
+    super.initState();
+
+    updateFullTagList();
+  }
+
+  @override
   void dispose() {
     cancellableDBQuery.cancel();
     super.dispose();
@@ -318,6 +326,10 @@ class _NavigationPanelState extends State<NavigationPanel> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.tagListChanged == true){
+      updateFullTagList();
+      widget.tagListChanged = false;
+    }
     return SizedBox(
         width: 300,
         child: Container(
@@ -397,101 +409,34 @@ class _NavigationPanelState extends State<NavigationPanel> {
                     height: 230,
                     onTagDeleted: (val) async {
                       int tagId = (await DBHelper.db.rawQuery(
-                          'SELECT tag_id FROM tags WHERE name=?;', [val]))[0]["tag_id"];
-                      int count = (await DBHelper.db.rawQuery(
-                          'SELECT COUNT(*) FROM image_tag WHERE tag_id=?',
-                          [tagId]))[0]["COUNT(*)"];
+                          'SELECT tag_id FROM tags WHERE name=?;',
+                          [val]))[0]["tag_id"];
 
-                      // Confirm delete tag when it is used
-                      if (count > 0) {
-                        showDialog(
-                            context: context,
-                            builder: (_) => AlertDialog(
-                                  title: Text(tr("confirm-delete-tag")),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () async {
-                                          await DBHelper.db.rawDelete(
-                                              'DELETE FROM image_tag WHERE tag_id = ?',
-                                              [tagId]);
-                                          await DBHelper.db.rawDelete(
-                                              'DELETE FROM tags WHERE tag_id = ?',
-                                              [tagId]);
-                                          String queryTag = "SELECT name FROM tags";
-                                          cancellableDBQuery = CancelableOperation.fromFuture(
-                                            DBHelper.db.rawQuery(queryTag),
-                                          );
+                      // Confirm delete tag
+                      showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                                title: Text(tr("confirm-delete-tag")),
+                                actions: [
+                                  TextButton(
+                                      onPressed: () async {
+                                        await DBHelper.db.rawDelete(
+                                            'DELETE FROM image_tag WHERE tag_id = ?',
+                                            [tagId]);
+                                        await DBHelper.db.rawDelete(
+                                            'DELETE FROM tags WHERE tag_id = ?',
+                                            [tagId]);
+                                        updateFullTagList();
 
-                                          cancellableDBQuery.then((results) {
-                                            bool tagListChanged = false;
-                                            List<String> newTagList = [];
-                                            for (var row in results) {
-                                              newTagList.add(row["name"] as String);
-                                            }
-
-                                            if (newTagList.length != fullTagList.length) {
-                                              tagListChanged = true;
-                                            } else {
-                                              for (int i = 0; i < newTagList.length; i++) {
-                                                if (newTagList[i] != fullTagList[i]) tagListChanged = true;
-                                              }
-                                            }
-
-                                            if (tagListChanged) {
-                                              fullTagList.clear();
-                                              setState(() {
-                                                fullTagList.addAll(newTagList);
-                                                tagListChanged = false;
-                                              });
-                                            }
-                                          });
-
-                                          Navigator.pop(context);
-                                        },
-                                        child: Text(tr("yes"))),
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: Text(tr("no"))),
-                                  ],
-                                ),
-                            barrierDismissible: false);
-                      } else {
-                        await DBHelper.db.rawDelete(
-                            'DELETE FROM image_tag WHERE tag_id = ?',
-                            [tagId]);
-                        await DBHelper.db.rawDelete(
-                            'DELETE FROM tags WHERE tag_id = ?',
-                            [tagId]);
-                        String queryTag = "SELECT name FROM tags";
-                        cancellableDBQuery = CancelableOperation.fromFuture(
-                          DBHelper.db.rawQuery(queryTag),
-                        );
-
-                        cancellableDBQuery.then((results) {
-                          bool tagListChanged = false;
-                          List<String> newTagList = [];
-                          for (var row in results) {
-                            newTagList.add(row["name"] as String);
-                          }
-
-                          if (newTagList.length != fullTagList.length) {
-                            tagListChanged = true;
-                          } else {
-                            for (int i = 0; i < newTagList.length; i++) {
-                              if (newTagList[i] != fullTagList[i]) tagListChanged = true;
-                            }
-                          }
-
-                          if (tagListChanged) {
-                            fullTagList.clear();
-                            setState(() {
-                              fullTagList.addAll(newTagList);
-                              tagListChanged = false;
-                            });
-                          }
-                        });
-
-                      }
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text(tr("yes"))),
+                                  TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: Text(tr("no"))),
+                                ],
+                              ),
+                          barrierDismissible: false);
                     },
                     tagList: fullTagList,
                   ),
