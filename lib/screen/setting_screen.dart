@@ -120,7 +120,7 @@ class _SettingScreenState extends State<SettingScreen> {
                             // The only case when driveApi will be null should be
                             // when GDrive has never been set up before
                             if (!widget.gApiHelper.isInitialized) {
-                              await widget.gApiHelper.authUser();
+                              await widget.gApiHelper.initializeAuthClient();
                               await widget.gApiHelper.initializeGoogleApi();
                               await _applyRemoteDBChanges();
                             }
@@ -313,7 +313,7 @@ class _SettingFragmentState extends State<SettingFragment> {
                           // The only case when driveApi will be null should be
                           // when GDrive has never been set up before
                           if (!widget.gApiHelper.isInitialized) {
-                            await widget.gApiHelper.authUser();
+                            await widget.gApiHelper.initializeAuthClient();
                             await widget.gApiHelper.initializeGoogleApi();
                             await _applyRemoteDBChanges();
                           }

@@ -32,10 +32,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
-  /// Upload FAB is dynamically updated with this variable
-  bool syncing = false;
-  bool syncingFailed = false;
-
   Fragments currentFragment = Fragments.tagrefMasonry;
 
   late final TwitterApiHelper _twitterApiHelper;
@@ -69,7 +65,7 @@ class _HomeScreenState extends State<HomeScreen>
     trmf = TagRefMasonryFragment(
       key: trmfKey,
       gApiHelper: widget.gApiHelper,
-      onTagListChanged: () => setState(()=>tagListChanged = true),
+      onTagListChanged: () => setState(() => tagListChanged = true),
     );
   }
 
@@ -114,6 +110,7 @@ class _HomeScreenState extends State<HomeScreen>
     return Row(
       children: [
         NavigationPanel(
+          gApiHelper: widget.gApiHelper,
           tagListChanged: tagListChanged,
           onSearchChanged: (List<String> tags) =>
               trmfKey.currentState?.setFilterTags(tags),
@@ -134,20 +131,17 @@ class _HomeScreenState extends State<HomeScreen>
             });
           },
           onSyncButtonClicked: () async {
-            syncing = true;
             // Sync database
-
-            bool success = await widget.gApiHelper.syncDB(true);
+            bool success = await widget.gApiHelper.updateLocalDB(true);
 
             setState(() {
-              if (success) {
-                syncing = false;
-              } else {
-                syncing = false;
-                syncingFailed = true;
-                Future.delayed(const Duration(seconds: 3))
-                    .then((value) => syncingFailed = false);
-              }
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(
+                  tr(success ? "updated" : "update-failed"),
+                ),
+                backgroundColor: success ? Colors.green : Colors.redAccent,
+                duration: const Duration(milliseconds: 1000),
+              ));
             });
           },
           onTwitterClicked: () async {
@@ -176,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen>
               });
             }
           },
-          syncButtonVisibility: true,
+          syncButtonVisibility: currentFragment == Fragments.tagrefMasonry ? true : false,
         ),
 
         // TagRef/twitter/setting fragment
@@ -259,6 +253,8 @@ class NavigationPanel extends StatefulWidget {
   final OnButtonClicked onTwitterClicked;
   final bool syncButtonVisibility;
 
+  final GoogleApiHelper gApiHelper;
+
   bool tagListChanged;
 
   NavigationPanel(
@@ -267,7 +263,9 @@ class NavigationPanel extends StatefulWidget {
       required this.onSettingClicked,
       required this.onSyncButtonClicked,
       required this.onTwitterClicked,
-      required this.syncButtonVisibility, required this.tagListChanged})
+      required this.syncButtonVisibility,
+      required this.tagListChanged,
+      required this.gApiHelper})
       : super(key: key);
 
   @override
@@ -326,7 +324,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.tagListChanged == true){
+    if (widget.tagListChanged == true) {
       updateFullTagList();
       widget.tagListChanged = false;
     }
@@ -416,16 +414,22 @@ class _NavigationPanelState extends State<NavigationPanel> {
                       showDialog(
                           context: context,
                           builder: (_) => AlertDialog(
-                                title: Text(tr("confirm-delete-tag")),
+                                backgroundColor: desktopColorDark,
+                                title: Text(
+                                  tr("confirm-delete-tag"),
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
                                 actions: [
                                   TextButton(
                                       onPressed: () async {
-                                        await DBHelper.db.rawDelete(
+                                        await DBHelper.rawDeleteAndPush(
                                             'DELETE FROM image_tag WHERE tag_id = ?',
-                                            [tagId]);
-                                        await DBHelper.db.rawDelete(
+                                            [tagId],
+                                            googleApiHelper: widget.gApiHelper);
+                                        await DBHelper.rawDeleteAndPush(
                                             'DELETE FROM tags WHERE tag_id = ?',
-                                            [tagId]);
+                                            [tagId],
+                                            googleApiHelper: widget.gApiHelper);
                                         updateFullTagList();
 
                                         Navigator.pop(context);
@@ -498,7 +502,7 @@ class _NavigationPanelBottomNavigationState
                   padding: const EdgeInsets.all(20),
                   backgroundColor: desktopColorDarker),
               onPressed: widget.onSyncButtonClicked,
-              label: Text(tr("sync")),
+              label: Text(tr("update")),
               icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
             ),
           ),

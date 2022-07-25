@@ -16,11 +16,13 @@ import '../helpers/twitter_api_helper.dart';
 import '../ui/image_widgets.dart';
 
 typedef OnTagListChanged = Function();
+
 class TagRefMasonryFragment extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
   final OnTagListChanged onTagListChanged;
 
-  const TagRefMasonryFragment({Key? key, required this.gApiHelper, required this.onTagListChanged})
+  const TagRefMasonryFragment(
+      {Key? key, required this.gApiHelper, required this.onTagListChanged})
       : super(key: key);
 
   @override
@@ -56,8 +58,9 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
 
     if (result != null) {
       for (var path in result.paths) {
-        DBHelper.db.rawInsert(
-            "INSERT INTO images (src_url, src_id) VALUES (?, 2)", [path]);
+        DBHelper.rawInsertAndPush(
+            "INSERT INTO images (src_url, src_id) VALUES (?, 2)", [path],
+            googleApiHelper: widget.gApiHelper);
       }
     } else {
       // Do nothing when user closed the dialog
@@ -138,43 +141,47 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
           itemCount: rawImageInfo.length,
           itemBuilder: (context, index) {
             return ReferenceImage(
-                srcUrl: rawImageInfo[index]["src_url"] as String,
-                imgId: rawImageInfo[index]["img_id"] as int,
-                onDeleted: () {
-                  refreshImageList();
-                  widget.gApiHelper.pushDB();
-                },
-                onTagAdded: () {
-                  widget.onTagListChanged();
-                  widget.gApiHelper.pushDB();
-                },
-                onTap: (imgUrl) {
-                  Navigator.push(
-                      context,
-                      PageRouteBuilder(
-                          opaque: false,
-                          transitionsBuilder:
-                              (context, animation, secondaryAnimation, child) {
-                            const begin = Offset(0, -1.0);
-                            const end = Offset.zero;
-                            const curve = Curves.ease;
+              srcUrl: rawImageInfo[index]["src_url"] as String,
+              imgId: rawImageInfo[index]["img_id"] as int,
+              onDeleted: () {
+                refreshImageList();
+                widget.gApiHelper.pushDB();
+              },
+              onTagAdded: () {
+                widget.onTagListChanged();
+                widget.gApiHelper.pushDB();
+              },
+              onTap: (imgUrl) {
+                Navigator.push(
+                    context,
+                    PageRouteBuilder(
+                        opaque: false,
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(0, -1.0);
+                          const end = Offset.zero;
+                          const curve = Curves.ease;
 
-                            final tween = Tween(begin: begin, end: end);
-                            final curvedAnimation = CurvedAnimation(
-                              parent: animation,
-                              curve: curve,
-                            );
+                          final tween = Tween(begin: begin, end: end);
+                          final curvedAnimation = CurvedAnimation(
+                            parent: animation,
+                            curve: curve,
+                          );
 
-                            return SlideTransition(
-                              position: tween.animate(curvedAnimation),
-                              child: child,
-                            );
-                          },
-                          pageBuilder: (context, a1, a2) => ScaledImageViewer(
-                                imageUrl: imgUrl,
-                              )));
-                },
-                srcId: rawImageInfo[index]["src_id"] as int);
+                          return SlideTransition(
+                            position: tween.animate(curvedAnimation),
+                            child: child,
+                          );
+                        },
+                        pageBuilder: (context, a1, a2) => ScaledImageViewer(
+                              imageUrl: imgUrl,
+                            )));
+              },
+              srcId: rawImageInfo[index]["src_id"] as int,
+              onTagRemoved: () {
+                widget.gApiHelper.pushDB();
+              },
+            );
           },
         ),
       ),
@@ -254,8 +261,8 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
       for (currentGridCount;
           currentGridCount < gridMaxCounts;
           currentGridCount++) {
-        late TwitterImage rid;
-        masonryGrids.add(rid = TwitterImage(
+
+        masonryGrids.add(TwitterImage(
           onAdd: (srcUrl) {
             DBHelper.insertImage(srcUrl, true,
                 googleApiHelper: widget.googleApiHelper);
@@ -285,12 +292,6 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
                     pageBuilder: (context, a1, a2) => ScaledImageViewer(
                           imageUrl: srcUrl,
                         )));
-          },
-          onDeleted: () {
-            setState(() {
-              masonryGrids.remove(rid);
-              currentGridCount -= 1;
-            });
           },
           tweetSrcId: queryResult.entries.elementAt(currentGridCount).key,
           srcImgUrl: queryResult.entries.elementAt(currentGridCount).value,
@@ -348,12 +349,5 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
         ),
       ),
     );
-  }
-
-  /// Reset masonry view environment variables
-  void _resetEnv() {
-    currentGridCount = 0;
-    gridMaxCounts = 50;
-    masonryGrids.clear();
   }
 }

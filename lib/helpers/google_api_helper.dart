@@ -38,55 +38,22 @@ class GoogleApiHelper {
       required this.dbFileName,
       required this.secureStorage});
 
-  Future<bool> syncDB(bool pullOnly) async {
-
+  Future<bool> updateLocalDB(bool pullOnly) async {
     int versionDifference = await compareDB();
-    if (versionDifference < 0) {
-      log("Local version of the database is newer, uploading");
-      return await pushDB();
-    } else if (versionDifference > 0) {
+    if (versionDifference > 0) {
       log("Remote version of the database is newer, downloading...");
       return await pullAndReplaceLocalDB();
-    }
-    return false;
-  }
-
-  Future<void> authUser() async {
-    // Build the auth client with user consent
-    if (Platform.isAndroid || Platform.isIOS) {
-      try {
-        // Using GoogleSignIn library
-        final GoogleSignIn _googleSignIn =
-            GoogleSignIn(scopes: [drive.DriveApi.driveAppdataScope]);
-
-        await _googleSignIn.signIn();
-      } catch (error) {
-        if (kDebugMode) {
-          print(error);
-        }
-      }
     } else {
-      // // Login for desktop
-      // // GoogleSignIn library is not available for desktop
-      // // Using googleapis_auth library
-      _authClient = await obtainCredentials();
+      log("Local file is up to date");
 
-      // Write to the secure secureStorage
-      secureStorage.write(
-          key: gAccessCredential,
-          value: jsonEncode(_authClient.credentials.toJson()));
+      return true;
     }
   }
 
-  /// Initializes google api when user has logged in before (desktop/mobile flow)
-  Future<void> initializeGoogleApi() async {
-    if (driveApi != null) {
-      log("Google API have already been initialized!");
-    }
-
+  Future<void> initializeAuthClient() async {
     // check if accessCredential is already available
     String? accessCredentialsJString =
-        await secureStorage.read(key: gAccessCredential);
+    await secureStorage.read(key: gAccessCredential);
 
     if (accessCredentialsJString != null) {
       // Build the auth client from secure secureStorage
@@ -94,6 +61,40 @@ class GoogleApiHelper {
           _clientId,
           AccessCredentials.fromJson(jsonDecode(accessCredentialsJString)),
           _baseClient);
+
+    } else {
+      // Build the auth client with user consent
+      if (Platform.isAndroid || Platform.isIOS) {
+        try {
+          // Using GoogleSignIn library
+          final GoogleSignIn _googleSignIn =
+          GoogleSignIn(scopes: [drive.DriveApi.driveAppdataScope]);
+
+          await _googleSignIn.signIn();
+        } catch (error) {
+          if (kDebugMode) {
+            print(error);
+          }
+        }
+      } else {
+        // // Login for desktop
+        // // GoogleSignIn library is not available for desktop
+        // // Using googleapis_auth library
+        _authClient = await obtainCredentials();
+
+        // Write to the secure secureStorage
+        secureStorage.write(
+            key: gAccessCredential,
+            value: jsonEncode(_authClient.credentials.toJson()));
+      }
+    }
+
+  }
+
+  /// Initializes google api when user has logged in before (desktop/mobile flow)
+  Future<void> initializeGoogleApi() async {
+    if (driveApi != null) {
+      log("Google API have already been initialized!");
     }
 
     driveApi = drive.DriveApi(_authClient);

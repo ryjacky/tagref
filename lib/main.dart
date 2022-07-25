@@ -40,8 +40,9 @@ void main(List<String> args) async {
       dbFileName: DBHelper.dbFileName);
 
   if (pref.getBool(gDriveConnected) != null) {
+    await gApiHelper.initializeAuthClient();
     await gApiHelper.initializeGoogleApi();
-    await gApiHelper.syncDB(true);
+    await gApiHelper.updateLocalDB(true);
   }
 
   // Platform checks
@@ -224,12 +225,12 @@ class _ScreenRouterState extends State<ScreenRouter> {
       });
     }
 
-    Timer.periodic(const Duration(seconds: 5), (timer) {
+    Timer.periodic(const Duration(seconds: 10), (timer) {
       if (!syncing) {
         // Detects remote changes
         syncing = true;
         if (widget.gApiHelper.isInitialized) {
-          widget.gApiHelper.syncDB(true).then((value) => syncing = false);
+          widget.gApiHelper.updateLocalDB(true).then((value) => syncing = false);
         }
       }
     });
