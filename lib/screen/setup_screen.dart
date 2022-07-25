@@ -208,7 +208,7 @@ class _SetupScreenState extends State<SetupScreen> {
                             statusOn: gDriveStatusOn,
                             onTap: () async {
                               if (!widget.gApiHelper.isInitialized) {
-                                await widget.gApiHelper.authUser();
+                                await widget.gApiHelper.initializeAuthClient();
                                 await widget.gApiHelper.initializeGoogleApi();
                                 await _applyRemoteDBChanges();
                               }

@@ -26,6 +26,11 @@
   "sync": "Sync",
   "back-to-tagref": "Back to TagRef",
   "filters": "Tag Filter",
-  "integrations": "Integrations"
+  "integrations": "Integrations",
+  "all-tags": "All Tags",
+  "confirm-delete-tag": "This tag will be removed from all images, do you want to continue?",
+  "update": "Update",
+  "updated": "更新しました",
+  "update-failed": "更新は失敗しました"
 
 }

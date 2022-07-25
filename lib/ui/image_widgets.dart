@@ -19,12 +19,15 @@ typedef OnTapCallback = Function(String url);
 typedef OnTagAdded = Function(String tag);
 typedef OnTwitterAddCallback = Function(String imgUrl);
 
+
+// TODO: Move out functions, this class should only contain widget related codes
 class ReferenceImage extends StatefulWidget {
   final String srcUrl;
   final int imgId;
   final int srcId;
 
   final VoidCallback onDeleted;
+  final VoidCallback onTagRemoved;
   final VoidCallback onTagAdded;
   final OnTapCallback onTap;
 
@@ -35,7 +38,7 @@ class ReferenceImage extends StatefulWidget {
       required this.onDeleted,
       required this.srcId,
       required this.onTap,
-      required this.onTagAdded})
+      required this.onTagAdded, required this.onTagRemoved})
       : super(key: key);
 
   @override
@@ -53,21 +56,6 @@ class _ReferenceImageState extends State<ReferenceImage> {
   @override
   void initState() {
     super.initState();
-
-    // DBHelper.db.rawQuery(
-    //     "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
-    //     [widget.imgId]).then((existedTags) {
-    //   // Triggering setState in case tagList update completes after initial build
-    //   try {
-    //     setState(() {
-    //       for (int i = 0; i < existedTags.length; i++) {
-    //         tagList.add(existedTags[i]["name"]);
-    //       }
-    //     });
-    //   } catch (e) {
-    //     log("Reference Image going out of viewport before tag is loaded");
-    //   }
-    // });
   }
 
   void addTagToImage(String tag) async {
@@ -115,6 +103,8 @@ class _ReferenceImageState extends State<ReferenceImage> {
     String deleteTagStatement =
         "DELETE FROM image_tag WHERE img_id=? AND tag_id=(SELECT tag_id FROM tags WHERE name=?);";
     DBHelper.db.rawDelete(deleteTagStatement, [widget.imgId, tagWd]);
+
+    widget.onTagRemoved();
   }
 
   void _launchUrl(Uri url) async {
@@ -268,14 +258,12 @@ class TwitterImage extends StatefulWidget {
   final String srcImgUrl;
   final String tweetSrcId;
 
-  final VoidCallback onDeleted;
   final OnTapCallback onTap;
   final OnTwitterAddCallback onAdd;
 
   const TwitterImage(
       {Key? key,
       required this.srcImgUrl,
-      required this.onDeleted,
       required this.tweetSrcId,
       required this.onTap,
       required this.onAdd})
@@ -291,13 +279,6 @@ class _TwitterImageState extends State<TwitterImage> {
 
   void _launchUrl(Uri url) async {
     if (!await launchUrl(url)) log('Could not launch $url');
-  }
-
-  Future<void> removeImageFromDB(int imgId) async {
-    await DBHelper.db.rawDelete('DELETE FROM images WHERE img_id = ?', [imgId]);
-    await DBHelper.db
-        .rawDelete('DELETE FROM image_tag WHERE img_id = ?', [imgId]);
-    widget.onDeleted();
   }
 
   @override

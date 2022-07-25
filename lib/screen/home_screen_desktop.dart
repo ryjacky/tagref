@@ -32,10 +32,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
-  /// Upload FAB is dynamically updated with this variable
-  bool syncing = false;
-  bool syncingFailed = false;
-
   Fragments currentFragment = Fragments.tagrefMasonry;
 
   late final TwitterApiHelper _twitterApiHelper;
@@ -48,6 +44,8 @@ class _HomeScreenState extends State<HomeScreen>
   // Setting/TwitterMasonry Fragment transition related animation
   late final AnimationController _slideController;
   late final Animation<Offset> _bodyOffset;
+
+  bool tagListChanged = false;
 
   @override
   void initState() {
@@ -67,6 +65,7 @@ class _HomeScreenState extends State<HomeScreen>
     trmf = TagRefMasonryFragment(
       key: trmfKey,
       gApiHelper: widget.gApiHelper,
+      onTagListChanged: () => setState(() => tagListChanged = true),
     );
   }
 
@@ -111,6 +110,8 @@ class _HomeScreenState extends State<HomeScreen>
     return Row(
       children: [
         NavigationPanel(
+          gApiHelper: widget.gApiHelper,
+          tagListChanged: tagListChanged,
           onSearchChanged: (List<String> tags) =>
               trmfKey.currentState?.setFilterTags(tags),
           onSettingClicked: () {
@@ -130,25 +131,25 @@ class _HomeScreenState extends State<HomeScreen>
             });
           },
           onSyncButtonClicked: () async {
-            syncing = true;
             // Sync database
-
-            bool success = await widget.gApiHelper.syncDB(true);
+            bool success = await widget.gApiHelper.updateLocalDB(true);
 
             setState(() {
-              if (success) {
-                syncing = false;
-              } else {
-                syncing = false;
-                syncingFailed = true;
-                Future.delayed(const Duration(seconds: 3))
-                    .then((value) => syncingFailed = false);
-              }
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(
+                  tr(success ? "updated" : "update-failed"),
+                ),
+                backgroundColor: success ? Colors.green : Colors.redAccent,
+                duration: const Duration(milliseconds: 1000),
+              ));
             });
           },
           onTwitterClicked: () async {
             if (currentFragment != Fragments.twitterMasonry) {
-              if (!_twitterApiHelper.authorized) {
+              if (!_twitterApiHelper.authorized ||
+                  _twitterApiHelper.expires
+                      .compareTo(DateTime.now())
+                      .isNegative) {
                 bool success = await _twitterApiHelper.authTwitter();
 
                 // try again
@@ -169,7 +170,7 @@ class _HomeScreenState extends State<HomeScreen>
               });
             }
           },
-          syncButtonVisibility: true,
+          syncButtonVisibility: currentFragment == Fragments.tagrefMasonry ? true : false,
         ),
 
         // TagRef/twitter/setting fragment
@@ -252,13 +253,19 @@ class NavigationPanel extends StatefulWidget {
   final OnButtonClicked onTwitterClicked;
   final bool syncButtonVisibility;
 
-  const NavigationPanel(
+  final GoogleApiHelper gApiHelper;
+
+  bool tagListChanged;
+
+  NavigationPanel(
       {Key? key,
       required this.onSearchChanged,
       required this.onSettingClicked,
       required this.onSyncButtonClicked,
       required this.onTwitterClicked,
-      required this.syncButtonVisibility})
+      required this.syncButtonVisibility,
+      required this.tagListChanged,
+      required this.gApiHelper})
       : super(key: key);
 
   @override
@@ -269,12 +276,9 @@ class _NavigationPanelState extends State<NavigationPanel> {
   final List<String> _tagFilterList = [];
 
   final List<String> fullTagList = [];
-  late final CancelableOperation cancellableDBQuery;
+  late CancelableOperation cancellableDBQuery;
 
-  @override
-  void initState() {
-    super.initState();
-
+  void updateFullTagList() {
     String queryTag = "SELECT name FROM tags";
     cancellableDBQuery = CancelableOperation.fromFuture(
       DBHelper.db.rawQuery(queryTag),
@@ -299,9 +303,17 @@ class _NavigationPanelState extends State<NavigationPanel> {
         fullTagList.clear();
         setState(() {
           fullTagList.addAll(newTagList);
+          tagListChanged = false;
         });
       }
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+
+    updateFullTagList();
   }
 
   @override
@@ -312,6 +324,10 @@ class _NavigationPanelState extends State<NavigationPanel> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.tagListChanged == true) {
+      updateFullTagList();
+      widget.tagListChanged = false;
+    }
     return SizedBox(
         width: 300,
         child: Container(
@@ -389,7 +405,43 @@ class _NavigationPanelState extends State<NavigationPanel> {
                   child: TagListBox(
                     color: desktopColorDarker,
                     height: 230,
-                    onTagDeleted: (val) {},
+                    onTagDeleted: (val) async {
+                      int tagId = (await DBHelper.db.rawQuery(
+                          'SELECT tag_id FROM tags WHERE name=?;',
+                          [val]))[0]["tag_id"];
+
+                      // Confirm delete tag
+                      showDialog(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                                backgroundColor: desktopColorDark,
+                                title: Text(
+                                  tr("confirm-delete-tag"),
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                                actions: [
+                                  TextButton(
+                                      onPressed: () async {
+                                        await DBHelper.rawDeleteAndPush(
+                                            'DELETE FROM image_tag WHERE tag_id = ?',
+                                            [tagId],
+                                            googleApiHelper: widget.gApiHelper);
+                                        await DBHelper.rawDeleteAndPush(
+                                            'DELETE FROM tags WHERE tag_id = ?',
+                                            [tagId],
+                                            googleApiHelper: widget.gApiHelper);
+                                        updateFullTagList();
+
+                                        Navigator.pop(context);
+                                      },
+                                      child: Text(tr("yes"))),
+                                  TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: Text(tr("no"))),
+                                ],
+                              ),
+                          barrierDismissible: false);
+                    },
                     tagList: fullTagList,
                   ),
                 ),
@@ -450,7 +502,7 @@ class _NavigationPanelBottomNavigationState
                   padding: const EdgeInsets.all(20),
                   backgroundColor: desktopColorDarker),
               onPressed: widget.onSyncButtonClicked,
-              label: Text(tr("sync")),
+              label: Text(tr("update")),
               icon: const FaIcon(FontAwesomeIcons.arrowsRotate),
             ),
           ),

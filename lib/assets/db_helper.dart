@@ -10,12 +10,8 @@ class DBHelper {
   static const String dbFileName = "tagref_db.db";
 
   static Future insertImage(String path, bool fromNetwork, {GoogleApiHelper? googleApiHelper}) async {
-    var insertResult = await DBHelper.db.rawInsert(
-        "INSERT INTO images (src_url, src_id) VALUES (?, ?)", [path, fromNetwork ? 1 : 2]);
-
-    if (googleApiHelper != null) {
-      googleApiHelper.pushDB();
-    }
+    var insertResult = await DBHelper.rawInsertAndPush(
+        "INSERT INTO images (src_url, src_id) VALUES (?, ?)", [path, fromNetwork ? 1 : 2], googleApiHelper: googleApiHelper);
 
     return insertResult;
   }
@@ -23,6 +19,18 @@ class DBHelper {
   static initializeDatabase() async {
     var databaseFactory = databaseFactoryFfi;
     db = await databaseFactory.openDatabase(await getDBUrl());
+  }
+
+  static rawInsertAndPush(String insert, List options, {GoogleApiHelper? googleApiHelper}) async {
+    await db.rawInsert(insert, options);
+
+    if (googleApiHelper != null) await googleApiHelper.pushDB();
+  }
+
+  static rawDeleteAndPush(String delete, List options, {GoogleApiHelper? googleApiHelper}) async {
+    await db.rawDelete(delete, options);
+
+    if (googleApiHelper != null) await googleApiHelper.pushDB();
   }
 
   static Future<String> getDBUrl() async {
