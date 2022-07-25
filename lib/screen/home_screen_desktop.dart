@@ -274,7 +274,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
   final List<String> _tagFilterList = [];
 
   final List<String> fullTagList = [];
-  late final CancelableOperation cancellableDBQuery;
+  late CancelableOperation cancellableDBQuery;
 
   @override
   void initState() {
@@ -304,6 +304,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
         fullTagList.clear();
         setState(() {
           fullTagList.addAll(newTagList);
+          tagListChanged = false;
         });
       }
     });
@@ -416,9 +417,35 @@ class _NavigationPanelState extends State<NavigationPanel> {
                                           await DBHelper.db.rawDelete(
                                               'DELETE FROM tags WHERE tag_id = ?',
                                               [tagId]);
-                                          setState(() {
+                                          String queryTag = "SELECT name FROM tags";
+                                          cancellableDBQuery = CancelableOperation.fromFuture(
+                                            DBHelper.db.rawQuery(queryTag),
+                                          );
 
+                                          cancellableDBQuery.then((results) {
+                                            bool tagListChanged = false;
+                                            List<String> newTagList = [];
+                                            for (var row in results) {
+                                              newTagList.add(row["name"] as String);
+                                            }
+
+                                            if (newTagList.length != fullTagList.length) {
+                                              tagListChanged = true;
+                                            } else {
+                                              for (int i = 0; i < newTagList.length; i++) {
+                                                if (newTagList[i] != fullTagList[i]) tagListChanged = true;
+                                              }
+                                            }
+
+                                            if (tagListChanged) {
+                                              fullTagList.clear();
+                                              setState(() {
+                                                fullTagList.addAll(newTagList);
+                                                tagListChanged = false;
+                                              });
+                                            }
                                           });
+
                                           Navigator.pop(context);
                                         },
                                         child: Text(tr("yes"))),
@@ -435,9 +462,35 @@ class _NavigationPanelState extends State<NavigationPanel> {
                         await DBHelper.db.rawDelete(
                             'DELETE FROM tags WHERE tag_id = ?',
                             [tagId]);
-                        setState(() {
+                        String queryTag = "SELECT name FROM tags";
+                        cancellableDBQuery = CancelableOperation.fromFuture(
+                          DBHelper.db.rawQuery(queryTag),
+                        );
 
+                        cancellableDBQuery.then((results) {
+                          bool tagListChanged = false;
+                          List<String> newTagList = [];
+                          for (var row in results) {
+                            newTagList.add(row["name"] as String);
+                          }
+
+                          if (newTagList.length != fullTagList.length) {
+                            tagListChanged = true;
+                          } else {
+                            for (int i = 0; i < newTagList.length; i++) {
+                              if (newTagList[i] != fullTagList[i]) tagListChanged = true;
+                            }
+                          }
+
+                          if (tagListChanged) {
+                            fullTagList.clear();
+                            setState(() {
+                              fullTagList.addAll(newTagList);
+                              tagListChanged = false;
+                            });
+                          }
                         });
+
                       }
                     },
                     tagList: fullTagList,
