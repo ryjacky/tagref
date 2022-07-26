@@ -8,6 +8,7 @@ import 'package:tagref/assets/db_helper.dart';
 import 'package:tagref/assets/font_size.dart';
 import 'package:tagref/ui/buttons.dart';
 import 'package:tagref/ui/toggle_switch.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../assets/constant.dart';
 import '../helpers/google_api_helper.dart';
@@ -152,9 +153,7 @@ class _SettingScreenState extends State<SettingScreen> {
                                 .authTwitter()) {
                               setState(() => twitterStatusOn = true);
                             }
-                          } else {
-                            
-                          }
+                          } else {}
                         },
                       ),
                     ),
@@ -347,33 +346,45 @@ class _SettingFragmentState extends State<SettingFragment> {
                 ],
               ),
             ),
+            Expanded(child: Container()),
             Padding(
                 padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        width: (1.sw / 1.3).w,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(tr("auto-tag"),
-                                style: Theme.of(context).textTheme.titleMedium),
-                            Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 10),
-                              child: Text(tr("auto-tag-desc"),
-                                  style: Theme.of(context).textTheme.bodySmall),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
-                      child: const ToggleSwitch(),
-                    )
-                  ],
+                child: TextButton(
+                  onPressed: () {
+                    launchUrl(Uri.parse(context.locale == const Locale("en")
+                        ? "https://forms.zoho.com/tagref/form/BugTracker"
+                        : "https://forms.zoho.com/tagref/form/BugReportJP"));
+                  },
+                  child: const Text("Bug Report"),
                 ))
+
+            // Padding(
+            //     padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
+            //     child: Row(
+            //       children: [
+            //         Expanded(
+            //           child: SizedBox(
+            //             width: (1.sw / 1.3).w,
+            //             child: Column(
+            //               crossAxisAlignment: CrossAxisAlignment.start,
+            //               children: [
+            //                 Text(tr("auto-tag"),
+            //                     style: Theme.of(context).textTheme.titleMedium),
+            //                 Padding(
+            //                   padding: const EdgeInsets.symmetric(vertical: 10),
+            //                   child: Text(tr("auto-tag-desc"),
+            //                       style: Theme.of(context).textTheme.bodySmall),
+            //                 )
+            //               ],
+            //             ),
+            //           ),
+            //         ),
+            //         Padding(
+            //           padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
+            //           child: const ToggleSwitch(),
+            //         )
+            //       ],
+            //     ))
           ],
         ),
       ),
