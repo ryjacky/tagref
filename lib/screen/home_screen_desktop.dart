@@ -49,7 +49,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   void initState() {
-    // secureStorage.deleteAll();
+    // secureStorage.delete(key: "com.tagref.twitterUserToken");
     super.initState();
 
     _slideController = AnimationController(
@@ -170,7 +170,8 @@ class _HomeScreenState extends State<HomeScreen>
               });
             }
           },
-          syncButtonVisibility: currentFragment == Fragments.tagrefMasonry ? true : false,
+          syncButtonVisibility:
+              currentFragment == Fragments.tagrefMasonry ? true : false,
         ),
 
         // TagRef/twitter/setting fragment

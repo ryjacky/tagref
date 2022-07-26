@@ -47,6 +47,8 @@ class TwitterApiHelper {
 
         twitterClient = TwitterApi(bearerToken: token["access_token"]!);
         authorized = true;
+
+        return true;
       } catch (e) {
         // print(e);
         secureStorage.delete(key: uidSSKey);
@@ -63,7 +65,7 @@ class TwitterApiHelper {
 
       // Show twitter oauth 2.0 authorization page, save and apply userId and
       // access token when complete
-      Navigator.push(
+      var token = await Navigator.push(
           context,
           PageRouteBuilder(
               transitionsBuilder:
@@ -83,24 +85,22 @@ class TwitterApiHelper {
                   child: child,
                 );
               },
-              pageBuilder: (context, a1, a2) =>
-                  const TwitterOAuthExchange())).then((token) {
-        // Save and apply userId and access token
-        twitterClient = TwitterApi(bearerToken: token["access_token"]);
-        twitterClient.usersService.lookupMe().then((value) {
-          log("Twitter oauth consent has returned, continuing with the result");
+              pageBuilder: (context, a1, a2) => const TwitterOAuthExchange()));
 
-          userId = value.data.id;
-          secureStorage.write(key: tTokenSSKey, value: token["access_token"]);
-          secureStorage.write(
-              key: refreshTokenSSKey, value: token["refresh_token"]);
-          secureStorage.write(key: uidSSKey, value: userId);
-          authorized = true;
-        });
-      });
+      // Save and apply userId and access token
+      twitterClient = TwitterApi(bearerToken: token["access_token"]);
+      var value = await twitterClient.usersService.lookupMe();
+      log("Twitter oauth consent has returned, continuing with the result");
+
+      userId = value.data.id;
+      await secureStorage.write(key: tTokenSSKey, value: token["access_token"]);
+      await secureStorage.write(
+          key: refreshTokenSSKey, value: token["refresh_token"]);
+      await secureStorage.write(key: uidSSKey, value: userId);
+      authorized = true;
+
+      return true;
     }
-
-    return true;
   }
 
   /// Look up the reverse chronological home timeline for the user and
