@@ -16,8 +16,11 @@ import '../helpers/twitter_api_helper.dart';
 
 class SettingScreen extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
+  final TwitterApiHelper twitterApiHelper;
 
-  const SettingScreen({Key? key, required this.gApiHelper}) : super(key: key);
+  const SettingScreen(
+      {Key? key, required this.gApiHelper, required this.twitterApiHelper})
+      : super(key: key);
 
   @override
   State<SettingScreen> createState() => _SettingScreenState();
@@ -147,13 +150,12 @@ class _SettingScreenState extends State<SettingScreen> {
                         statusOn: twitterStatusOn,
                         onTap: () async {
                           if (!twitterStatusOn) {
-                            if (await TwitterApiHelper(
-                                    context: context,
-                                    secureStorage: const FlutterSecureStorage())
-                                .authTwitter()) {
+                            if (await widget.twitterApiHelper.authTwitter()) {
                               setState(() => twitterStatusOn = true);
                             }
-                          } else {}
+                          } else {
+                            widget.twitterApiHelper.purgeData();
+                          }
                         },
                       ),
                     ),
@@ -253,6 +255,14 @@ class _SettingFragmentState extends State<SettingFragment> {
   bool remoteChanged = false;
 
   @override
+  void initState() {
+    super.initState();
+    secureStorage
+        .read(key: "com.tagref.twitterUserToken")
+        .then((value) => setState(() => twitterStatusOn = value == null));
+  }
+
+  @override
   Widget build(BuildContext context) {
     SharedPreferences.getInstance().then((pref) => setState(() {
           gDriveStatusOn = pref.getBool(gDriveConnected) != null ? true : false;
@@ -315,7 +325,7 @@ class _SettingFragmentState extends State<SettingFragment> {
                           if (!widget.gApiHelper.isInitialized) {
                             await widget.gApiHelper.initializeAuthClient();
                             await widget.gApiHelper.initializeGoogleApi();
-                            await _applyRemoteDBChanges();
+                            await _compareRemoteDB();
                           }
 
                           // Update shared preferences
@@ -338,8 +348,12 @@ class _SettingFragmentState extends State<SettingFragment> {
                       driveName: tr("twitter-link"),
                       statusOn: twitterStatusOn,
                       onTap: () async {
-                        if (await widget.twitterApiHelper.authTwitter()) {
-                          setState(() => twitterStatusOn = true);
+                        if (twitterStatusOn) {
+                          widget.twitterApiHelper.purgeData();
+                        } else {
+                          if (await widget.twitterApiHelper.authTwitter()) {
+                            setState(() => twitterStatusOn = true);
+                          }
                         }
                       },
                     ),
@@ -394,10 +408,36 @@ class _SettingFragmentState extends State<SettingFragment> {
 
   /// Closes the current database connection, update the source db file to match
   /// remote version, and re-open the database connection
-  Future<void> _applyRemoteDBChanges() async {
-    await DBHelper.db.close();
-    await widget.gApiHelper.pullAndReplaceLocalDB();
-    await DBHelper.initializeDatabase();
+  Future<void> _compareRemoteDB() async {
+    int version = await widget.gApiHelper.compareDB();
+
+    if (version != 404) {
+      // Ask for which version to keep
+      showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+                backgroundColor: desktopColorDark,
+                title: Text(
+                  tr("is-remote-replace-local"),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        widget.gApiHelper.pullAndReplaceLocalDB();
+                        Navigator.pop(context);
+                      },
+                      child: Text(tr("yes"))),
+                  TextButton(
+                      onPressed: () {
+                        widget.gApiHelper.pushDB();
+                        Navigator.pop(context);
+                      },
+                      child: Text(tr("no"))),
+                ],
+              ),
+          barrierDismissible: false);
+    }
   }
 
   /// Removes all local configurations about google drive
@@ -405,6 +445,7 @@ class _SettingFragmentState extends State<SettingFragment> {
     SharedPreferences.getInstance().then((pref) => setState(() {
           pref.remove(gDriveConnected);
         }));
+    widget.gApiHelper.isInitialized = false;
     widget.gApiHelper.purgeAccessCredentials(secureStorage);
     Navigator.pop(context);
     setState(() {

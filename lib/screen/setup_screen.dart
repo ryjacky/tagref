@@ -210,7 +210,7 @@ class _SetupScreenState extends State<SetupScreen> {
                               if (!widget.gApiHelper.isInitialized) {
                                 await widget.gApiHelper.initializeAuthClient();
                                 await widget.gApiHelper.initializeGoogleApi();
-                                await _applyRemoteDBChanges();
+                                await _compareRemoteDB();
                               }
 
                               // Update shared preferences
@@ -280,9 +280,35 @@ class _SetupScreenState extends State<SetupScreen> {
 
   /// Closes the current database connection, update the source db file to match
   /// remote version, and re-open the database connection
-  Future<void> _applyRemoteDBChanges() async {
-    await DBHelper.db.close();
-    await widget.gApiHelper.pullAndReplaceLocalDB();
-    await DBHelper.initializeDatabase();
+  Future<void> _compareRemoteDB() async {
+    int version = await widget.gApiHelper.compareDB();
+
+    if (version != 404) {
+      // Ask for which version to keep
+      showDialog(
+          context: context,
+          builder: (_) => AlertDialog(
+                backgroundColor: desktopColorDark,
+                title: Text(
+                  tr("is-remote-replace-local"),
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                actions: [
+                  TextButton(
+                      onPressed: () {
+                        widget.gApiHelper.pullAndReplaceLocalDB();
+                        Navigator.pop(context);
+                      },
+                      child: Text(tr("yes"))),
+                  TextButton(
+                      onPressed: () {
+                        widget.gApiHelper.pushDB();
+                        Navigator.pop(context);
+                      },
+                      child: Text(tr("no"))),
+                ],
+              ),
+          barrierDismissible: false);
+    }
   }
 }

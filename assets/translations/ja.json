@@ -31,7 +31,8 @@
   "confirm-delete-tag": "このタグはすべての画像から削除されます、続きますか？",
   "update": "更新",
   "updated": "更新しました",
-  "update-failed": "更新は失敗しました"
+  "update-failed": "更新は失敗しました",
+  "is-remote-replace-local": "バックアップが見つかりました！バックアップのバージョンを使用しますか？"
 
 
 }

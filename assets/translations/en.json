@@ -30,7 +30,8 @@
   "all-tags": "All Tags",
   "confirm-delete-tag": "This tag will be removed from all images, do you want to continue?",
   "update": "Update",
-  "updated": "更新しました",
-  "update-failed": "更新は失敗しました"
+  "updated": "Updated",
+  "update-failed": "Update failed",
+  "is-remote-replace-local": "Backup is found! Would you like to use the backup version?"
 
 }

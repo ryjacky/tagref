@@ -129,6 +129,11 @@ class GoogleApiHelper {
   }
 
   Future<int> compareDB() async {
+    if (!isInitialized) {
+      log("Drive API has not yet been initialized");
+      return 404;
+    }
+
     // Check and compare the database version of remote and local
     drive.FileList appDataFileList = await driveApi!.files.list(
         spaces: "appDataFolder",
@@ -151,7 +156,7 @@ class GoogleApiHelper {
       }
     } else {
       log("Remote database does not exist.");
-      return -1;
+      return 404;
     }
   }
 

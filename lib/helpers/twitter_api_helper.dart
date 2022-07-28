@@ -24,6 +24,16 @@ class TwitterApiHelper {
 
   TwitterApiHelper({required this.context, required this.secureStorage});
 
+  Future<bool> purgeData() async {
+    await secureStorage.delete(key: tTokenSSKey);
+    await secureStorage.delete(key: uidSSKey);
+    await secureStorage.delete(key: refreshTokenSSKey);
+
+    authorized = false;
+
+    return true;
+  }
+
   Future<bool> authTwitter() async {
     expires = DateTime.now().add(const Duration(seconds: 7000));
 
