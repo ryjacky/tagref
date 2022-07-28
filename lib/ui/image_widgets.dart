@@ -66,14 +66,14 @@ class _ReferenceImageState extends State<ReferenceImage> {
     });
 
     String tagQuery = "SELECT * FROM tags WHERE name=?;";
-    List<Map> tagExists = await DBHelper.db.rawQuery(tagQuery, [tag]);
+    List<Map> tagExists = await db.rawQuery(tagQuery, [tag]);
 
     // Create tag (if not existed in 'tags' table) and creates
     // new record in 'image_tag' table
     late int newTagId;
     if (tagExists.isEmpty) {
       String newTagStatement = "INSERT INTO tags (name) VALUES (?);";
-      newTagId = await DBHelper.db.rawInsert(newTagStatement, [tag]);
+      newTagId = await db.rawInsert(newTagStatement, [tag]);
     } else {
       newTagId = tagExists.first["tag_id"];
     }
@@ -82,9 +82,9 @@ class _ReferenceImageState extends State<ReferenceImage> {
     String imageTagQuery =
         "SELECT * FROM image_tag WHERE img_id=? AND tag_id=?;";
     List<Map> imageTagExists =
-        await DBHelper.db.rawQuery(imageTagQuery, [widget.imgId, newTagId]);
+        await db.rawQuery(imageTagQuery, [widget.imgId, newTagId]);
     if (imageTagExists.isEmpty) {
-      DBHelper.db.rawInsert(
+      db.rawInsert(
           "INSERT INTO image_tag (img_id, tag_id) VALUES (?,?);",
           [widget.imgId, newTagId]);
     }
@@ -102,7 +102,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
 
     String deleteTagStatement =
         "DELETE FROM image_tag WHERE img_id=? AND tag_id=(SELECT tag_id FROM tags WHERE name=?);";
-    DBHelper.db.rawDelete(deleteTagStatement, [widget.imgId, tagWd]);
+    db.rawDelete(deleteTagStatement, [widget.imgId, tagWd]);
 
     widget.onTagRemoved();
   }
@@ -112,12 +112,12 @@ class _ReferenceImageState extends State<ReferenceImage> {
   }
 
   Future<void> removeImageFromDB(int imgId) async {
-    await DBHelper.db.rawDelete('DELETE FROM images WHERE img_id = ?', [imgId]);
+    await db.rawDelete('DELETE FROM images WHERE img_id = ?', [imgId]);
     widget.onDeleted();
   }
 
   void updateTagList() {
-    _cancelableUpdateTagList = CancelableOperation.fromFuture(DBHelper.db.rawQuery(
+    _cancelableUpdateTagList = CancelableOperation.fromFuture(db.rawQuery(
         "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
         [widget.imgId]));
 

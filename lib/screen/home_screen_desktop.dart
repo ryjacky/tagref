@@ -282,7 +282,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
   void updateFullTagList() {
     String queryTag = "SELECT name FROM tags";
     cancellableDBQuery = CancelableOperation.fromFuture(
-      DBHelper.db.rawQuery(queryTag),
+      db.rawQuery(queryTag),
     );
 
     cancellableDBQuery.then((results) {
@@ -407,7 +407,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                     color: desktopColorDarker,
                     height: 230,
                     onTagDeleted: (val) async {
-                      int tagId = (await DBHelper.db.rawQuery(
+                      int tagId = (await db.rawQuery(
                           'SELECT tag_id FROM tags WHERE name=?;',
                           [val]))[0]["tag_id"];
 

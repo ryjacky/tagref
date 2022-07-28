@@ -208,7 +208,7 @@ class _SettingScreenState extends State<SettingScreen> {
   /// Closes the current database connection, update the source db file to match
   /// remote version, and re-open the database connection
   Future<void> _applyRemoteDBChanges() async {
-    await DBHelper.db.close();
+    await db.close();
     await widget.gApiHelper.pullAndReplaceLocalDB();
     await DBHelper.initializeDatabase();
   }

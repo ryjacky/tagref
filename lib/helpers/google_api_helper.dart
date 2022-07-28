@@ -12,6 +12,7 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:tagref/assets/constant.dart';
+import 'package:tagref/assets/db_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class GoogleApiHelper {
@@ -48,6 +49,7 @@ class GoogleApiHelper {
     if (versionDifference > 0) {
       log("Remote version of the database is newer, downloading...");
       return await pullAndReplaceLocalDB();
+
     } else {
       log("Local file is up to date");
 
@@ -168,7 +170,8 @@ class GoogleApiHelper {
   /// You SHOULD close all database connection before calling this method
   Future<bool> pullAndReplaceLocalDB() async {
     if (driveApi == null) {
-      throw Exception("Google API has not been initialized!");
+      log("Google API has not been initialized!");
+      return false;
     }
 
     // Search for tagref_db.db

@@ -301,7 +301,7 @@ class _TagSearchBarState extends State<TagSearchBar> {
 //   Future<void> refreshTagList() async {
 //     // Query for database and all tags if not already
 //     String queryTag = "SELECT name FROM tags";
-//     List<Map<String, Object?>> results = await DBHelper.db.rawQuery(queryTag);
+//     List<Map<String, Object?>> results = await db.rawQuery(queryTag);
 //
 //     if (results.length != currentTagLabels.length) {
 //       setState(() {

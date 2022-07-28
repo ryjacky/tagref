@@ -83,11 +83,11 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
 
       String queryImages =
           "SELECT * FROM images WHERE img_id IN (SELECT DISTINCT img_id FROM image_tag INNER JOIN tags on image_tag.tag_id = tags.tag_id WHERE tags.name IN ($inString)) ORDER BY img_id DESC;";
-      queryResult = await DBHelper.db.rawQuery(queryImages, filterTags);
+      queryResult = await db.rawQuery(queryImages, filterTags);
     } else {
       String queryImages = "SELECT * FROM images ORDER BY img_id DESC;";
 
-      queryResult = await DBHelper.db.rawQuery(queryImages);
+      queryResult = await db.rawQuery(queryImages);
     }
 
     if (queryResult.length != rawImageInfo.length) {

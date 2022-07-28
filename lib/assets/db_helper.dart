@@ -5,8 +5,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 
+var db;
+
 class DBHelper {
-  static var db;
   static const String dbFileName = "tagref_db.db";
 
   static Future insertImage(String path, bool fromNetwork, {GoogleApiHelper? googleApiHelper}) async {
@@ -42,7 +43,7 @@ class DBHelper {
   }
 
   static Future<void> createDBWithTemplate() async {
-    await DBHelper.db.execute('''
+    await db.execute('''
       CREATE TABLE images
       (
           img_id         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -76,7 +77,7 @@ class DBHelper {
       );
       ''');
 
-    await DBHelper.db
+    await db
         .rawInsert("INSERT INTO sources (name) VALUES ('web'), ('local');");
   }
 }
