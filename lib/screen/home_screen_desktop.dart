@@ -454,7 +454,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                   onSettingClicked: widget.onSettingClicked,
                   onSyncButtonClicked: widget.onSyncButtonClicked,
                   onTwitterClicked: widget.onTwitterClicked,
-                  syncButtonVisibility: widget.syncButtonVisibility,
+                  syncButtonVisibility: widget.gApiHelper.isInitialized && widget.syncButtonVisibility,
                 )
               ],
             )));

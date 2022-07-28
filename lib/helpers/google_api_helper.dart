@@ -39,6 +39,11 @@ class GoogleApiHelper {
       required this.secureStorage});
 
   Future<bool> updateLocalDB(bool pullOnly) async {
+    if (!isInitialized) {
+      log("Drive API has not yet been initialized");
+      return false;
+    }
+
     int versionDifference = await compareDB();
     if (versionDifference > 0) {
       log("Remote version of the database is newer, downloading...");
@@ -186,7 +191,8 @@ class GoogleApiHelper {
 
   Future<bool> pushDB() async {
     if (!isInitialized) {
-      throw Exception("Google API has not been initialized!");
+      log("Google API has not been initialized!");
+      return false;
     }
 
     log("Start pushing database to remote");

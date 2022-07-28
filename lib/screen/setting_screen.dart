@@ -216,6 +216,7 @@ class _SettingScreenState extends State<SettingScreen> {
     SharedPreferences.getInstance().then((pref) => setState(() {
           pref.remove(gDriveConnected);
         }));
+    widget.gApiHelper.isInitialized = false;
     widget.gApiHelper.purgeAccessCredentials(secureStorage);
     Navigator.pop(context);
     setState(() {
