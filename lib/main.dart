@@ -200,11 +200,16 @@ class ScreenRouter extends StatefulWidget {
 
 class _ScreenRouterState extends State<ScreenRouter> {
   bool syncing = false;
+  bool routeInitialized = false;
 
   @override
   Widget build(BuildContext context) {
-    initRoute().then((screen) => Navigator.pushReplacement(
-        context, MaterialPageRoute(builder: (context) => screen)));
+    if (!routeInitialized){
+      initRoute().then((screen) => Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => screen)));
+
+      routeInitialized = true;
+    }
     return const Scaffold();
   }
 
@@ -282,14 +287,17 @@ class _ScreenRouterState extends State<ScreenRouter> {
   Future<Widget> initRoute() async {
     String dbUrl = await DBHelper.getDBUrl();
     bool dbExists = await File(dbUrl).exists();
+    log("Database already existed: " + dbExists.toString());
 
     // Initialize database when exists, create while not
     await DBHelper.initializeDatabase();
 
     if (!dbExists) {
       await DBHelper.createDBWithTemplate();
+
       return SetupScreen(gApiHelper: widget.gApiHelper);
     }
+
 
     return HomeScreen(
       gApiHelper: widget.gApiHelper,

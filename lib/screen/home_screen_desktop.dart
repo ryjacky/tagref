@@ -1,11 +1,14 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
+import 'package:desktop_drop/desktop_drop.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:mime/mime.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
 import 'package:tagref/screen/setting_screen.dart';
@@ -73,9 +76,45 @@ class _HomeScreenState extends State<HomeScreen>
   Widget build(BuildContext context) {
     return Scaffold(
         backgroundColor: desktopColorDarker,
-        body: (Platform.isMacOS || Platform.isWindows)
-            ? homeScreenDesktopBody()
-            : homeScreenMobileBody());
+        body: Stack(children: [
+          DropTarget(
+            onDragDone: (detail) {
+              setState(() {
+                log("Drag Done, ${detail.files.length} files dropped, checking file format...");
+                for (var file in detail.files) {
+                  log("Checking file: ${file.path}");
+
+                  var type = lookupMimeType(file.path) ?? "unknown";
+                  log("Type = $type");
+
+                  if (type.contains("image")) {
+                    DBHelper.rawInsertAndPush(
+                        "INSERT INTO images (src_url, src_id) VALUES (?, 2)",
+                        [file.path],
+                        googleApiHelper: widget.gApiHelper);
+                  }
+                }
+              });
+            },
+            onDragEntered: (detail) {
+              setState(() {
+                log("Drag Entered");
+              });
+            },
+            onDragExited: (detail) {
+              setState(() {
+                log("Drag Exited");
+              });
+            },
+            child: SizedBox.expand(
+                child: Container(
+              color: Colors.transparent,
+            )),
+          ),
+          (Platform.isMacOS || Platform.isWindows)
+              ? homeScreenDesktopBody()
+              : homeScreenMobileBody()
+        ]));
   }
 
   Widget homeScreenMobileBody() {
@@ -454,7 +493,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
                   onSettingClicked: widget.onSettingClicked,
                   onSyncButtonClicked: widget.onSyncButtonClicked,
                   onTwitterClicked: widget.onTwitterClicked,
-                  syncButtonVisibility: widget.gApiHelper.isInitialized && widget.syncButtonVisibility,
+                  syncButtonVisibility: widget.gApiHelper.isInitialized &&
+                      widget.syncButtonVisibility,
                 )
               ],
             )));
@@ -541,7 +581,9 @@ class _ScaledImageViewerState extends State<ScaledImageViewer> {
             SizedBox.expand(
               child: InteractiveViewer(
                 maxScale: 10,
-                child: Image.network(widget.imageUrl),
+                child: widget.imageUrl.contains("http")
+                    ? Image.network(widget.imageUrl)
+                    : Image.file(File(widget.imageUrl)),
               ),
             ),
             Align(

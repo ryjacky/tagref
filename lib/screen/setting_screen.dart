@@ -7,7 +7,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tagref/assets/db_helper.dart';
 import 'package:tagref/assets/font_size.dart';
 import 'package:tagref/ui/buttons.dart';
-import 'package:tagref/ui/toggle_switch.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../assets/constant.dart';
@@ -174,30 +173,30 @@ class _SettingScreenState extends State<SettingScreen> {
                   padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
                   child: Row(
                     children: [
-                      Expanded(
-                        child: SizedBox(
-                          width: (1.sw / 1.3).w,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(tr("auto-tag"),
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: FontSize.l3.sp,
-                                      color: fontColorDark)),
-                              Text(tr("auto-tag-desc"),
-                                  style: TextStyle(
-                                      fontWeight: FontWeight.w300,
-                                      fontSize: FontSize.body1.sp,
-                                      color: fontColorDark)),
-                            ],
-                          ),
-                        ),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
-                        child: const ToggleSwitch(),
-                      )
+                      // Expanded(
+                      //   child: SizedBox(
+                      //     width: (1.sw / 1.3).w,
+                      //     child: Column(
+                      //       crossAxisAlignment: CrossAxisAlignment.start,
+                      //       children: [
+                      //         Text(tr("auto-tag"),
+                      //             style: TextStyle(
+                      //                 fontWeight: FontWeight.bold,
+                      //                 fontSize: FontSize.l3.sp,
+                      //                 color: fontColorDark)),
+                      //         Text(tr("auto-tag-desc"),
+                      //             style: TextStyle(
+                      //                 fontWeight: FontWeight.w300,
+                      //                 fontSize: FontSize.body1.sp,
+                      //                 color: fontColorDark)),
+                      //       ],
+                      //     ),
+                      //   ),
+                      // ),
+                      // Padding(
+                      //   padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
+                      //   child: const ToggleSwitch(),
+                      // )
                     ],
                   ))
             ],

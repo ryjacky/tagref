@@ -12,7 +12,6 @@ import 'package:googleapis_auth/auth_io.dart';
 import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:tagref/assets/constant.dart';
-import 'package:tagref/assets/db_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class GoogleApiHelper {
@@ -245,6 +244,7 @@ class GoogleApiHelper {
   /// Remove all locally stored credentials, clear active driveApi instances
   void purgeAccessCredentials(FlutterSecureStorage secureStorage) {
     secureStorage.delete(key: gAccessCredential);
+    secureStorage.delete(key: gDriveConnected);
     driveApi = null;
   }
 }

@@ -10,10 +10,8 @@ import 'package:tagref/assets/constant.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
 
-import '../assets/db_helper.dart';
 import '../assets/font_size.dart';
 import '../ui/buttons.dart';
-import '../ui/toggle_switch.dart';
 import 'home_screen_desktop.dart';
 
 class SetupScreen extends StatefulWidget {
@@ -34,10 +32,13 @@ class _SetupScreenState extends State<SetupScreen> {
   bool twitterStatusOn = false;
 
   @override
-  Widget build(BuildContext context) {
-    // Query for window width
-    double width = MediaQuery.of(context).size.width;
+  void initState() {
+    super.initState();
+    const FlutterSecureStorage().deleteAll();
+  }
 
+  @override
+  Widget build(BuildContext context) {
     // Set current language to active in the language options toggle button
     for (int i = 0; i < context.supportedLocales.length; i++) {
       isSelected[i] = context.locale.toString() == locale[i];
@@ -165,32 +166,32 @@ class _SetupScreenState extends State<SetupScreen> {
                         padding: EdgeInsets.fromLTRB(0, 20.w, 0, 0),
                         child: Row(
                           children: [
-                            Expanded(
-                              child: SizedBox(
-                                width: (width / 1.3).w,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(tr("auto-tag"),
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 10),
-                                      child: Text(tr("auto-tag-desc"),
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Padding(
-                              padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
-                              child: const ToggleSwitch(),
-                            )
+                            // Expanded(
+                            //   child: SizedBox(
+                            //     width: (width / 1.3).w,
+                            //     child: Column(
+                            //       crossAxisAlignment: CrossAxisAlignment.start,
+                            //       children: [
+                            //         Text(tr("auto-tag"),
+                            //             style: Theme.of(context)
+                            //                 .textTheme
+                            //                 .titleMedium),
+                            //         Padding(
+                            //           padding: const EdgeInsets.symmetric(
+                            //               vertical: 10),
+                            //           child: Text(tr("auto-tag-desc"),
+                            //               style: Theme.of(context)
+                            //                   .textTheme
+                            //                   .bodyMedium),
+                            //         ),
+                            //       ],
+                            //     ),
+                            //   ),
+                            // ),
+                            // Padding(
+                            //   padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
+                            //   child: const ToggleSwitch(),
+                            // )
                           ],
                         )),
                     Padding(
