@@ -32,6 +32,7 @@
   "update": "Update",
   "updated": "Updated",
   "update-failed": "Update failed",
-  "is-remote-replace-local": "Backup is found! Would you like to use the backup version?"
+  "is-remote-replace-local": "Backup is found! Would you like to use the backup version?",
+  "twitter-link-failed": "Failed to connect to your Twitter account. Please try again later."
 
 }

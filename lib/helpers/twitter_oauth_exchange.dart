@@ -66,7 +66,7 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
     );
   }
 
-  void launchWindowsWebView() async {
+  void launchDesktopWebView() async {
     if (!winWebViewShown) {
       winWebViewShown = true;
 
@@ -82,6 +82,8 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
             // userDataFolderWindows: await _getWebViewPath(),
             ),
       );
+
+      webview.onClose.then((value) => Navigator.pop(context, "userExited"));
 
       webview.launch(authURI);
       webview.addOnUrlRequestCallback((url) {
@@ -105,7 +107,7 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
   }
 
   Widget getDesktopWebView() {
-    launchWindowsWebView();
+    launchDesktopWebView();
     return const Text("Please complete the login process in the popup.");
   }
 

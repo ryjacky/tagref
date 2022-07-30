@@ -82,12 +82,15 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
       }
 
       String queryImages =
-          "SELECT * FROM images WHERE img_id IN (SELECT DISTINCT img_id FROM image_tag INNER JOIN tags on image_tag.tag_id = tags.tag_id WHERE tags.name IN ($inString)) ORDER BY img_id DESC;";
-      queryResult = await db.rawQuery(queryImages, filterTags);
-    } else {
-      String queryImages = "SELECT * FROM images ORDER BY img_id DESC;";
+          "SELECT * FROM images WHERE src_id in (?, ?) AND img_id IN (SELECT DISTINCT img_id FROM image_tag INNER JOIN tags on image_tag.tag_id = tags.tag_id WHERE tags.name IN ($inString)) ORDER BY img_id DESC;";
 
-      queryResult = await db.rawQuery(queryImages);
+      List options = ["1", Platform.localHostname];
+      options.addAll(filterTags);
+      queryResult = await db.rawQuery(queryImages, options);
+    } else {
+      String queryImages = "SELECT * FROM images WHERE src_id in (?, ?) ORDER BY img_id DESC;";
+
+      queryResult = await db.rawQuery(queryImages, ["1", Platform.localHostname]);
     }
 
     if (queryResult.length != rawImageInfo.length) {
@@ -177,7 +180,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
                               imageUrl: imgUrl,
                             )));
               },
-              srcId: rawImageInfo[index]["src_id"] as int,
+              srcId: rawImageInfo[index]["src_id"] as String,
               onTagRemoved: () {
                 widget.gApiHelper.pushDB();
               },

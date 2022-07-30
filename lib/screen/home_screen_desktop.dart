@@ -89,8 +89,8 @@ class _HomeScreenState extends State<HomeScreen>
 
                   if (type.contains("image")) {
                     DBHelper.rawInsertAndPush(
-                        "INSERT INTO images (src_url, src_id) VALUES (?, 2)",
-                        [file.path],
+                        "INSERT INTO images (src_url, src_id) VALUES (?, ?)",
+                        [file.path, Platform.localHostname],
                         googleApiHelper: widget.gApiHelper);
                   }
                 }
@@ -191,8 +191,16 @@ class _HomeScreenState extends State<HomeScreen>
                       .isNegative) {
                 bool success = await _twitterApiHelper.authTwitter();
 
-                // try again
-                if (!success) await _twitterApiHelper.authTwitter();
+                if (!success) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(
+                      tr("twitter-link-failed"),
+                    ),
+                    backgroundColor: Colors.redAccent,
+                    duration: const Duration(milliseconds: 1500),
+                  ));
+                  return;
+                }
               }
             }
 

@@ -48,8 +48,7 @@ class DBHelper {
       (
           img_id         INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
           src_url        TEXT,
-          src_id         INTEGER,
-          FOREIGN KEY (src_id) REFERENCES sources (src_id)
+          src_id         TEXT
       );
       CREATE TABLE sources
       (

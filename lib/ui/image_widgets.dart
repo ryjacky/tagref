@@ -19,12 +19,11 @@ typedef OnTapCallback = Function(String url);
 typedef OnTagAdded = Function(String tag);
 typedef OnTwitterAddCallback = Function(String imgUrl);
 
-
 // TODO: Move out functions, this class should only contain widget related codes
 class ReferenceImage extends StatefulWidget {
   final String srcUrl;
   final int imgId;
-  final int srcId;
+  final String srcId;
 
   final VoidCallback onDeleted;
   final VoidCallback onTagRemoved;
@@ -38,7 +37,8 @@ class ReferenceImage extends StatefulWidget {
       required this.onDeleted,
       required this.srcId,
       required this.onTap,
-      required this.onTagAdded, required this.onTagRemoved})
+      required this.onTagAdded,
+      required this.onTagRemoved})
       : super(key: key);
 
   @override
@@ -84,8 +84,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
     List<Map> imageTagExists =
         await db.rawQuery(imageTagQuery, [widget.imgId, newTagId]);
     if (imageTagExists.isEmpty) {
-      db.rawInsert(
-          "INSERT INTO image_tag (img_id, tag_id) VALUES (?,?);",
+      db.rawInsert("INSERT INTO image_tag (img_id, tag_id) VALUES (?,?);",
           [widget.imgId, newTagId]);
     }
 
@@ -155,6 +154,33 @@ class _ReferenceImageState extends State<ReferenceImage> {
   @override
   Widget build(BuildContext context) {
     updateTagList();
+
+    Image imageWidget;
+
+    bool imageDeleted = false;
+    String fallbackImageURL =
+        "https://raw.githubusercontent.com/tagref/tagref.github.io/main/images/fallback.png";
+
+    imageWidget = widget.srcId == "1"
+        ? Image.network(
+            widget.srcUrl,
+            fit: BoxFit.cover,
+            errorBuilder: (BuildContext context, Object exception,
+                StackTrace? stackTrace) {
+              imageDeleted = true;
+              return Image.network(fallbackImageURL);
+            },
+          )
+        : Image.file(
+            File(widget.srcUrl),
+            fit: BoxFit.cover,
+            errorBuilder: (BuildContext context, Object exception,
+                StackTrace? stackTrace) {
+              imageDeleted = true;
+              return Image.network(fallbackImageURL);
+            },
+          );
+
     return InkWell(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(cornerRadius),
@@ -173,15 +199,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
                           tileMode: TileMode.decal,
                           sigmaX: hovered ? 5 : 0,
                           sigmaY: hovered ? 5 : 0),
-                      child: widget.srcId == 1
-                          ? Image.network(
-                              widget.srcUrl,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.file(
-                              File(widget.srcUrl),
-                              fit: BoxFit.cover,
-                            )),
+                      child: imageWidget),
                 ),
               ),
               Visibility(
@@ -243,7 +261,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
             ],
           ),
         ),
-        onTap: () => widget.onTap(widget.srcUrl),
+        onTap: () => widget.onTap(imageDeleted ? fallbackImageURL : widget.srcUrl),
         onHover: (val) {
           setState(() {
             // Controls overlay visibility
@@ -301,9 +319,9 @@ class _TwitterImageState extends State<TwitterImage> {
                             sigmaX: hovered ? 2 : 0,
                             sigmaY: hovered ? 2 : 0),
                         child: Image.network(
-                                widget.srcImgUrl,
-                                fit: BoxFit.cover,
-                              )),
+                          widget.srcImgUrl,
+                          fit: BoxFit.cover,
+                        )),
                   )),
               Visibility(
                 visible: hovered,
@@ -320,14 +338,16 @@ class _TwitterImageState extends State<TwitterImage> {
                             child: FaIconButton(
                                 faIcon: FontAwesomeIcons.link,
                                 onPressed: () {
-                                  _launchUrl(Uri.parse("https://twitter.com/i/web/status/${widget.tweetSrcId}"));
+                                  _launchUrl(Uri.parse(
+                                      "https://twitter.com/i/web/status/${widget.tweetSrcId}"));
                                 }),
                           ),
                           Padding(
                             padding: const EdgeInsets.all(padding),
                             child: FaIconButton(
                                 faIcon: FontAwesomeIcons.plus,
-                                onPressed: () => widget.onAdd(widget.srcImgUrl)),
+                                onPressed: () =>
+                                    widget.onAdd(widget.srcImgUrl)),
                           ),
                         ],
                       ),

@@ -97,6 +97,8 @@ class TwitterApiHelper {
               },
               pageBuilder: (context, a1, a2) => const TwitterOAuthExchange()));
 
+      if (token == "userExited") return false;
+
       // Save and apply userId and access token
       twitterClient = TwitterApi(bearerToken: token["access_token"]);
       var value = await twitterClient.usersService.lookupMe();
