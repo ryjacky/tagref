@@ -143,6 +143,8 @@ class GoogleApiHelper {
 
     var localDBFile = File(join(localDBPath, dbFileName));
 
+    if (!localDBFile.existsSync()) return 1;
+
     // Upload or update the local db file based on the search result
     if (appDataFileList.files!.isNotEmpty) {
       Duration versionDifference = appDataFileList.files!.first.modifiedTime!

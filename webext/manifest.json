@@ -3,8 +3,6 @@
   "name": "TagRef",
   "version": "1.0",
   "permissions": [
-    "nativeMessaging",
-    "tabs",
     "contextMenus"
   ],
   "action": {

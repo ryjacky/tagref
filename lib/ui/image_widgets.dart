@@ -228,16 +228,17 @@ class _ReferenceImageState extends State<ReferenceImage> {
                                   _launchUrl(Uri.parse(widget.srcUrl));
                                 }),
                           ),
-                          Padding(
-                            padding: const EdgeInsets.all(padding),
-                            child: FaIconButton(
-                                faIcon: FontAwesomeIcons.magnifyingGlass,
-                                onPressed: () {}),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.all(padding),
-                            child: PinButton(onPressed: (pinned) {}),
-                          ),
+                          // TODO: TOBE implemented
+                          // Padding(
+                          //   padding: const EdgeInsets.all(padding),
+                          //   child: FaIconButton(
+                          //       faIcon: FontAwesomeIcons.magnifyingGlass,
+                          //       onPressed: () {}),
+                          // ),
+                          // Padding(
+                          //   padding: const EdgeInsets.all(padding),
+                          //   child: PinButton(onPressed: (pinned) {}),
+                          // ),
                         ],
                       ),
                       Padding(

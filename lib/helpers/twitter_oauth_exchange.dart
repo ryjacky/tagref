@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:desktop_webview_window/desktop_webview_window.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:http/http.dart' as http;
 
@@ -78,8 +79,8 @@ class _TwitterOAuthExchangeState extends State<TwitterOAuthExchange> {
             windowWidth: 400,
             titleBarHeight: 0,
             titleBarTopPadding: Platform.isMacOS ? 0 : 0,
-            title: "Twitter Authorization"
-            // userDataFolderWindows: await _getWebViewPath(),
+            title: "Twitter Authorization",
+            userDataFolderWindows: (await getApplicationSupportDirectory()).path,
             ),
       );
 
