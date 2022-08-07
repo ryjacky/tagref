@@ -161,7 +161,7 @@ class TagRefUIRoot extends StatelessWidget {
                       color: Colors.white,
                       fontWeight: FontWeight.bold),
                   bodySmall: TextStyle(color: Colors.white60, fontSize: 18),
-                  bodyMedium: TextStyle(color: Colors.white60, fontSize: 2),
+                  bodyMedium: TextStyle(color: Colors.white60, fontSize: 22),
                   titleMedium: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -222,9 +222,8 @@ class _ScreenRouterState extends State<ScreenRouter> {
       initSystemTray();
 
       doWhenWindowReady(() {
-        const initialSize = Size(1280, 720);
+        const initialSize = Size(900, 600);
         appWindow.minSize = initialSize;
-        appWindow.size = initialSize;
         appWindow.alignment = Alignment.center;
         appWindow.show();
       });

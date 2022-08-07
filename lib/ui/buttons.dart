@@ -40,9 +40,13 @@ class AddButton extends StatelessWidget {
                 ),
               ),
             ),
-            FaIconButton(onPressed: () {
-              onPressed();
-            }, faIcon: FontAwesomeIcons.plus, size: const Size(65, 65),)
+            FaIconButton(
+              onPressed: () {
+                onPressed();
+              },
+              faIcon: FontAwesomeIcons.plus,
+              size: const Size(65, 65),
+            )
           ],
         ));
   }
@@ -63,8 +67,7 @@ class EditTagButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return RawMaterialButton(
       onPressed: onPressed,
-      constraints:
-      BoxConstraints.tight(Size(buttonWidth * 3, buttonHeight)),
+      constraints: BoxConstraints.tight(Size(buttonWidth * 3, buttonHeight)),
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(_cornerRadius)),
       elevation: 0.1,
@@ -104,9 +107,9 @@ class FaIconButton extends StatelessWidget {
 
   const FaIconButton(
       {Key? key,
-        required this.onPressed,
-        required this.faIcon,
-        this.size = const Size(42, 42)})
+      required this.onPressed,
+      required this.faIcon,
+      this.size = const Size(42, 42)})
       : super(key: key);
   final GestureTapCallback onPressed;
 
@@ -122,16 +125,62 @@ class FaIconButton extends StatelessWidget {
         fillColor: Colors.grey.shade200.withOpacity(0.5),
         splashColor: Colors.grey.shade500.withOpacity(0.5),
         child: Padding(
-          padding: const EdgeInsets.only(left: 1,),
+          padding: const EdgeInsets.only(
+            left: 1,
+          ),
           child: Center(
             child: FaIcon(
               faIcon,
               color: Colors.white,
-              size: min(size.width/2, size.height/2),
+              size: min(size.width / 2, size.height / 2),
             ),
           ),
-        )
-    );
+        ));
+  }
+}
+
+class FaTextButton extends StatelessWidget {
+  final IconData faIcon;
+  final double height;
+  final Text text;
+
+  const FaTextButton(
+      {Key? key,
+      required this.onPressed,
+      required this.faIcon,
+      required this.text,
+      this.height = 42})
+      : super(key: key);
+  final GestureTapCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return RawMaterialButton(
+        onPressed: onPressed,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        constraints: BoxConstraints.tightFor(height: height),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(_cornerRadius)),
+        elevation: 0,
+        fillColor: Colors.grey.shade200.withOpacity(0.5),
+        splashColor: Colors.grey.shade500.withOpacity(0.5),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Center(
+              child: Row(
+            children: [
+              FaIcon(
+                faIcon,
+                color: Colors.white,
+                size: height / 2,
+              ),
+              Padding(
+                padding: const EdgeInsets.only(left: 5),
+                child: text,
+              )
+            ],
+          )),
+        ));
   }
 }
 
@@ -160,18 +209,18 @@ class _PinButtonState extends State<PinButton> {
           padding: const EdgeInsets.symmetric(vertical: 11.0, horizontal: 12),
           child: _unPinned
               ? const RotationTransition(
-            turns: AlwaysStoppedAnimation(30 / 360),
-            child: FaIcon(
-              FontAwesomeIcons.thumbtack,
-              color: Colors.white,
-              size: 21,
-            ),
-          )
+                  turns: AlwaysStoppedAnimation(30 / 360),
+                  child: FaIcon(
+                    FontAwesomeIcons.thumbtack,
+                    color: Colors.white,
+                    size: 21,
+                  ),
+                )
               : const FaIcon(
-            FontAwesomeIcons.thumbtack,
-            color: Colors.white,
-            size: 21,
-          )),
+                  FontAwesomeIcons.thumbtack,
+                  color: Colors.white,
+                  size: 21,
+                )),
       onPressed: () {
         setState(() {
           // Flips the pin state when clicked
@@ -193,18 +242,18 @@ class IntegrationDisplayButton extends StatefulWidget {
 
   const IntegrationDisplayButton(
       {Key? key,
-        required this.driveLogoSrc,
-        required this.driveName,
-        this.statusOn = false,
-        required this.onTap})
+      required this.driveLogoSrc,
+      required this.driveName,
+      this.statusOn = false,
+      required this.onTap})
       : super(key: key);
 
   @override
-  State<IntegrationDisplayButton> createState() => _IntegrationDisplayButtonState();
+  State<IntegrationDisplayButton> createState() =>
+      _IntegrationDisplayButtonState();
 }
 
 class _IntegrationDisplayButtonState extends State<IntegrationDisplayButton> {
-
   @override
   Widget build(BuildContext context) {
     return InkWell(
@@ -221,7 +270,7 @@ class _IntegrationDisplayButtonState extends State<IntegrationDisplayButton> {
                   color: desktopColorLight,
                   child: Padding(
                     padding:
-                    const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                        const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
                     child: Text("Status: " + (widget.statusOn ? "ON" : "OFF"),
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.labelMedium),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:developer' as dev;
 import 'dart:math';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -88,9 +89,11 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
       options.addAll(filterTags);
       queryResult = await db.rawQuery(queryImages, options);
     } else {
-      String queryImages = "SELECT * FROM images WHERE src_id in (?, ?) ORDER BY img_id DESC;";
+      String queryImages =
+          "SELECT * FROM images WHERE src_id in (?, ?) ORDER BY img_id DESC;";
 
-      queryResult = await db.rawQuery(queryImages, ["1", Platform.localHostname]);
+      queryResult =
+          await db.rawQuery(queryImages, ["1", Platform.localHostname]);
     }
 
     if (queryResult.length != rawImageInfo.length) {
@@ -177,6 +180,8 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
                           );
                         },
                         pageBuilder: (context, a1, a2) => ScaledImageViewer(
+                              isLocalImage: true,
+                              googleApiHelper: widget.gApiHelper,
                               imageUrl: imgUrl,
                             )));
               },
@@ -264,13 +269,22 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
       for (currentGridCount;
           currentGridCount < gridMaxCounts;
           currentGridCount++) {
-
         masonryGrids.add(TwitterImage(
           onAdd: (srcUrl) {
             DBHelper.insertImage(srcUrl, true,
                 googleApiHelper: widget.googleApiHelper);
+
+            setState(() {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(
+                  tr("twitter-image-added"),
+                ),
+                backgroundColor: Colors.blue,
+                duration: const Duration(milliseconds: 1000),
+              ));
+            });
           },
-          onTap: (srcUrl) {
+          onTap: (id, imgUrl) {
             Navigator.push(
                 context,
                 PageRouteBuilder(
@@ -293,7 +307,10 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
                       );
                     },
                     pageBuilder: (context, a1, a2) => ScaledImageViewer(
-                          imageUrl: srcUrl,
+                          isLocalImage: false,
+                          srcUrl: "https://twitter.com/i/web/status/$id",
+                          googleApiHelper: widget.googleApiHelper,
+                          imageUrl: imgUrl,
                         )));
           },
           tweetSrcId: queryResult.entries.elementAt(currentGridCount).key,

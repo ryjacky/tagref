@@ -1,5 +1,6 @@
 import 'dart:developer';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:bitsdojo_window/bitsdojo_window.dart';
 import 'package:desktop_drop/desktop_drop.dart';
@@ -12,6 +13,8 @@ import 'package:mime/mime.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
 import 'package:tagref/screen/setting_screen.dart';
+import 'package:tagref/ui/buttons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../assets/constant.dart';
 import '../assets/db_helper.dart';
@@ -236,13 +239,13 @@ class _HomeScreenState extends State<HomeScreen>
               Stack(
                 children: [
                   SizedBox(
-                    height: 1.sh * 0.95,
+                    height: 0.92.sh,
                     child: trmf,
                   ),
                   SlideTransition(
                     position: _bodyOffset,
                     child: SizedBox(
-                      height: 1.sh * 0.95,
+                      height: 0.93.sh,
                       child: getFragment(),
                     ),
                   )
@@ -376,136 +379,145 @@ class _NavigationPanelState extends State<NavigationPanel> {
       updateFullTagList();
       widget.tagListChanged = false;
     }
-    return SizedBox(
-        width: 300,
-        child: Container(
-            color: desktopColorDark,
-            child: Column(
-              children: [
-                WindowTitleBarBox(child: MoveWindow()),
+    return Container(
+        width: math.min(0.35.sw, 300),
+        color: desktopColorDark,
+        child: Column(
+          children: [
+            WindowTitleBarBox(child: MoveWindow()),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  "TagRef",
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+            ),
+            SizedBox(
+              height: 0.7.sh,
+              child: ListView(
+                controller: ScrollController(),
+                children: [
+                  // Search bar
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+                    child: SearchBarDesktop(
+                        hintText: tr("search-hint"),
+                        onSubmitted: (val) {
+                          if (val.isNotEmpty && !_tagFilterList.contains(val)) {
+                            setState(() => _tagFilterList.add(val));
+                          }
+                          widget.onSearchChanged(_tagFilterList);
+                        }),
+                  ),
 
-                // App title
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      "TagRef",
-                      style: Theme.of(context).textTheme.titleSmall,
+                  // "Filters" label
+                  Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 10, 5),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          tr("filters"),
+                          textAlign: TextAlign.left,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      )),
+
+                  // Box storing all tags that are searched by user
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+                    child: TagListBox(
+                        height: 130,
+                        color: desktopColorDarker,
+                        tagList: _tagFilterList,
+                        onTagDeleted: (val) {
+                          if (_tagFilterList.contains(val)) {
+                            setState(() => _tagFilterList.remove(val));
+                          }
+                          widget.onSearchChanged(_tagFilterList);
+                        }),
+                  ),
+
+                  // "All Tags" label
+                  Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 10, 10, 5),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          tr("all-tags"),
+                          textAlign: TextAlign.left,
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      )),
+
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
+                    child: TagListBox(
+                      color: desktopColorDarker,
+                      height: 230,
+                      onTagDeleted: (val) async {
+                        int tagId = (await db.rawQuery(
+                            'SELECT tag_id FROM tags WHERE name=?;',
+                            [val]))[0]["tag_id"];
+
+                        // Confirm delete tag
+                        showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                                  backgroundColor: desktopColorDark,
+                                  title: Text(
+                                    tr("confirm-delete-tag"),
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () async {
+                                          await DBHelper.rawDeleteAndPush(
+                                              'DELETE FROM image_tag WHERE tag_id = ?',
+                                              [tagId],
+                                              googleApiHelper:
+                                                  widget.gApiHelper);
+                                          await DBHelper.rawDeleteAndPush(
+                                              'DELETE FROM tags WHERE tag_id = ?',
+                                              [tagId],
+                                              googleApiHelper:
+                                                  widget.gApiHelper);
+                                          updateFullTagList();
+
+                                          Navigator.pop(context);
+                                        },
+                                        child: Text(tr("yes"))),
+                                    TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: Text(tr("no"))),
+                                  ],
+                                ),
+                            barrierDismissible: false);
+                      },
+                      tagList: fullTagList,
                     ),
                   ),
-                ),
+                ],
+              ),
+            ),
 
-                // Search bar
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
-                  child: SearchBarDesktop(
-                      hintText: tr("search-hint"),
-                      onSubmitted: (val) {
-                        if (val.isNotEmpty && !_tagFilterList.contains(val)) {
-                          setState(() => _tagFilterList.add(val));
-                        }
-                        widget.onSearchChanged(_tagFilterList);
-                      }),
-                ),
+            // App title
 
-                // "Filters" label
-                Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 10, 5),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        tr("filters"),
-                        textAlign: TextAlign.left,
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                    )),
+            // Spacer
+            Expanded(child: Container()),
 
-                // Box storing all tags that are searched by user
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-                  child: TagListBox(
-                      height: 130,
-                      color: desktopColorDarker,
-                      tagList: _tagFilterList,
-                      onTagDeleted: (val) {
-                        if (_tagFilterList.contains(val)) {
-                          setState(() => _tagFilterList.remove(val));
-                        }
-                        widget.onSearchChanged(_tagFilterList);
-                      }),
-                ),
-
-                // "All Tags" label
-                Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 10, 10, 5),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        tr("all-tags"),
-                        textAlign: TextAlign.left,
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                    )),
-
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 10, 20, 5),
-                  child: TagListBox(
-                    color: desktopColorDarker,
-                    height: 230,
-                    onTagDeleted: (val) async {
-                      int tagId = (await db.rawQuery(
-                          'SELECT tag_id FROM tags WHERE name=?;',
-                          [val]))[0]["tag_id"];
-
-                      // Confirm delete tag
-                      showDialog(
-                          context: context,
-                          builder: (_) => AlertDialog(
-                                backgroundColor: desktopColorDark,
-                                title: Text(
-                                  tr("confirm-delete-tag"),
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                                actions: [
-                                  TextButton(
-                                      onPressed: () async {
-                                        await DBHelper.rawDeleteAndPush(
-                                            'DELETE FROM image_tag WHERE tag_id = ?',
-                                            [tagId],
-                                            googleApiHelper: widget.gApiHelper);
-                                        await DBHelper.rawDeleteAndPush(
-                                            'DELETE FROM tags WHERE tag_id = ?',
-                                            [tagId],
-                                            googleApiHelper: widget.gApiHelper);
-                                        updateFullTagList();
-
-                                        Navigator.pop(context);
-                                      },
-                                      child: Text(tr("yes"))),
-                                  TextButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      child: Text(tr("no"))),
-                                ],
-                              ),
-                          barrierDismissible: false);
-                    },
-                    tagList: fullTagList,
-                  ),
-                ),
-
-                // Spacer
-                Expanded(child: Container()),
-
-                NavigationPanelBottomNavigation(
-                  onSettingClicked: widget.onSettingClicked,
-                  onSyncButtonClicked: widget.onSyncButtonClicked,
-                  onTwitterClicked: widget.onTwitterClicked,
-                  syncButtonVisibility: widget.gApiHelper.isInitialized &&
-                      widget.syncButtonVisibility,
-                )
-              ],
-            )));
+            NavigationPanelBottomNavigation(
+              onSettingClicked: widget.onSettingClicked,
+              onSyncButtonClicked: widget.onSyncButtonClicked,
+              onTwitterClicked: widget.onTwitterClicked,
+              syncButtonVisibility: widget.gApiHelper.isInitialized &&
+                  widget.syncButtonVisibility,
+            )
+          ],
+        ));
   }
 }
 
@@ -572,8 +584,16 @@ class _NavigationPanelBottomNavigationState
 
 class ScaledImageViewer extends StatefulWidget {
   final String imageUrl;
+  final String? srcUrl;
+  final GoogleApiHelper? googleApiHelper;
+  final bool isLocalImage;
 
-  const ScaledImageViewer({Key? key, required this.imageUrl}) : super(key: key);
+  const ScaledImageViewer(
+      {Key? key,
+      required this.imageUrl,
+      required this.googleApiHelper,
+      required this.isLocalImage, this.srcUrl})
+      : super(key: key);
 
   @override
   State<ScaledImageViewer> createState() => _ScaledImageViewerState();
@@ -594,14 +614,61 @@ class _ScaledImageViewerState extends State<ScaledImageViewer> {
                     : Image.file(File(widget.imageUrl)),
               ),
             ),
-            Align(
-              alignment: Alignment.topRight,
-              child: IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const FaIcon(
-                    FontAwesomeIcons.xmark,
-                    color: Colors.white,
-                  )),
+            Column(
+              children: [
+                Expanded(child: Container()),
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  color: const Color.fromRGBO(0, 0, 0, 0.5),
+                  child: Row(
+                    children: [
+                      Expanded(child: Container()),
+                      Visibility(
+                          visible: !widget.isLocalImage,
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
+                            child: FaIconButton(
+                                onPressed: () {
+                                  DBHelper.insertImage(widget.imageUrl, true,
+                                      googleApiHelper: widget.googleApiHelper);
+
+                                  setState(() {
+                                    ScaffoldMessenger.of(context)
+                                        .showSnackBar(SnackBar(
+                                      content: Text(
+                                        tr("twitter-image-added"),
+                                      ),
+                                      backgroundColor: Colors.blue,
+                                      duration:
+                                          const Duration(milliseconds: 1000),
+                                    ));
+                                  });
+                                },
+                                faIcon: FontAwesomeIcons.plus),
+                          )),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
+                        child: FaIconButton(
+                            faIcon: FontAwesomeIcons.link,
+                            onPressed: () {
+                              launchUrl(Uri.parse(widget.srcUrl ?? widget.imageUrl));
+                            }),
+                      ),
+                      FaTextButton(
+                        onPressed: () => Navigator.pop(context),
+                        faIcon: FontAwesomeIcons.xmark,
+                        text: Text(
+                          tr("close"),
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ),
+                      Expanded(
+                        child: Container(),
+                      )
+                    ],
+                  ),
+                )
+              ],
             )
           ],
         ));

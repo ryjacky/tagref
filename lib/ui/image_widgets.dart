@@ -16,6 +16,7 @@ import 'buttons.dart';
 
 typedef VoidCallback = Function();
 typedef OnTapCallback = Function(String url);
+typedef OnTwitterTapCallback = Function(String id, String url);
 typedef OnTagAdded = Function(String tag);
 typedef OnTwitterAddCallback = Function(String imgUrl);
 
@@ -277,7 +278,7 @@ class TwitterImage extends StatefulWidget {
   final String srcImgUrl;
   final String tweetSrcId;
 
-  final OnTapCallback onTap;
+  final OnTwitterTapCallback onTap;
   final OnTwitterAddCallback onAdd;
 
   const TwitterImage(
@@ -359,7 +360,7 @@ class _TwitterImageState extends State<TwitterImage> {
             ],
           ),
         ),
-        onTap: () => widget.onTap(widget.srcImgUrl),
+        onTap: () => widget.onTap(widget.tweetSrcId, widget.srcImgUrl),
         onHover: (val) {
           setState(() {
             // Controls overlay visibility
