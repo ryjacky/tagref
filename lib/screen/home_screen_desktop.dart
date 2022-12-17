@@ -13,14 +13,16 @@ import 'package:mime/mime.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
 import 'package:tagref/screen/setting_screen.dart';
-import 'package:tagref/ui/buttons.dart';
+import 'package:tagref/ui/components/buttons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../assets/constant.dart';
-import '../assets/db_helper.dart';
-import '../ui/tag_widgets.dart';
-import '../fragments/masonry_fragments.dart';
+import '../archive/db_helper.dart';
 import 'package:async/async.dart';
+
+import '../isar/IsarHelper.dart';
+import '../ui/components/tag_widgets.dart';
+import '../ui/fragments/masonry_fragments.dart';
 
 enum Fragments { twitterMasonry, tagrefMasonry, preferences }
 
@@ -29,8 +31,9 @@ typedef OnSearchChanged = Function(List<String> tags);
 
 class HomeScreen extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
+  final IsarHelper isarHelper;
 
-  const HomeScreen({Key? key, required this.gApiHelper}) : super(key: key);
+  const HomeScreen({Key? key, required this.gApiHelper, required this.isarHelper}) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -71,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen>
     trmf = TagRefMasonryFragment(
       key: trmfKey,
       gApiHelper: widget.gApiHelper,
-      onTagListChanged: () => setState(() => tagListChanged = true),
+      onTagListChanged: () => setState(() => tagListChanged = true), isarHelper: widget.isarHelper,
     );
   }
 
@@ -91,9 +94,7 @@ class _HomeScreenState extends State<HomeScreen>
                   log("Type = $type");
 
                   if (type.contains("image")) {
-                    DBHelper.rawInsertAndPush(
-                        "INSERT INTO images (src_url, src_id) VALUES (?, ?)",
-                        [file.path, Platform.localHostname],
+                    widget.isarHelper.putImage(file.path,
                         googleApiHelper: widget.gApiHelper);
                   }
                 }
@@ -221,7 +222,7 @@ class _HomeScreenState extends State<HomeScreen>
             }
           },
           syncButtonVisibility:
-              currentFragment == Fragments.tagrefMasonry ? true : false,
+              currentFragment == Fragments.tagrefMasonry ? true : false, isarHelper: widget.isarHelper,
         ),
 
         // TagRef/twitter/setting fragment
@@ -266,7 +267,7 @@ class _HomeScreenState extends State<HomeScreen>
       case Fragments.twitterMasonry:
         return TwitterMasonryFragment(
           twitterHelper: _twitterApiHelper,
-          googleApiHelper: widget.gApiHelper,
+          googleApiHelper: widget.gApiHelper, isarHelper: widget.isarHelper,
         );
       case Fragments.preferences:
         return SettingFragment(
@@ -303,6 +304,7 @@ class NavigationPanel extends StatefulWidget {
   final OnButtonClicked onSyncButtonClicked;
   final OnButtonClicked onTwitterClicked;
   final bool syncButtonVisibility;
+  final IsarHelper isarHelper;
 
   final GoogleApiHelper gApiHelper;
 
@@ -316,7 +318,7 @@ class NavigationPanel extends StatefulWidget {
       required this.onTwitterClicked,
       required this.syncButtonVisibility,
       required this.tagListChanged,
-      required this.gApiHelper})
+      required this.gApiHelper, required this.isarHelper})
       : super(key: key);
 
   @override
@@ -330,9 +332,8 @@ class _NavigationPanelState extends State<NavigationPanel> {
   late CancelableOperation cancellableDBQuery;
 
   void updateFullTagList() {
-    String queryTag = "SELECT name FROM tags";
     cancellableDBQuery = CancelableOperation.fromFuture(
-      db.rawQuery(queryTag),
+      widget.isarHelper.getAllTags(),
     );
 
     cancellableDBQuery.then((results) {
@@ -457,10 +458,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                     child: TagListBox(
                       color: desktopColorDarker,
                       height: 230,
-                      onTagDeleted: (val) async {
-                        int tagId = (await db.rawQuery(
-                            'SELECT tag_id FROM tags WHERE name=?;',
-                            [val]))[0]["tag_id"];
+                      onTagDeleted: (tagName) async {
 
                         // Confirm delete tag
                         showDialog(
@@ -475,16 +473,7 @@ class _NavigationPanelState extends State<NavigationPanel> {
                                   actions: [
                                     TextButton(
                                         onPressed: () async {
-                                          await DBHelper.rawDeleteAndPush(
-                                              'DELETE FROM image_tag WHERE tag_id = ?',
-                                              [tagId],
-                                              googleApiHelper:
-                                                  widget.gApiHelper);
-                                          await DBHelper.rawDeleteAndPush(
-                                              'DELETE FROM tags WHERE tag_id = ?',
-                                              [tagId],
-                                              googleApiHelper:
-                                                  widget.gApiHelper);
+                                          widget.isarHelper.deleteTag(tagName);
                                           updateFullTagList();
 
                                           Navigator.pop(context);
@@ -587,12 +576,13 @@ class ScaledImageViewer extends StatefulWidget {
   final String? srcUrl;
   final GoogleApiHelper? googleApiHelper;
   final bool isLocalImage;
+  final IsarHelper isarHelper;
 
   const ScaledImageViewer(
       {Key? key,
       required this.imageUrl,
       required this.googleApiHelper,
-      required this.isLocalImage, this.srcUrl})
+      required this.isLocalImage, this.srcUrl, required this.isarHelper})
       : super(key: key);
 
   @override
@@ -629,7 +619,7 @@ class _ScaledImageViewerState extends State<ScaledImageViewer> {
                             padding: const EdgeInsets.fromLTRB(0, 0, 10, 0),
                             child: FaIconButton(
                                 onPressed: () {
-                                  DBHelper.insertImage(widget.imageUrl, true,
+                                  widget.isarHelper.putImage(widget.imageUrl,
                                       googleApiHelper: widget.googleApiHelper);
 
                                   setState(() {

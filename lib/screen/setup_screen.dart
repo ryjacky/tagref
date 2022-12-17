@@ -9,15 +9,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tagref/assets/constant.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/helpers/twitter_api_helper.dart';
+import 'package:tagref/isar/IsarHelper.dart';
 
-import '../assets/font_size.dart';
-import '../ui/buttons.dart';
+import '../ui/components/buttons.dart';
 import 'home_screen_desktop.dart';
 
 class SetupScreen extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
+  final IsarHelper isarHelper;
 
-  const SetupScreen({Key? key, required this.gApiHelper}) : super(key: key);
+  const SetupScreen({Key? key, required this.gApiHelper, required this.isarHelper}) : super(key: key);
 
   @override
   State<SetupScreen> createState() => _SetupScreenState();
@@ -257,7 +258,7 @@ class _SetupScreenState extends State<SetupScreen> {
                                   builder: (context) =>
                                       Platform.isMacOS || Platform.isWindows
                                           ? HomeScreen(
-                                              gApiHelper: widget.gApiHelper,
+                                              gApiHelper: widget.gApiHelper, isarHelper: widget.isarHelper,
                                             )
                                           : const Text("data")));
                         },

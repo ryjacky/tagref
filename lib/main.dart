@@ -11,43 +11,55 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:system_tray/system_tray.dart' as tray;
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/screen/home_screen_desktop.dart';
 import 'package:tagref/screen/setup_screen.dart';
+import 'package:tagref/server/ExtensionServer.dart';
 
 import 'assets/constant.dart';
-import 'assets/db_helper.dart';
+import 'isar/IsarHelper.dart';
+
+late final IsarHelper _isarHelper;
+late final SharedPreferences _pref;
 
 /// Should include all pre-start initializations here
 void main(List<String> args) async {
-  // Initialize libraries
-  sqfliteFfiInit();
+  // Initialize database
+  _isarHelper = IsarHelper();
+  _isarHelper.initializeIsarDB();
 
+  // Initialize webview
   if (runWebViewTitleBarWidget(args)) return;
 
+  // Initialize localization
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 
   // Initialize environment variables
   const secureStorage = FlutterSecureStorage();
+
+  // Initialize shared preferences
+  _pref = await SharedPreferences.getInstance();
+  _pref.setBool(Preferences.initialized, _pref.getBool(Preferences.initialized) ?? false);
+  _pref.setString(Preferences.language, _pref.getString(Preferences.language) ?? locale[0]);
+
+  // Initialize google api
   final GoogleApiHelper gApiHelper;
-  SharedPreferences pref = await SharedPreferences.getInstance();
   gApiHelper = GoogleApiHelper(
       secureStorage: secureStorage,
       localDBPath: (await getApplicationSupportDirectory()).path,
-      dbFileName: DBHelper.dbFileName);
+      dbFileName: await _isarHelper.getDBUrl());
 
-  if (pref.getBool(gDriveConnected) != null) {
+  if (_pref.getBool(gDriveConnected) != null) {
     await gApiHelper.initializeAuthClient();
     await gApiHelper.initializeGoogleApi();
     await gApiHelper.updateLocalDB(true);
   }
 
-  // Platform checks
+  // Starts tagref server when running on windows/macos
   if (Platform.isWindows || Platform.isMacOS) {
-    connectTagRefInstance(gApiHelper);
+    ExtensionServer(_isarHelper).connectTagRefInstance(gApiHelper);
   }
 
   runApp(EasyLocalization(
@@ -60,56 +72,6 @@ void main(List<String> args) async {
       path: 'assets/translations'));
 }
 
-/// Open the current instance if it exists, if not, start a new instance
-/// and bind to tagref ServerSocket port (33728/33729)
-Future<void> connectTagRefInstance(GoogleApiHelper gApiHelper) async {
-  bool lockSuccess = await lockInstance();
-  for (int port in [33728, 33729]) {
-    try {
-      await startTagRefServer(gApiHelper, port: port);
-    } catch (e) {
-      if (!lockSuccess) {
-        log(e.toString());
-        (await Socket.connect("localhost", port)).write("T3BlbiBTZXNhbWU");
-        appWindow.close();
-      }
-    }
-  }
-}
-
-Future<void> startTagRefServer(GoogleApiHelper googleApiHelper,
-    {int port = 33728}) async {
-  final server = await ServerSocket.bind("localhost", port);
-
-  server.listen((event) {
-    log("Connection from ${event.address}");
-    event.listen((data) {
-      String plain = String.fromCharCodes(data);
-      if (plain == "T3BlbiBTZXNhbWU") {
-        appWindow.show();
-      }
-
-      String url = plain
-          .substring(plain.indexOf("aWxvdmV0YWdyZWY"))
-          .replaceAll("aWxvdmV0YWdyZWY", "");
-      log(url);
-
-      DBHelper.insertImage(url, true, googleApiHelper: googleApiHelper);
-    });
-  });
-}
-
-Future<bool> lockInstance() async {
-  File lockFile =
-      File(join((await getApplicationSupportDirectory()).path, "tagref.lock"));
-
-  if (lockFile.existsSync()) {
-    return false;
-  } else {
-    lockFile.createSync();
-    return true;
-  }
-}
 
 class TagRefUIRoot extends StatelessWidget {
   final FlutterSecureStorage secureStorage;
@@ -174,7 +136,9 @@ class TagRefUIRoot extends StatelessWidget {
                       fontWeight: FontWeight.w300,
                       color: Colors.white,
                       fontSize: 28)),
-              primarySwatch: Colors.purple),
+              primarySwatch: Colors.purple,
+              primaryColorLight: desktopColorLight
+          ),
           home: child,
         );
       },
@@ -257,7 +221,7 @@ class _ScreenRouterState extends State<ScreenRouter> {
     // create context menu
     final tray.Menu menu = tray.Menu();
     await menu.buildFrom([
-      tray.MenuItemLable(
+      tray.MenuItemLabel(
           label: 'Exit', onClicked: (menuItem) => exitApplication(_appWindow)),
     ]);
 
@@ -284,22 +248,14 @@ class _ScreenRouterState extends State<ScreenRouter> {
   }
 
   Future<Widget> initRoute() async {
-    String dbUrl = await DBHelper.getDBUrl();
-    bool dbExists = await File(dbUrl).exists();
-    log("Database already existed: " + dbExists.toString());
-
-    // Initialize database when exists, create while not
-    await DBHelper.initializeDatabase();
-
-    if (!dbExists) {
-      await DBHelper.createDBWithTemplate();
-
-      return SetupScreen(gApiHelper: widget.gApiHelper);
+    if (_pref.getBool(Preferences.initialized) == null || _pref.getBool(Preferences.initialized) == false) {
+      return SetupScreen(gApiHelper: widget.gApiHelper, isarHelper: _isarHelper,);
+    } else {
+      log("Database exists, skipping setup page");
+      return HomeScreen(
+        gApiHelper: widget.gApiHelper, isarHelper: _isarHelper,
+      );
     }
 
-
-    return HomeScreen(
-      gApiHelper: widget.gApiHelper,
-    );
   }
 }

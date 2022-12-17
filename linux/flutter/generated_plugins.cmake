@@ -7,7 +7,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   desktop_drop
   desktop_webview_window
   flutter_secure_storage_linux
-  sqlite3_flutter_libs
+  isar_flutter_libs
   system_tray
   url_launcher_linux
 )

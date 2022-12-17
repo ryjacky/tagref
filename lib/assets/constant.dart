@@ -17,6 +17,8 @@ const Color desktopColorDark = Color.fromRGBO(34, 28, 68, 1);
 const Color desktopColorDarker = Color.fromRGBO(15, 11, 33, 1);
 const Color desktopColorLight = Color.fromRGBO(114, 105, 255, 1);
 
+const String imageNotFoundAltURL = "https://img.freepik.com/free-vector/oops-404-error-with-broken-robot-concept-illustration_114360-1932.jpg?w=2000";
+
 // Secure storage key
 const String gAccessCredential = "gAccessCredential";
 
@@ -27,4 +29,18 @@ List<String> locale = ["en", "ja"];
 
 class Preferences {
   static const language = "language";
+  static const initialized = "initialized";
+}
+
+class FontSize{
+
+  static double l1 = 72;
+  static double l2 = 56;
+  static double l3 = 32;
+  static double l4 = 22;
+  static double l5 = 12;
+  static double l6 = 22;
+
+  static double body1 = 28;
+  static double body2 = 22;
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-import '../assets/constant.dart';
+import '../../assets/constant.dart';
 
 const double _cornerRadius = 4;
 
@@ -141,8 +141,7 @@ class _TagLabelState extends State<TagLabel> {
         },
         child: RawMaterialButton(
           onPressed: () => widget.onPressed(widget.tagWd),
-          //TODO : CHANGE TO USE THE CONTEXT ONE
-          fillColor: desktopColorLight,
+          fillColor: Theme.of(context).primaryColorLight,
           constraints: const BoxConstraints.tightFor(height: 28),
           shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(_cornerRadius)),

@@ -4,9 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:tagref/assets/db_helper.dart';
-import 'package:tagref/assets/font_size.dart';
-import 'package:tagref/ui/buttons.dart';
+import 'package:tagref/archive/db_helper.dart';
+import 'package:tagref/isar/IsarHelper.dart';
+import 'package:tagref/ui/components/buttons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../assets/constant.dart';
@@ -16,9 +16,10 @@ import '../helpers/twitter_api_helper.dart';
 class SettingScreen extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
   final TwitterApiHelper twitterApiHelper;
+  final IsarHelper isarHelper;
 
   const SettingScreen(
-      {Key? key, required this.gApiHelper, required this.twitterApiHelper})
+      {Key? key, required this.gApiHelper, required this.twitterApiHelper, required this.isarHelper})
       : super(key: key);
 
   @override
@@ -207,9 +208,10 @@ class _SettingScreenState extends State<SettingScreen> {
   /// Closes the current database connection, update the source db file to match
   /// remote version, and re-open the database connection
   Future<void> _applyRemoteDBChanges() async {
-    await db.close();
-    await widget.gApiHelper.pullAndReplaceLocalDB();
-    await DBHelper.initializeDatabase();
+    // TODO: Rewrite this function
+    // await db.close();
+    // await widget.gApiHelper.pullAndReplaceLocalDB();
+    // await DBHelper.initializeDatabase();
   }
 
   /// Removes all local configurations about google drive

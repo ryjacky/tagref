@@ -5,13 +5,14 @@ import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:tagref/assets/db_helper.dart';
-import 'package:tagref/ui/tag_widgets.dart';
+import 'package:tagref/isar/IsarHelper.dart';
+import 'package:tagref/isar/TagRefSchema.dart';
+import 'package:tagref/ui/components/tag_widgets.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:async/async.dart';
 
-import '../assets/constant.dart';
+import '../../assets/constant.dart';
 import 'buttons.dart';
 
 typedef VoidCallback = Function();
@@ -24,7 +25,7 @@ typedef OnTwitterAddCallback = Function(String imgUrl);
 class ReferenceImage extends StatefulWidget {
   final String srcUrl;
   final int imgId;
-  final String srcId;
+  final IsarHelper isarHelper;
 
   final VoidCallback onDeleted;
   final VoidCallback onTagRemoved;
@@ -36,10 +37,10 @@ class ReferenceImage extends StatefulWidget {
       required this.srcUrl,
       required this.imgId,
       required this.onDeleted,
-      required this.srcId,
       required this.onTap,
       required this.onTagAdded,
-      required this.onTagRemoved})
+      required this.onTagRemoved,
+      required this.isarHelper})
       : super(key: key);
 
   @override
@@ -66,43 +67,20 @@ class _ReferenceImageState extends State<ReferenceImage> {
       }
     });
 
-    String tagQuery = "SELECT * FROM tags WHERE name=?;";
-    List<Map> tagExists = await db.rawQuery(tagQuery, [tag]);
-
-    // Create tag (if not existed in 'tags' table) and creates
-    // new record in 'image_tag' table
-    late int newTagId;
-    if (tagExists.isEmpty) {
-      String newTagStatement = "INSERT INTO tags (name) VALUES (?);";
-      newTagId = await db.rawInsert(newTagStatement, [tag]);
-    } else {
-      newTagId = tagExists.first["tag_id"];
-    }
-
-    // Creates the relation record in image_tag when it does not exists
-    String imageTagQuery =
-        "SELECT * FROM image_tag WHERE img_id=? AND tag_id=?;";
-    List<Map> imageTagExists =
-        await db.rawQuery(imageTagQuery, [widget.imgId, newTagId]);
-    if (imageTagExists.isEmpty) {
-      db.rawInsert("INSERT INTO image_tag (img_id, tag_id) VALUES (?,?);",
-          [widget.imgId, newTagId]);
-    }
+    widget.isarHelper.addTagToImage(widget.imgId, tag);
 
     widget.onTagAdded();
     updateTagList();
   }
 
-  void removeTag(String tagWd) {
+  Future<void> removeTag(String tagWd) async {
     setState(() {
       if (tagList.contains(tagWd)) {
         tagList.remove(tagWd);
       }
     });
 
-    String deleteTagStatement =
-        "DELETE FROM image_tag WHERE img_id=? AND tag_id=(SELECT tag_id FROM tags WHERE name=?);";
-    db.rawDelete(deleteTagStatement, [widget.imgId, tagWd]);
+    await widget.isarHelper.removeTagFromImage(widget.imgId, tagWd);
 
     widget.onTagRemoved();
   }
@@ -112,32 +90,33 @@ class _ReferenceImageState extends State<ReferenceImage> {
   }
 
   Future<void> removeImageFromDB(int imgId) async {
-    await db.rawDelete('DELETE FROM images WHERE img_id = ?', [imgId]);
+    await widget.isarHelper.deleteImage(imgId);
+
     widget.onDeleted();
   }
 
   void updateTagList() {
-    _cancelableUpdateTagList = CancelableOperation.fromFuture(db.rawQuery(
-        "SELECT name FROM tags WHERE tag_id IN (SELECT tag_id FROM image_tag WHERE img_id=?);",
-        [widget.imgId]));
+    _cancelableUpdateTagList = CancelableOperation.fromFuture(
+      widget.isarHelper.getImageData(widget.imgId)
+    );
 
     _cancelableUpdateTagList.then((databaseTags) {
       // Triggering setState in case tagList update completes after initial build
-
-      if (tagList.length != databaseTags.length) {
+      databaseTags = databaseTags as ImageData;
+      if (tagList.length != databaseTags.tagLinks.length) {
         tagList.clear();
         setState(() {
-          for (int i = 0; i < databaseTags.length; i++) {
-            tagList.add(databaseTags[i]["name"]);
+          for (int i = 0; i < databaseTags.tagLinks.length; i++) {
+            tagList.add(databaseTags.tagLinks.elementAt(i).tagName);
           }
         });
       } else {
         for (int x = 0; x < tagList.length; x++) {
-          if (tagList[x] != databaseTags[x]["name"]) {
+          if (tagList[x] != databaseTags.tagLinks.elementAt(x).tagName) {
             tagList.clear();
             setState(() {
               for (int i = 0; i < databaseTags.length; i++) {
-                tagList.add(databaseTags[i]["name"]);
+                tagList.add(databaseTags.tagLinks.elementAt(i).tagName);
               }
             });
           }
@@ -162,7 +141,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
     String fallbackImageURL =
         "https://raw.githubusercontent.com/tagref/tagref.github.io/main/images/fallback.png";
 
-    imageWidget = widget.srcId == "1"
+    imageWidget = widget.srcUrl.startsWith("http")
         ? Image.network(
             widget.srcUrl,
             fit: BoxFit.cover,

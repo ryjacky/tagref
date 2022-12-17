@@ -1,29 +1,32 @@
 import 'dart:async';
-import 'dart:io';
 import 'dart:developer' as dev;
+import 'dart:io';
 import 'dart:math';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
+import 'package:tagref/isar/IsarHelper.dart';
+import 'package:tagref/isar/TagRefSchema.dart';
 import 'package:tagref/screen/home_screen_desktop.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
 
-import '../assets/constant.dart';
-import '../assets/db_helper.dart';
-import '../helpers/twitter_api_helper.dart';
-import '../ui/image_widgets.dart';
+import '../../assets/constant.dart';
+import '../../helpers/twitter_api_helper.dart';
+import '../components/image_widgets.dart';
 
 typedef OnTagListChanged = Function();
 
 class TagRefMasonryFragment extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
   final OnTagListChanged onTagListChanged;
+  final IsarHelper isarHelper;
 
   const TagRefMasonryFragment(
-      {Key? key, required this.gApiHelper, required this.onTagListChanged})
+      {Key? key, required this.gApiHelper, required this.onTagListChanged, required this.isarHelper})
       : super(key: key);
 
   @override
@@ -33,7 +36,7 @@ class TagRefMasonryFragment extends StatefulWidget {
 class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   List<String> filterTags = [];
 
-  List<Map<String, Object?>> rawImageInfo = [];
+  List<ImageData> imageData = [];
 
   late Timer timer;
 
@@ -59,9 +62,9 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
 
     if (result != null) {
       for (var path in result.paths) {
-        DBHelper.rawInsertAndPush(
-            "INSERT INTO images (src_url, src_id) VALUES (?, 2)", [path],
-            googleApiHelper: widget.gApiHelper);
+        if (path == null) continue;
+
+        widget.isarHelper.putImage(path, googleApiHelper: widget.gApiHelper);
       }
     } else {
       // Do nothing when user closed the dialog
@@ -74,35 +77,21 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   }
 
   Future<bool> refreshImageList() async {
-    late List<Map<String, Object?>> queryResult;
+    late List<ImageData> queryResult;
 
     if (filterTags.isNotEmpty) {
-      String inString = "";
-      for (int i = 0; i < filterTags.length; i++) {
-        inString += i == filterTags.length - 1 ? "?" : "?,";
-      }
-
-      String queryImages =
-          "SELECT * FROM images WHERE src_id in (?, ?) AND img_id IN (SELECT DISTINCT img_id FROM image_tag INNER JOIN tags on image_tag.tag_id = tags.tag_id WHERE tags.name IN ($inString)) ORDER BY img_id DESC;";
-
-      List options = ["1", Platform.localHostname];
-      options.addAll(filterTags);
-      queryResult = await db.rawQuery(queryImages, options);
+      queryResult = widget.isarHelper.getImagesByTags(filterTags);
     } else {
-      String queryImages =
-          "SELECT * FROM images WHERE src_id in (?, ?) ORDER BY img_id DESC;";
-
-      queryResult =
-          await db.rawQuery(queryImages, ["1", Platform.localHostname]);
+      queryResult = widget.isarHelper.getAllImages();
     }
 
-    if (queryResult.length != rawImageInfo.length) {
-      setState(() => rawImageInfo = queryResult);
+    if (queryResult.length != imageData.length) {
+      setState(() => imageData = queryResult);
       return true;
     } else {
-      for (int i = 0; i < rawImageInfo.length; i++) {
-        if (rawImageInfo[i]["img_id"] != queryResult[i]["img_id"]) {
-          setState(() => rawImageInfo = queryResult);
+      for (int i = 0; i < imageData.length; i++) {
+        if (imageData[i].id != queryResult[i].id) {
+          setState(() => imageData = queryResult);
 
           return true;
         }
@@ -144,11 +133,11 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
           mainAxisSpacing: 15,
           crossAxisSpacing: 15,
           // Reserve one seat for the AddButton
-          itemCount: rawImageInfo.length,
+          itemCount: imageData.length,
           itemBuilder: (context, index) {
             return ReferenceImage(
-              srcUrl: rawImageInfo[index]["src_url"] as String,
-              imgId: rawImageInfo[index]["img_id"] as int,
+              srcUrl: imageData[index].srcUrl ?? imageNotFoundAltURL,
+              imgId: imageData[index].id,
               onDeleted: () {
                 refreshImageList();
                 widget.gApiHelper.pushDB();
@@ -182,13 +171,12 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
                         pageBuilder: (context, a1, a2) => ScaledImageViewer(
                               isLocalImage: true,
                               googleApiHelper: widget.gApiHelper,
-                              imageUrl: imgUrl,
+                              imageUrl: imgUrl, isarHelper: widget.isarHelper,
                             )));
               },
-              srcId: rawImageInfo[index]["src_id"] as String,
               onTagRemoved: () {
                 widget.gApiHelper.pushDB();
-              },
+              }, isarHelper: widget.isarHelper,
             );
           },
         ),
@@ -200,9 +188,10 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
 class TwitterMasonryFragment extends StatefulWidget {
   final TwitterApiHelper twitterHelper;
   final GoogleApiHelper? googleApiHelper;
+  final IsarHelper isarHelper;
 
   const TwitterMasonryFragment(
-      {Key? key, required this.twitterHelper, this.googleApiHelper})
+      {Key? key, required this.twitterHelper, this.googleApiHelper, required this.isarHelper})
       : super(key: key);
 
   @override
@@ -271,7 +260,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
           currentGridCount++) {
         masonryGrids.add(TwitterImage(
           onAdd: (srcUrl) {
-            DBHelper.insertImage(srcUrl, true,
+            widget.isarHelper.putImage(srcUrl,
                 googleApiHelper: widget.googleApiHelper);
 
             setState(() {
@@ -310,7 +299,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
                           isLocalImage: false,
                           srcUrl: "https://twitter.com/i/web/status/$id",
                           googleApiHelper: widget.googleApiHelper,
-                          imageUrl: imgUrl,
+                          imageUrl: imgUrl, isarHelper: widget.isarHelper,
                         )));
           },
           tweetSrcId: queryResult.entries.elementAt(currentGridCount).key,
