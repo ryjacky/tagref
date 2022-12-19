@@ -8,13 +8,8 @@ import 'package:tagref/oauth/oauth_server.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
 
 class TwitterAPIDesktopHelper extends TwitterAPIHelper {
-  TwitterAPIDesktopHelper(
-      TwitterApi api, String uid)
-      : super(api) {
+  TwitterAPIDesktopHelper(TwitterApi api, String uid) : super(api) {
     currTwitterUID = uid;
-    api.tweetsService
-        .lookupHomeTimeline(userId: currTwitterUID, maxResults: 5)
-        .then((value) => untilTweetId = int.parse(value.data.last.id));
   }
 
   @override
@@ -23,10 +18,13 @@ class TwitterAPIDesktopHelper extends TwitterAPIHelper {
     log("Fetching home timeline images for the users, extracting from tweets");
     TwitterResponse<List<TweetData>, TweetMeta> response;
 
+    untilTweetId ??= (await api.tweetsService
+          .lookupHomeTimeline(userId: currTwitterUID, maxResults: 100)).data.last.id;
+
     log("Until tweet id: $untilTweetId");
 
     response = await api.tweetsService.lookupHomeTimeline(
-        untilTweetId: untilTweetId.toString(),
+        untilTweetId: untilTweetId,
         userId: currTwitterUID,
         maxResults: 100,
         excludes: [
@@ -42,7 +40,7 @@ class TwitterAPIDesktopHelper extends TwitterAPIHelper {
           MediaField.url
         ]);
 
-    untilTweetId = int.parse(response.data.last.id);
+    untilTweetId = response.data.last.id;
     Map<String, String> tweetIdToImgURL = {};
 
     // Separate original tweets (with attachment) and retweets (with/without attachment)
@@ -116,22 +114,36 @@ class TwitterAPIDesktopHelper extends TwitterAPIHelper {
   static Future<TwitterApi?> getAuthClient() async {
     FlutterSecureStorage secureStorage = const FlutterSecureStorage();
 
-    String? uid = await secureStorage.read(key: TwitterAPIHelper.twitterUID);
-    String? accessToken =
-        await secureStorage.read(key: TwitterAPIHelper.twitterToken);
-    String? refreshToken =
-        await secureStorage.read(key: TwitterAPIHelper.twitterRefreshToken);
+    List<String?> localCred = await Future.wait([
+      secureStorage.read(key: TwitterAPIHelper.twitterUID),
+      secureStorage.read(key: TwitterAPIHelper.twitterToken),
+      secureStorage.read(key: TwitterAPIHelper.twitterRefreshToken),
+      secureStorage.read(key: TwitterAPIHelper.twitterTokenExpire),
+    ]);
+
+    String? uid = localCred[0];
+    String? accessToken = localCred[1];
+    String? refreshToken = localCred[2];
+    String? expireTime = localCred[3] ??
+        DateTime.now().subtract(const Duration(days: 1)).toString();
 
     OAuthCredentials? cred;
 
     if (uid != null && accessToken != null && refreshToken != null) {
-      // Refresh accessToken
-
-      log("Refreshing access token");
-      cred = await OAuthServer.twitterRefreshAccessToken(refreshToken);
+      // All credentials are locally available
+      // Refresh accessToken if expired
+      if (DateTime.now().isAfter(DateTime.parse(expireTime))) {
+        log("Refreshing access token");
+        cred = await OAuthServer.twitterRefreshAccessToken(refreshToken);
+      } else {
+        log("Access token not expired");
+        cred = OAuthCredentials(
+            accessToken: accessToken,
+            refreshToken: refreshToken,
+            expires: DateTime.parse(expireTime));
+      }
     } else {
       // Get access token through user consent
-
       log("Generating access token");
 
       const String authUrl =
@@ -143,6 +155,7 @@ class TwitterAPIDesktopHelper extends TwitterAPIHelper {
       // Create auth client
       if (cred == null) return null;
     }
+    log("Access expire time: ${cred.expires.toString()}");
 
     // Save user credentials to local secure storage
     log("Saving user credentials");
@@ -150,6 +163,8 @@ class TwitterAPIDesktopHelper extends TwitterAPIHelper {
         key: TwitterAPIHelper.twitterToken, value: cred.accessToken);
     secureStorage.write(
         key: TwitterAPIHelper.twitterRefreshToken, value: cred.refreshToken);
+    secureStorage.write(
+        key: TwitterAPIHelper.twitterTokenExpire, value: cred.expires.toString());
 
     TwitterApi api = TwitterApi(bearerToken: cred.accessToken);
     secureStorage.write(

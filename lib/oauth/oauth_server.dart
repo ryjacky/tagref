@@ -8,13 +8,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'oauth_credentials.dart';
 
-enum OAuthType {twitter}
+enum OAuthType { twitter }
 
 class OAuthServer {
   static late HttpServer server;
 
   /// Force close the server connection
-  static void forceClose(){
+  static void forceClose() {
     server.close();
   }
 
@@ -25,7 +25,8 @@ class OAuthServer {
   /// OAuthCredentials.code and OAuthCredentials.state can be null when
   /// the authorization fails. null object will be returned when oauth server
   /// fails.
-  static Future<OAuthCredentials?> listen(Uri userConsent, OAuthType type) async {
+  static Future<OAuthCredentials?> listen(
+      Uri userConsent, OAuthType type) async {
     server = await HttpServer.bind(InternetAddress.anyIPv4, 56738);
 
     OAuthCredentials? cred;
@@ -43,15 +44,12 @@ class OAuthServer {
         case OAuthType.twitter:
           if (!request.uri.queryParameters.containsKey("code")) break;
 
-          cred = OAuthCredentials.fromMap(await _twitterCodeToAccessToken(
-              request.uri.queryParameters["code"]!));
-
+          cred = await _twitterCodeToAccessToken(
+              request.uri.queryParameters["code"]!);
 
           server.close();
           break;
       }
-
-
     });
 
     return cred;
@@ -61,7 +59,7 @@ class OAuthServer {
   /// the given code.
   ///
   /// Returns a map containing the refresh token {"accessToken":"", "refreshToken":""}
-  static Future<Map<String, String>> _twitterCodeToAccessToken(
+  static Future<OAuthCredentials> _twitterCodeToAccessToken(
       String authCode) async {
     var headers = {
       'Content-Type': 'application/x-www-form-urlencoded',
@@ -88,10 +86,11 @@ class OAuthServer {
     log("Twitter API V2 has returned the following results, it should not be shared to any third party.");
     log("--hidden--");
 
-    return {
-      "access_token": jsonDecode(res.body)["access_token"],
-      "refresh_token": jsonDecode(res.body)["refresh_token"]
-    };
+    return OAuthCredentials(
+        accessToken: jsonDecode(res.body)["access_token"],
+        refreshToken: jsonDecode(res.body)["refresh_token"],
+        expires: DateTime.now()
+            .add(Duration(seconds: jsonDecode(res.body)["expires_in"])));
   }
 
   static Future<OAuthCredentials> twitterRefreshAccessToken(
@@ -111,11 +110,14 @@ class OAuthServer {
     var url = Uri.parse('https://api.twitter.com/2/oauth2/token');
     var res = await http.post(url, headers: headers, body: data);
     if (res.statusCode != 200) {
+      log(res.body.toString());
       throw Exception('http.post error: statusCode= ${res.statusCode}');
     }
 
     return OAuthCredentials(
         accessToken: jsonDecode(res.body)["access_token"],
-        refreshToken: jsonDecode(res.body)["refresh_token"]);
+        refreshToken: jsonDecode(res.body)["refresh_token"],
+        expires: DateTime.now()
+            .add(Duration(seconds: jsonDecode(res.body)["expires_in"])));
   }
 }

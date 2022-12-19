@@ -37,6 +37,7 @@
   "twitter-image-added": "Image bookmarked.",
   "close": "Close",
   "cancel": "Cancel",
-  "waiting-oauth": "Waiting for login..."
+  "waiting-oauth": "Waiting for login...",
+  "twitter-image-add-fail-clicking-too-fast": "You are clicking too fast! Please wait for a second..."
 
 }

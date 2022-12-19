@@ -18,6 +18,9 @@ abstract class TwitterAPIHelper {
   /// Secure storage key for twitter refresh token
   static const twitterRefreshToken = "com.tagref.twitterRefreshToken";
 
+  /// Secure storage key for twitter refresh token
+  static const twitterTokenExpire = "com.tagref.tokenExpire";
+
   @protected final TwitterApi api;
   @protected final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
 
@@ -25,7 +28,7 @@ abstract class TwitterAPIHelper {
   @protected late final String currTwitterUID;
 
   /// Twitter api retrieve post until id
-  @protected late int untilTweetId;
+  @protected String? untilTweetId;
 
   TwitterAPIHelper(this.api);
 

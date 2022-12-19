@@ -43,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen>
   late final Animation<Offset> _bodyOffset;
 
   late final GoogleApiHelper _gApiHelper;
+  final String _notifierId = "HomeScreenDesktop";
 
   bool tagListChanged = false;
 
@@ -108,7 +109,10 @@ class _HomeScreenState extends State<HomeScreen>
           });
         } else {
           _slideController.reverse().whenComplete(() {
-            setState(() => currentFragment = Fragments.tagrefMasonry);
+            setState(() {
+              currentFragment = Fragments.tagrefMasonry;
+              _updateNotifier.update(_notifierId);
+            });
           });
         }
       },
