@@ -267,7 +267,7 @@ class _IntegrationDisplayButtonState extends State<IntegrationDisplayButton> {
               children: [
                 Container(
                   width: 150,
-                  color: desktopColorLight,
+                  color: widget.statusOn ? Colors.green : desktopColorLight,
                   child: Padding(
                     padding:
                         const EdgeInsets.symmetric(vertical: 8, horizontal: 10),

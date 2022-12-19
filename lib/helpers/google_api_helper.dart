@@ -38,6 +38,8 @@ class GoogleApiHelper {
       required this.dbFileName,
       required this.secureStorage});
 
+  Future<void> connectGDrive() async {}
+
   Future<bool> updateLocalDB(bool pullOnly) async {
     if (!isInitialized) {
       log("Drive API has not yet been initialized");

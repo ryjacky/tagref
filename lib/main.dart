@@ -13,9 +13,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:system_tray/system_tray.dart' as tray;
 import 'package:tagref/helpers/google_api_helper.dart';
-import 'package:tagref/screen/home_screen_desktop.dart';
-import 'package:tagref/screen/setup_screen.dart';
-import 'package:tagref/server/ExtensionServer.dart';
+import 'package:tagref/server/BrowserExServer.dart';
+import 'package:tagref/ui/screen/home_screen_desktop.dart';
+import 'package:tagref/ui/screen/setup_screen.dart';
 
 import 'assets/constant.dart';
 import 'isar/IsarHelper.dart';
@@ -27,7 +27,7 @@ late final SharedPreferences _pref;
 void main(List<String> args) async {
   // Initialize database
   _isarHelper = IsarHelper();
-  _isarHelper.initializeIsarDB();
+  _isarHelper.openDB();
 
   // Initialize webview
   if (runWebViewTitleBarWidget(args)) return;
@@ -137,6 +137,7 @@ class TagRefUIRoot extends StatelessWidget {
                       color: Colors.white,
                       fontSize: 28)),
               primarySwatch: Colors.purple,
+              primaryColor: desktopColorDark,
               primaryColorLight: desktopColorLight
           ),
           home: child,
@@ -169,11 +170,15 @@ class _ScreenRouterState extends State<ScreenRouter> {
   @override
   Widget build(BuildContext context) {
     if (!routeInitialized){
-      initRoute().then((screen) => Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => screen)));
+      Widget initialRoute = initRoute();
+      Future.delayed(const Duration(seconds: 1), (){
+        Navigator.pushReplacement(
+            context, MaterialPageRoute(builder: (context) => initialRoute));
+      });
 
       routeInitialized = true;
     }
+
     return const Scaffold();
   }
 
@@ -247,14 +252,12 @@ class _ScreenRouterState extends State<ScreenRouter> {
     appWindow.close();
   }
 
-  Future<Widget> initRoute() async {
+  Widget initRoute() {
     if (_pref.getBool(Preferences.initialized) == null || _pref.getBool(Preferences.initialized) == false) {
-      return SetupScreen(gApiHelper: widget.gApiHelper, isarHelper: _isarHelper,);
+      return SetupScreen(gApiHelper: widget.gApiHelper, isarHelper: _isarHelper, pref: _pref,);
     } else {
       log("Database exists, skipping setup page");
-      return HomeScreen(
-        gApiHelper: widget.gApiHelper, isarHelper: _isarHelper,
-      );
+      return const HomeScreen();
     }
 
   }

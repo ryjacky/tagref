@@ -17,6 +17,12 @@ const Color desktopColorDark = Color.fromRGBO(34, 28, 68, 1);
 const Color desktopColorDarker = Color.fromRGBO(15, 11, 33, 1);
 const Color desktopColorLight = Color.fromRGBO(114, 105, 255, 1);
 
+// OAuth secrets
+const String twitterClientId = "emVVNlIxSDdnOWlnNzI2bTJUdVE6MTpjaQ";
+const String twitterClientSecret =
+    "DUFbAjOMGIDq57gZ54nGw1N4IwIJhHRHARxY5T0d_LWbwVwXty";
+const String twitterCallback = "http://localhost:56738";
+
 const String imageNotFoundAltURL = "https://img.freepik.com/free-vector/oops-404-error-with-broken-robot-concept-illustration_114360-1932.jpg?w=2000";
 
 // Secure storage key

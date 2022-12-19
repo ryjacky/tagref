@@ -9,7 +9,7 @@ void main() async {
 
   test("Insert/Query image with IsarHelper", () async {
     IsarHelper isarHelper = IsarHelper(test: true);
-    await isarHelper.initializeIsarDB();
+    await isarHelper.openDB();
 
     await isarHelper.putImage("https://picsum.photos/seed/picsum/200/300");
     List<ImageData> images = await isarHelper.getImageByUrl("https://picsum.photos/seed/picsum/200/300");
@@ -19,7 +19,7 @@ void main() async {
 
   test("Query/Delete image with IsarHelper", () async {
     IsarHelper isarHelper = IsarHelper(test: true);
-    await isarHelper.initializeIsarDB();
+    await isarHelper.openDB();
 
     List<ImageData> images = await isarHelper.getImageByUrl("https://picsum.photos/seed/picsum/200/300");
 
@@ -36,7 +36,7 @@ void main() async {
 
   test("Query all images", () async {
     IsarHelper isarHelper = IsarHelper(test: true);
-    await isarHelper.initializeIsarDB();
+    await isarHelper.openDB();
 
     await isarHelper.putImage("https://picsum.photos/seed/picsum/200/300");
     await isarHelper.putImage("https://picsum.photos/seed/picsum/200/300");
@@ -59,7 +59,7 @@ void main() async {
 
   test("Insert/Query tag with IsarHelper", () async {
     IsarHelper isarHelper = IsarHelper(test: true);
-    await isarHelper.initializeIsarDB();
+    await isarHelper.openDB();
 
     await isarHelper.putTag("tag1");
     await isarHelper.putTag("tag1");
@@ -72,7 +72,7 @@ void main() async {
 
   test("Add tag", () async {
     IsarHelper isarHelper = IsarHelper(test: true);
-    await isarHelper.initializeIsarDB();
+    await isarHelper.openDB();
 
     await isarHelper.putTag("tag1");
     await isarHelper.putTag("tag1");
@@ -85,7 +85,7 @@ void main() async {
 
   test("Add tag to images", () async {
     IsarHelper isarHelper = IsarHelper(test: true);
-    await isarHelper.initializeIsarDB();
+    await isarHelper.openDB();
 
     await isarHelper.putImage("https://picsum.photos/seed/picsum/200/300");
     await isarHelper.putImage("https://picsum.photos/seed/picsum/200/300");
@@ -106,7 +106,7 @@ void main() async {
 
   test("Get images by tag", () async {
     IsarHelper isarHelper = IsarHelper(test: true);
-    await isarHelper.initializeIsarDB();
+    await isarHelper.openDB();
 
     int qLength = isarHelper.getImagesByTags(["tag1"]).length;
     List<ImageData> images = isarHelper.getAllImages();
@@ -120,7 +120,7 @@ void main() async {
 
   test("Remove tag from images", () async {
     IsarHelper isarHelper = IsarHelper(test: true);
-    await isarHelper.initializeIsarDB();
+    await isarHelper.openDB();
 
     List<ImageData> images = isarHelper.getAllImages();
     await isarHelper.removeTagFromImage(images.first.id, "tag1");

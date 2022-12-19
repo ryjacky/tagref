@@ -25,7 +25,6 @@ typedef OnTwitterAddCallback = Function(String imgUrl);
 class ReferenceImage extends StatefulWidget {
   final String srcUrl;
   final int imgId;
-  final IsarHelper isarHelper;
 
   final VoidCallback onDeleted;
   final VoidCallback onTagRemoved;
@@ -39,8 +38,7 @@ class ReferenceImage extends StatefulWidget {
       required this.onDeleted,
       required this.onTap,
       required this.onTagAdded,
-      required this.onTagRemoved,
-      required this.isarHelper})
+      required this.onTagRemoved})
       : super(key: key);
 
   @override
@@ -48,6 +46,7 @@ class ReferenceImage extends StatefulWidget {
 }
 
 class _ReferenceImageState extends State<ReferenceImage> {
+  final IsarHelper _isarHelper = IsarHelper();
   bool hovered = false;
   static const double padding = 4;
 
@@ -58,6 +57,8 @@ class _ReferenceImageState extends State<ReferenceImage> {
   @override
   void initState() {
     super.initState();
+
+    _isarHelper.openDB();
   }
 
   void addTagToImage(String tag) async {
@@ -67,7 +68,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
       }
     });
 
-    widget.isarHelper.addTagToImage(widget.imgId, tag);
+    _isarHelper.addTagToImage(widget.imgId, tag);
 
     widget.onTagAdded();
     updateTagList();
@@ -80,7 +81,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
       }
     });
 
-    await widget.isarHelper.removeTagFromImage(widget.imgId, tagWd);
+    await _isarHelper.removeTagFromImage(widget.imgId, tagWd);
 
     widget.onTagRemoved();
   }
@@ -90,14 +91,14 @@ class _ReferenceImageState extends State<ReferenceImage> {
   }
 
   Future<void> removeImageFromDB(int imgId) async {
-    await widget.isarHelper.deleteImage(imgId);
+    await _isarHelper.deleteImage(imgId);
 
     widget.onDeleted();
   }
 
   void updateTagList() {
     _cancelableUpdateTagList = CancelableOperation.fromFuture(
-      widget.isarHelper.getImageData(widget.imgId)
+      _isarHelper.getImageData(widget.imgId)
     );
 
     _cancelableUpdateTagList.then((databaseTags) {

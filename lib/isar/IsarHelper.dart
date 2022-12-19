@@ -27,7 +27,7 @@ class IsarHelper {
   }
 
   /// Open the database if not yet opened, attach to the opened instance otherwise.
-  initializeIsarDB () async {
+  Future<void> openDB () async {
     _isar = Isar.getInstance(_dbName);
 
     _isar ??= Isar.openSync(
@@ -176,7 +176,7 @@ class IsarHelper {
   /// Retrieve a list of image-data from the database with given tag in [tags]
   ///
   /// Returns a list of existing image-data, null otherwise.
-  List<ImageData> getImagesByTags(List<String> tags) {
+  Future<List<ImageData>> getImagesByTags(List<String> tags) async {
     if (_isar == null) {
       throw Exception(_eIsarNotOpened);
     }
@@ -195,17 +195,17 @@ class IsarHelper {
   /// Retrieve a list of all image-data from the database
   ///
   /// Returns a list of existing image-data, null otherwise.
-  List<ImageData> getAllImages() {
+  Future<List<ImageData>> getAllImages() async {
     if (_isar == null) {
       throw Exception(_eIsarNotOpened);
     }
     
     List<ImageData> existingImages = <ImageData>[];
-    List<ImageData?> images = _isar!.imageData.getAllSync(
-        [for (int i = 0; i < _isar!.imageData.getSizeSync(); i++) i]
+    List<ImageData?> images = await _isar!.imageData.getAll(
+        [for (int i = 0; i < await _isar!.imageData.getSize(); i++) i]
     );
 
-    // Remove non-existing image
+    // Add existing (non-null fields) images to return
     for (int i = 0; i < images.length; i++){
       if (images[i] != null){
         existingImages.add(images[i]!);
@@ -215,10 +215,10 @@ class IsarHelper {
     return existingImages;
   }
 
-  /// Retrieve a list of all image-data from the database
+  /// Retrieve a list of all tags
   ///
   /// Returns a list of existing image-data, null otherwise.
-  Future<List<Tag>> getAllTags() async {
+  Future<List<Tag>> getAllTags(bool excludeLeaf) async {
     if (_isar == null) {
       throw Exception(_eIsarNotOpened);
     }
@@ -228,9 +228,9 @@ class IsarHelper {
         [for (int i = 0; i < await _isar!.tags.getSize(); i++) i]
     );
 
-    // Remove non-existing image
+    // Remove non-existing tag (by any chance)
     for (int i = 0; i < tags.length; i++){
-      if (tags[i] != null){
+      if (tags[i] != null && (!excludeLeaf || tags[i]!.imageDataLinks.isNotEmpty)){
         existingTags.add(tags[i]!);
       }
     }
@@ -283,7 +283,7 @@ class IsarHelper {
     if (tagToDel == null) return false;
 
     // remove tag of tagName from every imageData
-    List<ImageData> connectedImageData = getImagesByTags([tagName]);
+    List<ImageData> connectedImageData = await getImagesByTags([tagName]);
     for (var imageData in connectedImageData){
       imageData.tagLinks.remove(tagToDel);
     }

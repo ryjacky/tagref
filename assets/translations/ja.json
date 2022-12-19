@@ -35,6 +35,8 @@
   "is-remote-replace-local": "バックアップが見つかりました！バックアップのバージョンを使用しますか？",
   "twitter-link-failed": "ツイッターとの連携が失敗しました。しばらくお待ちしたらまたお試してください。",
   "twitter-image-added": "画像をブックマークしました。",
-  "close": "閉じる"
+  "close": "閉じる",
+  "cancel": "キャンセル",
+  "waiting-oauth": "ログインを待っています..."
 
 }

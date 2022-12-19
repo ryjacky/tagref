@@ -7,18 +7,24 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tagref/assets/constant.dart';
+import 'package:tagref/helpers/TwitterAPIDesktopHelper.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
-import 'package:tagref/helpers/twitter_api_helper.dart';
 import 'package:tagref/isar/IsarHelper.dart';
+import 'package:tagref/ui/components/buttons.dart';
 
-import '../ui/components/buttons.dart';
 import 'home_screen_desktop.dart';
 
 class SetupScreen extends StatefulWidget {
   final GoogleApiHelper gApiHelper;
   final IsarHelper isarHelper;
+  final SharedPreferences pref;
 
-  const SetupScreen({Key? key, required this.gApiHelper, required this.isarHelper}) : super(key: key);
+  const SetupScreen(
+      {Key? key,
+      required this.gApiHelper,
+      required this.isarHelper,
+      required this.pref})
+      : super(key: key);
 
   @override
   State<SetupScreen> createState() => _SetupScreenState();
@@ -53,6 +59,7 @@ class _SetupScreenState extends State<SetupScreen> {
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
             children: [
+              // Page 1
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
@@ -73,8 +80,7 @@ class _SetupScreenState extends State<SetupScreen> {
                     isSelected: isSelected,
                     onPressed: (index) {
                       setState(() {
-                        // Implements the exclusive selection feature for
-                        // the language options toggle button
+                        // Language toggle button logic
                         for (int buttonIndex = 0;
                             buttonIndex < isSelected.length;
                             buttonIndex++) {
@@ -155,6 +161,8 @@ class _SetupScreenState extends State<SetupScreen> {
                   )
                 ],
               ),
+
+              // Page 2
               Padding(
                 padding: EdgeInsets.fromLTRB(20.w, 60.w, 20.w, 20.w),
                 child: Column(
@@ -165,36 +173,7 @@ class _SetupScreenState extends State<SetupScreen> {
                         style: Theme.of(context).textTheme.titleLarge),
                     Padding(
                         padding: EdgeInsets.fromLTRB(0, 20.w, 0, 0),
-                        child: Row(
-                          children: [
-                            // Expanded(
-                            //   child: SizedBox(
-                            //     width: (width / 1.3).w,
-                            //     child: Column(
-                            //       crossAxisAlignment: CrossAxisAlignment.start,
-                            //       children: [
-                            //         Text(tr("auto-tag"),
-                            //             style: Theme.of(context)
-                            //                 .textTheme
-                            //                 .titleMedium),
-                            //         Padding(
-                            //           padding: const EdgeInsets.symmetric(
-                            //               vertical: 10),
-                            //           child: Text(tr("auto-tag-desc"),
-                            //               style: Theme.of(context)
-                            //                   .textTheme
-                            //                   .bodyMedium),
-                            //         ),
-                            //       ],
-                            //     ),
-                            //   ),
-                            // ),
-                            // Padding(
-                            //   padding: EdgeInsets.fromLTRB(40.w, 0, 0, 0),
-                            //   child: const ToggleSwitch(),
-                            // )
-                          ],
-                        )),
+                        child: Row()),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(0, 30, 0, 0),
                       child: Text(tr("integrations"),
@@ -209,11 +188,7 @@ class _SetupScreenState extends State<SetupScreen> {
                             driveName: tr("gdrive"),
                             statusOn: gDriveStatusOn,
                             onTap: () async {
-                              if (!widget.gApiHelper.isInitialized) {
-                                await widget.gApiHelper.initializeAuthClient();
-                                await widget.gApiHelper.initializeGoogleApi();
-                                await _compareRemoteDB();
-                              }
+                              await widget.gApiHelper.connectGDrive();
 
                               // Update shared preferences
                               SharedPreferences.getInstance().then((pref) =>
@@ -232,13 +207,17 @@ class _SetupScreenState extends State<SetupScreen> {
                             driveName: tr("twitter-link"),
                             statusOn: twitterStatusOn,
                             onTap: () async {
-                              if (await TwitterApiHelper(
-                                      context: context,
-                                      secureStorage:
-                                          const FlutterSecureStorage())
-                                  .authTwitter()) {
-                                setState(() => twitterStatusOn = true);
-                              }
+                              // Authorize twitter
+                              if (Platform.isMacOS ||
+                                  Platform.isWindows ||
+                                  Platform.isLinux) {
+                                if ((await TwitterAPIDesktopHelper
+                                        .getAuthClient()) !=
+                                    null) {
+                                  setState(() => twitterStatusOn = true);
+                                }
+                              } else if (Platform.isIOS || Platform.isAndroid) {
+                              } else {}
                             },
                           ),
                         )
@@ -252,14 +231,13 @@ class _SetupScreenState extends State<SetupScreen> {
                       padding: const EdgeInsets.all(30),
                       child: TextButton(
                         onPressed: () {
+                          widget.pref.setBool(Preferences.initialized, true);
                           Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(
                                   builder: (context) =>
                                       Platform.isMacOS || Platform.isWindows
-                                          ? HomeScreen(
-                                              gApiHelper: widget.gApiHelper, isarHelper: widget.isarHelper,
-                                            )
+                                          ? HomeScreen()
                                           : const Text("data")));
                         },
                         style: ButtonStyle(
@@ -280,37 +258,37 @@ class _SetupScreenState extends State<SetupScreen> {
         ));
   }
 
-  /// Closes the current database connection, update the source db file to match
-  /// remote version, and re-open the database connection
-  Future<void> _compareRemoteDB() async {
-    int version = await widget.gApiHelper.compareDB();
-
-    if (version != 404) {
-      // Ask for which version to keep
-      showDialog(
-          context: context,
-          builder: (_) => AlertDialog(
-                backgroundColor: desktopColorDark,
-                title: Text(
-                  tr("is-remote-replace-local"),
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-                actions: [
-                  TextButton(
-                      onPressed: () {
-                        widget.gApiHelper.pullAndReplaceLocalDB();
-                        Navigator.pop(context);
-                      },
-                      child: Text(tr("yes"))),
-                  TextButton(
-                      onPressed: () {
-                        widget.gApiHelper.pushDB();
-                        Navigator.pop(context);
-                      },
-                      child: Text(tr("no"))),
-                ],
-              ),
-          barrierDismissible: false);
-    }
-  }
+// /// Closes the current database connection, update the source db file to match
+// /// remote version, and re-open the database connection
+// Future<void> _compareRemoteDB() async {
+//   int version = await widget.gApiHelper.compareDB();
+//
+//   if (version != 404) {
+//     // Ask for which version to keep
+//     showDialog(
+//         context: context,
+//         builder: (_) => AlertDialog(
+//               backgroundColor: desktopColorDark,
+//               title: Text(
+//                 tr("is-remote-replace-local"),
+//                 style: Theme.of(context).textTheme.bodySmall,
+//               ),
+//               actions: [
+//                 TextButton(
+//                     onPressed: () {
+//                       widget.gApiHelper.pullAndReplaceLocalDB();
+//                       Navigator.pop(context);
+//                     },
+//                     child: Text(tr("yes"))),
+//                 TextButton(
+//                     onPressed: () {
+//                       widget.gApiHelper.pushDB();
+//                       Navigator.pop(context);
+//                     },
+//                     child: Text(tr("no"))),
+//               ],
+//             ),
+//         barrierDismissible: false);
+//   }
+// }
 }
