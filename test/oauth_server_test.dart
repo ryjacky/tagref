@@ -9,7 +9,7 @@ void main() async {
         "https://twitter.com/i/oauth2/authorize?response_type=code&client_id=$twitterClientId&redirect_uri=$twitterCallback&scope=offline.access%20tweet.read%20users.read%20follows.read&state=state&code_challenge=challenge&code_challenge_method=plain";
 
     // Start OAuth server and launch user consent
-    OAuthCredentials? cred = await OAuthServer().listen(Uri.parse(authUrl));
+    OAuthCredentials? cred = await OAuthServer.listen(Uri.parse(authUrl), OAuthType.twitter);
 
     print("The access token is ${cred!.accessToken.substring(0, 5)}\n");
     print("The refresh token is ${cred.refreshToken.substring(0, 5)}");
