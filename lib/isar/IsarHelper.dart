@@ -265,6 +265,10 @@ class IsarHelper {
     return true;
   }
 
+  /// Get image data of id from local database
+  ///
+  /// Return ImageData when success, return null when image data of id is not
+  /// found
   Future<ImageData?> getImageData(int id) async {
     if (_isar == null) {
       throw Exception(_eIsarNotOpened);

@@ -103,6 +103,7 @@ class _ReferenceImageState extends State<ReferenceImage> {
 
     _cancelableUpdateTagList.then((databaseTags) {
       // Triggering setState in case tagList update completes after initial build
+      if (databaseTags == null) return;
       databaseTags = databaseTags as ImageData;
       if (tagList.length != databaseTags.tagLinks.length) {
         tagList.clear();
