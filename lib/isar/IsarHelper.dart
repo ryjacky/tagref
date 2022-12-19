@@ -181,15 +181,19 @@ class IsarHelper {
       throw Exception(_eIsarNotOpened);
     }
 
-    List<ImageData> allImageData = <ImageData>[];
-    for (var tag in tags){
-      if (_isar!.tags.getByTagNameSync(tag) != null) {
-        allImageData.addAll(
-            _isar!.tags.getByTagNameSync(tag)!.imageDataLinks.toList());
+    Map<int, ImageData> uniqueImageData = {};
+    for (var tag in _isar!.tags.getAllByTagNameSync(tags)){
+      if (tag != null) {
+        // Tag exists
+
+        // Create result list with no duplicate imageData
+        for (ImageData imageData in tag.imageDataLinks){
+          uniqueImageData[imageData.id] = imageData;
+        }
       }
     }
 
-    return allImageData;
+    return uniqueImageData.values.toList();
   }
 
   /// Retrieve a list of all image-data from the database

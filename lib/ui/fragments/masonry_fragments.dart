@@ -67,6 +67,7 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
     if (searchTags.isNotEmpty) {
       // Prepare images that satisfy the search words
       queryResult = await _isarHelper.getImagesByTags(searchTags);
+      dev.log(queryResult.toString());
     } else {
       // Prepare all images
       queryResult = await _isarHelper.getAllImages();
