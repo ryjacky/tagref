@@ -8,6 +8,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
 import 'package:tagref/assets/constant.dart';
 import 'package:tagref/helpers/TwitterAPIDesktopHelper.dart';
@@ -16,6 +17,7 @@ import 'package:tagref/helpers/UpdateNotifier.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/isar/IsarHelper.dart';
 import 'package:tagref/isar/TagRefSchema.dart';
+import 'package:tagref/ui/components/buttons.dart';
 import 'package:tagref/ui/screen/ScaledImageViewer.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
 
@@ -102,7 +104,10 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: desktopColorDarker,
+      decoration: const BoxDecoration(
+          gradient: LinearGradient(
+              colors: [desktopColorDarker, Color.fromRGBO(29, 23, 61, 1.0)],
+              begin: Alignment.bottomCenter)),
       child: Stack(
         children: [
           NotificationListener<ScrollNotification>(
@@ -122,75 +127,117 @@ class TagRefMasonryFragmentState extends State<TagRefMasonryFragment> {
               }
               return true;
             },
-            child: MasonryGridView.count(
-              crossAxisCount: (Platform.isWindows || Platform.isMacOS) ? 3 : 1,
-              padding: const EdgeInsets.all(20),
-              mainAxisSpacing: 15,
-              crossAxisSpacing: 15,
-              // Reserve one seat for the AddButton
-              itemCount: imageData.length,
-              itemBuilder: (context, index) {
-                return ReferenceImage(
-                    srcUrl: imageData[index].srcUrl ?? imageNotFoundAltURL,
-                    imgId: imageData[index].id,
-                    onDeleted: () {
-                      update();
-                      widget.updateNotifier.update(notifierId);
-                      _gApiHelper.pushDB();
-                    },
-                    onTagAdded: () {
-                      widget.updateNotifier.update(notifierId);
-                      _gApiHelper.pushDB();
-                    },
-                    onTap: (imgUrl) {
-                      Navigator.push(
-                          context,
-                          PageRouteBuilder(
-                              opaque: false,
-                              transitionsBuilder: (context, animation,
-                                  secondaryAnimation, child) {
-                                const begin = Offset(0, -1.0);
-                                const end = Offset.zero;
-                                const curve = Curves.ease;
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 25.0, horizontal: 5),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Row(
+                        children: [
+                          Expanded(child: Container()),
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 15.0),
+                            child: FaIconButton(
+                              onPressed: () {},
+                              faIcon: FontAwesomeIcons.camera,
+                              cornerRadius: 10,
+                              size: const Size(50, 50),
+                              backgroundColor:
+                                  Colors.deepPurpleAccent.withOpacity(0.2),
+                            ),
+                          ),
+                          FaIconButton(
+                            onPressed: () {},
+                            faIcon: FontAwesomeIcons.upload,
+                            cornerRadius: 10,
+                            size: const Size(50, 50),
+                            backgroundColor:
+                                Colors.deepPurpleAccent.withOpacity(0.2),
+                          ),
+                        ],
+                      ),
+                    ),
+                    MasonryGridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: 1,
+                      padding: const EdgeInsets.all(20),
+                      mainAxisSpacing: 15,
+                      crossAxisSpacing: 15,
+                      // Reserve one seat for the AddButton
+                      itemCount: imageData.length,
+                      itemBuilder: (context, index) {
+                        return ReferenceImage(
+                            srcUrl:
+                                imageData[index].srcUrl ?? imageNotFoundAltURL,
+                            imgId: imageData[index].id,
+                            onDeleted: () {
+                              update();
+                              widget.updateNotifier.update(notifierId);
+                              _gApiHelper.pushDB();
+                            },
+                            onTagAdded: () {
+                              widget.updateNotifier.update(notifierId);
+                              _gApiHelper.pushDB();
+                            },
+                            onTap: (imgUrl) {
+                              Navigator.push(
+                                  context,
+                                  PageRouteBuilder(
+                                      opaque: false,
+                                      transitionsBuilder: (context, animation,
+                                          secondaryAnimation, child) {
+                                        const begin = Offset(0, -1.0);
+                                        const end = Offset.zero;
+                                        const curve = Curves.ease;
 
-                                final tween = Tween(begin: begin, end: end);
-                                final curvedAnimation = CurvedAnimation(
-                                  parent: animation,
-                                  curve: curve,
-                                );
+                                        final tween =
+                                            Tween(begin: begin, end: end);
+                                        final curvedAnimation = CurvedAnimation(
+                                          parent: animation,
+                                          curve: curve,
+                                        );
 
-                                return SlideTransition(
-                                  position: tween.animate(curvedAnimation),
-                                  child: child,
-                                );
-                              },
-                              pageBuilder: (context, a1, a2) =>
-                                  ScaledImageViewer(
-                                    isLocalImage: true,
-                                    imageUrl: imgUrl,
-                                  )));
-                    },
-                    onTagRemoved: () {
-                      dev.log("TagRefMasonryFragment onTagRemoved");
-                      widget.updateNotifier.update(notifierId);
-                      _gApiHelper.pushDB();
-                    });
-              },
+                                        return SlideTransition(
+                                          position:
+                                              tween.animate(curvedAnimation),
+                                          child: child,
+                                        );
+                                      },
+                                      pageBuilder: (context, a1, a2) =>
+                                          ScaledImageViewer(
+                                            isLocalImage: true,
+                                            imageUrl: imgUrl,
+                                          )));
+                            },
+                            onTagRemoved: () {
+                              dev.log("TagRefMasonryFragment onTagRemoved");
+                              widget.updateNotifier.update(notifierId);
+                              _gApiHelper.pushDB();
+                            });
+                      },
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
           Visibility(
-            visible: searchTags.isEmpty && imageData.isEmpty,
-            child: SizedBox(
-              height: double.infinity,
-              width: double.infinity,
-              child: Center(
-                child: LoadingAnimationWidget.staggeredDotsWave(
-                  color: Colors.white,
-                  size: 200,
+              visible: searchTags.isEmpty && imageData.isEmpty,
+              child: SizedBox(
+                height: double.infinity,
+                width: double.infinity,
+                child: Center(
+                  child: LoadingAnimationWidget.staggeredDotsWave(
+                    color: Colors.white,
+                    size: 200,
+                  ),
                 ),
-              ),
-            )
-          )
+              ))
         ],
       ),
     );
@@ -250,7 +297,6 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
   }
 
   Future<void> loadImages() async {
-
     dev.log("TwitterMasonryFragment loadImages()");
     try {
       queryResult.addAll(await twitterHelper.lookupHomeTimelineImages());
@@ -266,8 +312,8 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
       if (!mounted) return;
       setState(() {
         for (currentGridCount;
-        currentGridCount < gridMaxCounts;
-        currentGridCount++) {
+            currentGridCount < gridMaxCounts;
+            currentGridCount++) {
           masonryGrids.add(TwitterImage(
             onAdd: (srcUrl) {
               try {
@@ -283,7 +329,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
                     duration: const Duration(milliseconds: 1000),
                   ));
                 });
-              } catch (e){
+              } catch (e) {
                 setState(() {
                   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
                     content: Text(
@@ -317,19 +363,14 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
                           child: child,
                         );
                       },
-                      pageBuilder: (context, a1, a2) =>
-                          ScaledImageViewer(
+                      pageBuilder: (context, a1, a2) => ScaledImageViewer(
                             isLocalImage: false,
                             srcUrl: "https://twitter.com/i/web/status/$id",
                             imageUrl: imgUrl,
                           )));
             },
-            tweetSrcId: queryResult.entries
-                .elementAt(currentGridCount)
-                .key,
-            srcImgUrl: queryResult.entries
-                .elementAt(currentGridCount)
-                .value,
+            tweetSrcId: queryResult.entries.elementAt(currentGridCount).key,
+            srcImgUrl: queryResult.entries.elementAt(currentGridCount).value,
           ));
         }
 
@@ -374,8 +415,7 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
                     size: 200,
                   ),
                 ),
-              )
-          ),
+              )),
           NotificationListener<ScrollNotification>(
             onNotification: (scrollNotification) {
               if (scrollNotification.metrics.pixels >=
@@ -397,7 +437,8 @@ class _TwitterMasonryFragmentState extends State<TwitterMasonryFragment> {
             child: MasonryGridView.count(
               controller: ScrollController(),
               crossAxisCount: (Platform.isWindows || Platform.isMacOS) ? 3 : 1,
-              padding: EdgeInsets.symmetric(vertical: 20, horizontal: paddingH.w),
+              padding:
+                  EdgeInsets.symmetric(vertical: 20, horizontal: paddingH.w),
               mainAxisSpacing: 15,
               crossAxisSpacing: 15,
               // Reserve one seat for the AddButton

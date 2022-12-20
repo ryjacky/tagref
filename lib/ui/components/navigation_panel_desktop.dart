@@ -13,7 +13,7 @@ import 'package:tagref/isar/IsarHelper.dart';
 import 'package:tagref/ui/components/tag_widgets.dart';
 import 'package:tagref/ui/screen/home_screen_desktop.dart';
 
-class NavigationPanel extends StatefulWidget {
+class NavigationPanelDesktop extends StatefulWidget {
   final OnButtonClicked onSettingClicked;
   final OnButtonClicked onSyncButtonClicked;
   final OnButtonClicked onTwitterClicked;
@@ -21,7 +21,7 @@ class NavigationPanel extends StatefulWidget {
 
   final UpdateNotifier updateNotifier;
 
-  NavigationPanel(
+  NavigationPanelDesktop(
       {Key? key,
       required this.onSettingClicked,
       required this.onSyncButtonClicked,
@@ -31,10 +31,10 @@ class NavigationPanel extends StatefulWidget {
       : super(key: key);
 
   @override
-  State<NavigationPanel> createState() => _NavigationPanelState();
+  State<NavigationPanelDesktop> createState() => _NavigationPanelDesktopState();
 }
 
-class _NavigationPanelState extends State<NavigationPanel> {
+class _NavigationPanelDesktopState extends State<NavigationPanelDesktop> {
   final IsarHelper _isarHelper = IsarHelper();
   final List<String> _tagFilterList = [];
 

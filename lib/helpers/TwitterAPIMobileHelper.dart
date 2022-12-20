@@ -2,13 +2,14 @@ import 'dart:developer';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:tagref/assets/constant.dart';
+import 'package:tagref/helpers/TwitterAPIDesktopHelper.dart';
 import 'package:tagref/helpers/TwitterAPIHelper.dart';
 import 'package:tagref/oauth/oauth_credentials.dart';
 import 'package:tagref/oauth/oauth_server.dart';
 import 'package:twitter_api_v2/twitter_api_v2.dart';
 
-class TwitterAPIDesktopHelper extends TwitterAPIHelper {
-  TwitterAPIDesktopHelper(TwitterApi api, String uid) : super(api) {
+class TwitterAPIMobileHelper extends TwitterAPIHelper {
+  TwitterAPIMobileHelper(TwitterApi api, String uid) : super(api) {
     currTwitterUID = uid;
   }
 

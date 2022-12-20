@@ -38,6 +38,8 @@
   "close": "閉じる",
   "cancel": "キャンセル",
   "waiting-oauth": "ログインを待っています...",
-  "twitter-image-add-fail-clicking-too-fast": "押すのが早すぎます！しばらくお待ちしてください…"
-
+  "twitter-image-add-fail-clicking-too-fast": "押すのが早すぎます！しばらくお待ちしてください…",
+  "home": "ホーム",
+  "twitter": "ツイッター",
+  "settings": "設定"
 }

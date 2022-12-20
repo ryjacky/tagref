@@ -104,11 +104,15 @@ class EditTagButton extends StatelessWidget {
 class FaIconButton extends StatelessWidget {
   final IconData faIcon;
   final Size size;
+  final Color backgroundColor;
+  final double cornerRadius;
 
   const FaIconButton(
       {Key? key,
       required this.onPressed,
       required this.faIcon,
+      this.backgroundColor = Colors.grey,
+      this.cornerRadius = 4,
       this.size = const Size(42, 42)})
       : super(key: key);
   final GestureTapCallback onPressed;
@@ -120,9 +124,11 @@ class FaIconButton extends StatelessWidget {
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         constraints: BoxConstraints.tight(size),
         shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(_cornerRadius)),
+            borderRadius: BorderRadius.circular(cornerRadius)),
         elevation: 0,
-        fillColor: Colors.grey.shade200.withOpacity(0.5),
+        fillColor: backgroundColor == Colors.grey
+            ? Colors.grey.shade200.withOpacity(0.5)
+            : backgroundColor,
         splashColor: Colors.grey.shade500.withOpacity(0.5),
         child: Padding(
           padding: const EdgeInsets.only(
@@ -230,69 +236,6 @@ class _PinButtonState extends State<PinButton> {
           widget.onPressed(_unPinned);
         });
       },
-    );
-  }
-}
-
-class IntegrationDisplayButton extends StatefulWidget {
-  final String driveLogoSrc;
-  final String driveName;
-  final VoidCallback onTap;
-  final bool statusOn;
-
-  const IntegrationDisplayButton(
-      {Key? key,
-      required this.driveLogoSrc,
-      required this.driveName,
-      this.statusOn = false,
-      required this.onTap})
-      : super(key: key);
-
-  @override
-  State<IntegrationDisplayButton> createState() =>
-      _IntegrationDisplayButtonState();
-}
-
-class _IntegrationDisplayButtonState extends State<IntegrationDisplayButton> {
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: widget.onTap,
-      child: ClipRRect(
-          borderRadius: BorderRadius.circular(_cornerRadius),
-          child: Container(
-            width: 150,
-            color: desktopColorDark,
-            child: Column(
-              children: [
-                Container(
-                  width: 150,
-                  color: widget.statusOn ? Colors.green : desktopColorLight,
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
-                    child: Text("Status: " + (widget.statusOn ? "ON" : "OFF"),
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.labelMedium),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-                  child: SvgPicture.asset(
-                    widget.driveLogoSrc,
-                    width: 70,
-                    height: 70,
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 15, 10, 20),
-                  child: Text(widget.driveName,
-                      textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.labelSmall),
-                )
-              ],
-            ),
-          )),
     );
   }
 }

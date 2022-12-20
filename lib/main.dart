@@ -15,6 +15,7 @@ import 'package:system_tray/system_tray.dart' as tray;
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/server/BrowserExServer.dart';
 import 'package:tagref/ui/screen/home_screen_desktop.dart';
+import 'package:tagref/ui/screen/home_screen_mobile.dart';
 import 'package:tagref/ui/screen/setup_screen.dart';
 
 import 'assets/constant.dart';
@@ -41,8 +42,10 @@ void main(List<String> args) async {
 
   // Initialize shared preferences
   _pref = await SharedPreferences.getInstance();
-  _pref.setBool(Preferences.initialized, _pref.getBool(Preferences.initialized) ?? false);
-  _pref.setString(Preferences.language, _pref.getString(Preferences.language) ?? locale[0]);
+  _pref.setBool(
+      Preferences.initialized, _pref.getBool(Preferences.initialized) ?? false);
+  _pref.setString(
+      Preferences.language, _pref.getString(Preferences.language) ?? locale[0]);
 
   // Initialize google api
   final GoogleApiHelper gApiHelper;
@@ -71,7 +74,6 @@ void main(List<String> args) async {
       supportedLocales: const [Locale('en'), Locale('ja')],
       path: 'assets/translations'));
 }
-
 
 class TagRefUIRoot extends StatelessWidget {
   final FlutterSecureStorage secureStorage;
@@ -102,6 +104,10 @@ class TagRefUIRoot extends StatelessWidget {
           locale: context.locale,
           theme: ThemeData(
               textTheme: const TextTheme(
+                  displayMedium: TextStyle(
+                      fontWeight: FontWeight.w300,
+                      color: Colors.white,
+                      fontSize: 32),
                   titleLarge: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: Colors.white,
@@ -122,6 +128,10 @@ class TagRefUIRoot extends StatelessWidget {
                       fontSize: 16,
                       color: Colors.white,
                       fontWeight: FontWeight.bold),
+                  displaySmall: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.normal),
                   bodySmall: TextStyle(color: Colors.white60, fontSize: 18),
                   bodyMedium: TextStyle(color: Colors.white60, fontSize: 22),
                   titleMedium: TextStyle(
@@ -136,10 +146,8 @@ class TagRefUIRoot extends StatelessWidget {
                       fontWeight: FontWeight.w300,
                       color: Colors.white,
                       fontSize: 28)),
-              primarySwatch: Colors.purple,
               primaryColor: desktopColorDark,
-              primaryColorLight: desktopColorLight
-          ),
+              primaryColorLight: desktopColorLight),
           home: child,
         );
       },
@@ -169,9 +177,9 @@ class _ScreenRouterState extends State<ScreenRouter> {
 
   @override
   Widget build(BuildContext context) {
-    if (!routeInitialized){
+    if (!routeInitialized) {
       Widget initialRoute = initRoute();
-      Future.delayed(const Duration(seconds: 1), (){
+      Future.delayed(const Duration(seconds: 1), () {
         Navigator.pushReplacement(
             context, MaterialPageRoute(builder: (context) => initialRoute));
       });
@@ -203,7 +211,9 @@ class _ScreenRouterState extends State<ScreenRouter> {
         // Detects remote changes
         syncing = true;
         if (widget.gApiHelper.isInitialized) {
-          widget.gApiHelper.updateLocalDB(true).then((value) => syncing = false);
+          widget.gApiHelper
+              .updateLocalDB(true)
+              .then((value) => syncing = false);
         }
       }
     });
@@ -253,12 +263,18 @@ class _ScreenRouterState extends State<ScreenRouter> {
   }
 
   Widget initRoute() {
-    if (_pref.getBool(Preferences.initialized) == null || _pref.getBool(Preferences.initialized) == false) {
-      return SetupScreen(gApiHelper: widget.gApiHelper, isarHelper: _isarHelper, pref: _pref,);
+    if (_pref.getBool(Preferences.initialized) == null ||
+        _pref.getBool(Preferences.initialized) == false) {
+      return SetupScreen(
+        gApiHelper: widget.gApiHelper,
+        isarHelper: _isarHelper,
+        pref: _pref,
+      );
     } else {
       log("Database exists, skipping setup page");
-      return const HomeScreen();
+      return (Platform.isWindows || Platform.isMacOS)
+          ? const HomeScreenDesktop()
+          : const HomeScreenMobile();
     }
-
   }
 }

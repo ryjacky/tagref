@@ -11,7 +11,7 @@ import 'package:tagref/assets/constant.dart';
 import 'package:tagref/helpers/UpdateNotifier.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/isar/IsarHelper.dart';
-import 'package:tagref/ui/components/NavigationPanel.dart';
+import 'package:tagref/ui/components/navigation_panel_desktop.dart';
 import 'package:tagref/ui/components/WindowButtons.dart';
 import 'package:tagref/ui/fragments/masonry_fragments.dart';
 import 'package:tagref/ui/screen/setting_screen.dart';
@@ -21,14 +21,14 @@ enum Fragments { twitterMasonry, tagrefMasonry, preferences }
 typedef OnButtonClicked = Function();
 typedef OnSearchChanged = Function(List<String> tags);
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+class HomeScreenDesktop extends StatefulWidget {
+  const HomeScreenDesktop({Key? key}) : super(key: key);
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreenDesktop> createState() => _HomeScreenDesktopState();
 }
 
-class _HomeScreenState extends State<HomeScreen>
+class _HomeScreenDesktopState extends State<HomeScreenDesktop>
     with SingleTickerProviderStateMixin {
   Fragments currentFragment = Fragments.tagrefMasonry;
 
@@ -68,7 +68,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    NavigationPanel navPanel = NavigationPanel(
+    NavigationPanelDesktop navPanel = NavigationPanelDesktop(
       onSettingClicked: () {
         setState(() {
           if (currentFragment != Fragments.preferences) {

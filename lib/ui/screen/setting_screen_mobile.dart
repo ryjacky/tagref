@@ -10,20 +10,19 @@ import 'package:tagref/helpers/TwitterAPIDesktopHelper.dart';
 import 'package:tagref/helpers/TwitterAPIHelper.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/oauth/oauth_server.dart';
+import 'package:tagref/ui/components/buttons.dart';
 import 'package:tagref/ui/components/floaty_loader.dart';
+import 'package:tagref/ui/components/integration_display_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../components/integration_display_button.dart';
-
-class SettingFragment extends StatefulWidget {
-
-  const SettingFragment({Key? key}) : super(key: key);
+class SettingFragmentMobile extends StatefulWidget {
+  const SettingFragmentMobile({Key? key}) : super(key: key);
 
   @override
-  State<SettingFragment> createState() => _SettingFragmentState();
+  State<SettingFragmentMobile> createState() => _SettingFragmentMobileState();
 }
 
-class _SettingFragmentState extends State<SettingFragment> {
+class _SettingFragmentMobileState extends State<SettingFragmentMobile> {
   late final GoogleApiHelper gApiHelper;
 
   final secureStorage = const FlutterSecureStorage();
@@ -72,113 +71,135 @@ class _SettingFragmentState extends State<SettingFragment> {
         padding: const EdgeInsets.all(30),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
           children: [
-            Text(
-              tr("pref"),
-              style: Theme.of(context).textTheme.headlineSmall,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(0,10,0,0),
+              child: Text(
+                tr("pref"),
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
               child: Text(tr("integrations"),
                   style: Theme.of(context).textTheme.titleMedium),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),
-              child: Row(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(0, 8, 8, 8),
-                    child: IntegrationDisplayButton(
-                      driveLogoSrc: "assets/images/gdrive_logo.svg",
-                      driveName: tr("gdrive"),
-                      statusOn: gDriveStatusOn,
-                      onTap: () async {
-                        if (gDriveStatusOn) {
-                          // Confirm google drive disconnection
-                          showDialog(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                    backgroundColor: desktopColorDark,
-                                    title: Text(
-                                      tr("disconnect-gdrive"),
-                                      style:
-                                          Theme.of(context).textTheme.bodySmall,
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                          onPressed: disconnectGDrive,
-                                          child: Text(tr("yes"))),
-                                      TextButton(
-                                          onPressed: () =>
-                                              Navigator.pop(context),
-                                          child: Text(tr("no"))),
-                                    ],
+            GridView.count(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              crossAxisCount: 2,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: IntegrationDisplayButtonMobile(
+                    driveLogoSrc: "assets/images/gdrive_logo.svg",
+                    driveName: tr("gdrive-mobile"),
+                    statusOn: gDriveStatusOn,
+                    onTap: () async {
+                      if (gDriveStatusOn) {
+                        // Confirm google drive disconnection
+                        showDialog(
+                            context: context,
+                            builder: (_) => AlertDialog(
+                                  backgroundColor: desktopColorDark,
+                                  title: Text(
+                                    tr("disconnect-gdrive"),
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
                                   ),
-                              barrierDismissible: false);
-                        } else {
-                          // The only case when driveApi will be null should be
-                          // when GDrive has never been set up before
-                          if (!gApiHelper.isInitialized) {
-                            await gApiHelper.initializeAuthClient();
-                            await gApiHelper.initializeGoogleApi();
-                            await _compareRemoteDB();
+                                  actions: [
+                                    TextButton(
+                                        onPressed: disconnectGDrive,
+                                        child: Text(tr("yes"))),
+                                    TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context),
+                                        child: Text(tr("no"))),
+                                  ],
+                                ),
+                            barrierDismissible: false);
+                      } else {
+                        // The only case when driveApi will be null should be
+                        // when GDrive has never been set up before
+                        if (!gApiHelper.isInitialized) {
+                          await gApiHelper.initializeAuthClient();
+                          await gApiHelper.initializeGoogleApi();
+                          await _compareRemoteDB();
+                        }
+
+                        // Update shared preferences
+                        SharedPreferences.getInstance().then(
+                            (pref) => pref.setBool(gDriveConnected, true));
+
+                        remoteChanged = true;
+
+                        setState(() {
+                          gDriveStatusOn = true;
+                        });
+                      }
+                    },
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(8),
+                  child: IntegrationDisplayButtonMobile(
+                    driveLogoSrc: "assets/images/twitter_logo.svg",
+                    driveName: tr("twitter-link"),
+                    statusOn: twitterStatusOn,
+                    onTap: () async {
+                      if (twitterStatusOn) {
+                        // Disconnect twitter
+                        TwitterAPIHelper.purgeUserCredentials(secureStorage);
+                        setState(() => twitterStatusOn = false);
+                      } else {
+                        // Authorize twitter
+                        if (Platform.isMacOS ||
+                            Platform.isWindows ||
+                            Platform.isLinux) {
+                          FloatyLoader fl = FloatyLoader(
+                            context: context,
+                            onCancel: () {
+                              OAuthServer.forceClose();
+                              log("OAuth is canceled by the user.");
+                            },
+                          );
+                          fl.startsLoadingForResult();
+
+                          if ((await TwitterAPIDesktopHelper
+                                  .getAuthClient()) !=
+                              null) {
+                            setState(() {
+                              twitterStatusOn = true;
+                            });
+                            fl.closeLoader();
                           }
+                        } else if (Platform.isIOS || Platform.isAndroid) {
+                          FloatyLoader fl = FloatyLoader(
+                            context: context,
+                            onCancel: () {
+                              OAuthServer.forceClose();
+                              log("OAuth is canceled by the user.");
+                            },
+                          );
+                          fl.startsLoadingForResult();
 
-                          // Update shared preferences
-                          SharedPreferences.getInstance().then(
-                              (pref) => pref.setBool(gDriveConnected, true));
-
-                          remoteChanged = true;
-
-                          setState(() {
-                            gDriveStatusOn = true;
-                          });
-                        }
-                      },
-                    ),
+                          if ((await TwitterAPIMobileHelper
+                              .getAuthClient()) !=
+                              null) {
+                            setState(() {
+                              twitterStatusOn = true;
+                            });
+                            fl.closeLoader();
+                          }
+                        } else {}
+                      }
+                    },
                   ),
-                  Padding(
-                    padding: const EdgeInsets.all(30),
-                    child: IntegrationDisplayButton(
-                      driveLogoSrc: "assets/images/twitter_logo.svg",
-                      driveName: tr("twitter-link"),
-                      statusOn: twitterStatusOn,
-                      onTap: () async {
-                        if (twitterStatusOn) {
-                          // Disconnect twitter
-                          TwitterAPIHelper.purgeUserCredentials(secureStorage);
-                          setState(() => twitterStatusOn = false);
-                        } else {
-                          // Authorize twitter
-                          if (Platform.isMacOS ||
-                              Platform.isWindows ||
-                              Platform.isLinux) {
-                            FloatyLoader fl = FloatyLoader(
-                              context: context,
-                              onCancel: () {
-                                OAuthServer.forceClose();
-                                log("OAuth is canceled by the user.");
-                              },
-                            );
-                            fl.startsLoadingForResult();
-
-                            if ((await TwitterAPIDesktopHelper
-                                    .getAuthClient()) !=
-                                null) {
-                              setState(() {
-                                twitterStatusOn = true;
-                              });
-                              fl.closeLoader();
-                            }
-                          } else if (Platform.isIOS || Platform.isAndroid) {
-                          } else {}
-                        }
-                      },
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+
             Expanded(child: Container()),
             Padding(
                 padding: const EdgeInsets.fromLTRB(0, 20, 0, 0),

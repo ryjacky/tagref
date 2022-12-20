@@ -11,6 +11,7 @@ import 'package:tagref/helpers/TwitterAPIDesktopHelper.dart';
 import 'package:tagref/helpers/google_api_helper.dart';
 import 'package:tagref/isar/IsarHelper.dart';
 import 'package:tagref/ui/components/buttons.dart';
+import 'package:tagref/ui/components/integration_display_button.dart';
 
 import 'home_screen_desktop.dart';
 
@@ -237,7 +238,7 @@ class _SetupScreenState extends State<SetupScreen> {
                               MaterialPageRoute(
                                   builder: (context) =>
                                       Platform.isMacOS || Platform.isWindows
-                                          ? HomeScreen()
+                                          ? HomeScreenDesktop()
                                           : const Text("data")));
                         },
                         style: ButtonStyle(
